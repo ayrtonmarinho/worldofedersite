@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/machado.css" />
+    <!-- CSS only -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body id="body">
+    <div id="centro">
+      <h1>Machados</h1>
+      <h3>Furia Implacável</h3>
+      <p>Ataques Acertados</p>
+      <input type="number" name="Numero de Ataques" id="acertos" />
+      <p>Criticos</p>
+      <input
+        type="text"
+        name="Numero de criticos"
+        id="criticos"
+        value="Ex: 1,3,6"
+        onclick="clearIput()"
+      />
+      <p>Multiplicador de Dano Critico</p>
+      <input type="text" name="" id="crtDMG" />
+      <p>Dano</p>
+      <input type="number" name="dano" id="dano" />
+      <p></p>
+      <p>Bonus de Dano</p>
+      <input type="number" name="dano" id="bDano" />
+      <p></p>
+      <button class="button-89" onclick="calcular()">Calcular</button>
+
+      <p>Dano dos Ataques</p>
+      <p id="seqDmg"></p>
+      <p>Dano Total</p>
+      <p id="totalDmg"></p>
+      <button class="button-49" onclick="location.href='index.html'">
+        Voltar
+      </button>
+    </div>
+    <script src="js/machado.js"></script>
+  </body>
+</html>
