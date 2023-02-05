@@ -1,0 +1,11 @@
+Pergaminho do Conhecimento Irrestrito,Permite escolher qualquer habilidade ou talento existente no RPG,5,1,1
+Conhecimento Duplo do Mundo,Permite usar duas escolas do mundo simultaneamente (apenas estas duas escolas escolhidas podem coexistir).,5,1,1
+Ouro,Moeda de Ouro Antiga,1,70,100
+Ouro,Moeda de Ouro Antiga,1,50,250
+Ouro,Moeda de Ouro Antiga,1,40,500
+Platina,Moeda de Platina Antiga,1,25,1
+Desejo de Guerra,Da uma arma aleatoria ao usuário.,5,10,1
+Esfera do Fogo,Uma esfera que guarda uma pequena porçao de poder de fogo.,2,90,10
+Esfera da Agua,Uma esfera que guarda uma pequena porçao de poder de agua.,2,90,10
+Esfera da Terra,Uma esfera que guarda uma pequena porção de poder da terra.,2,90,10
+Esfera do Ar,Uma esfera que guarda uma pequena porção de poder de ar.,2,90,10
