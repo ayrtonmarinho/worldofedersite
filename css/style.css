@@ -1,21 +1,36 @@
 #main{
     text-align: center;
-    width: 450px;
+    width: 900px;
     margin: auto;
     background-color: black;
     color: white;
     height: 500px;
+    
 
 }
-
+#logo{
+  width: 100%;
+}
 body{
     background-color: black;
+    color: white;
 }
 
 #titulo{
     text-align: center;
     color: white;
     background-color: black;
+}
+
+#main-box {
+  border: solid;
+  border-top: none;
+  border-bottom: none;
+  border-width: 1px;
+  border-color: rgb(65, 65, 65);
+  padding-top: 5%;
+  padding-bottom: 1%;
+ 
 }
 
 

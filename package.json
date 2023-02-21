@@ -1,0 +1,20 @@
+{
+  "name": "worldofedersite",
+  "version": "1.0.0",
+  "description": "Site World Of Eder",
+  "main": "./js/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ayrtonmarinho/worldofedersite.git"
+  },
+  "author": "Ayrton Marinho",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/ayrtonmarinho/worldofedersite/issues"
+  },
+  "homepage": "https://github.com/ayrtonmarinho/worldofedersite#readme"
+}
