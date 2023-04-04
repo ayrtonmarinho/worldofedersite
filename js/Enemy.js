@@ -1,17 +1,17 @@
-export class Enemy {
+class Enemy {
 
     constructor(name, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, aleatorio) {
         this.name = name;
         this.baseVida = baseVida;
-        this.nivel = nivel;
+        this.nivel = parseInt(nivel);
         this.tier = tier;
         this.proficiencia = Math.floor(this.nivel / 2) + 1;
-        this.forca = forca;
-        this.destreza = destreza;
-        this.constituicao = constituicao;
-        this.inteligencia = inteligencia;
-        this.sabedoria = sabedoria;
-        this.carisma = carisma;
+        this.forca = parseInt(forca);
+        this.destreza = parseInt(destreza);
+        this.constituicao = parseInt(constituicao);
+        this.inteligencia = parseInt(inteligencia);
+        this.sabedoria = parseInt(sabedoria);
+        this.carisma = parseInt(carisma);
         if (aleatorio == true) {
             this.randomAtributes();
         }
@@ -69,7 +69,7 @@ export class Enemy {
 
     gerarMana() {
         let dadoBase = Math.random() * 6 + 1
-        let mana = (this.gerarModificador(this.inteligencia) + 1) * this.nivel + dadoBase + 6;
+        let mana = Number((this.gerarModificador(this.inteligencia) + 1) * this.nivel + dadoBase + 6);
         if (this.tier == 'Elite') {
             mana *= 2;
         } else if (this.tier == 'Boss') {
@@ -147,15 +147,13 @@ export class Enemy {
         let tier = this.tier;
         let result = String(Math.floor(this.nivel / 4)) + weaponType;
         if (tier == 'Elite') {
-            weaponType[1] = String(Math.floor(this.nivel / 4)) + weaponType[1];
             weaponType[0] = weaponType[0] + "+5";
             result = weaponType;
         } else if (tier == 'Boss') {
-            weaponType[1] = "4x(" + String(Math.floor(this.nivel / 4)) + weaponType[1] + ")";
+            weaponType[1] = "3x(" + weaponType[1] + ")";
             weaponType[0] = weaponType[0] + "+15";
             result = weaponType;
         } else if (tier == 'Normal') {
-            weaponType[1] = String(Math.floor(this.nivel / 4)) + weaponType[1];
             result = weaponType;
         }
         return result;
@@ -173,64 +171,64 @@ export class Enemy {
         let arma = '';
         let attack = '';
         if (myWeapon == armas[0]) {
-            arma = "d6+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[1]) + "d6+" + String(this.mods[1]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[1]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[1]) {
-            arma = "d10+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[1]) + "d10+" + String(this.mods[1]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[1]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[2]) {
-            arma = "d12+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[0]) + "d12+" + String(this.mods[0]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[3]) {
-            arma = "d10+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[1]) + "d10+" + String(this.mods[1]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[1]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[4]) {
-            arma = "d8+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[1]) + "d8+" + String(this.mods[1]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[1]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[5]) {
-            arma = "d12+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[0]) + "d12+" + String(this.mods[0]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[6]) {
-            arma = "d8+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[1]) + "d8+" + String(this.mods[1]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[1]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[7]) {
-            arma = "d12+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[0]) + "d12+" + String(this.mods[0]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[8]) {
-            arma = "d12+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[1]) + "d12+" + String(this.mods[1]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[1]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[9]) {
-            arma = "d10+" + String(this.mods[3]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[3]) + "d10+" + String(this.mods[3]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[3]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[10]) {
-            arma = "d10+" + String(this.mods[3]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[3]) + "d10+" + String(this.mods[3]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[3]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[11]) {
-            arma = "d16+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[1]) + "d16+" + String(this.mods[1]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[1]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[12]) {
-            arma = "d12+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[0]) + "d12+" + String(this.mods[0]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[13]) {
-            arma = "d14+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[0]) + "d14+" + String(this.mods[0]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[14]) {
-            arma = "d10+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[1]) + "d10+" + String(this.mods[1]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[1]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[15]) {
-            arma = "d10+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[0]) + "d10+" + String(this.mods[0]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[16]) {
-            arma = "d7+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[1]) + "d7+" + String(this.mods[1]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[1]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[17]) {
-            arma = "d8+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[0]) + "d8+" + String(this.mods[0]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[18]) {
-            arma = "d12+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            arma = String(this.mods[0]) + "d12+" + String(this.mods[0]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
         } else if (myWeapon == armas[19]) {
-            arma = "d4+" + String(this.mods[0]) + "+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+            arma = String(Number(this.mods[0]) + Number(this.mods[1])) + "d4+" + String(this.mods[0]) + "+" + String(this.mods[1]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[0]) + "+" + String(this.mods[1]) + "+" + String(this.proficiencia);
         }
 
@@ -272,3 +270,152 @@ export class Enemy {
 
 
 }
+
+
+function gerar_inimigo() {
+    let nome = document.getElementById('nome').value;
+    let baseVida = Number(document.getElementById('vida_base').value);
+    let nivel = document.getElementById('nivel').value;
+
+
+    alert_message = [];
+
+    if (nome == "") {
+        alert_message += 'Nome está vazio\n';
+    }
+    if (baseVida < 10) {
+        alert_message += 'Vida Base inferior ao mininmo (10).\n';
+    }
+    if (nivel < 1 & nivel > 20) {
+        alert_message += 'Nível fora do intervalo (1-20).\n';
+    }
+
+    if (alert_message.length > 0) {
+        window.alert(alert_message);
+    } else {
+        createEnemy();
+    }
+}
+
+function createEnemy() {
+
+    let nome = document.getElementById('nome').value;
+    let baseVida = Number(document.getElementById('vida_base').value);
+    let nivel = document.getElementById('nivel').value;
+    let selected_tier = document.getElementById('tier');
+    let tier = selected_tier.options[selected_tier.selectedIndex].text;
+    let armadura = Number(document.getElementById('armadura').value);
+    let selected_arma = document.getElementById('arma');
+    let arma = selected_arma.options[selected_arma.selectedIndex].text;
+    let forca = Number(document.getElementById('for').value);
+    let destreza = Number(document.getElementById('des').value)
+    let constituicao = Number(document.getElementById('con').value)
+    let inteligencia = Number(document.getElementById('int').value)
+    let sabedoria = Number(document.getElementById('sab').value)
+    let carisma = Number(document.getElementById('car').value)
+    let aleatorio = document.getElementById('aleatorio')
+
+    let enemy;
+
+
+    if (aleatorio.checked) {
+        enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, true);
+
+    } else {
+        enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, false);
+
+    }
+
+
+    setAtributes(enemy);
+
+    go_to_exibirEnemy();
+
+    console.log(enemy);
+}
+
+function go_to_exibirEnemy() {
+    let displayScreen = document.getElementById('bloco2');
+    let hidScreen = document.getElementById('bloco1');
+    displayScreen.style.display = 'contents';
+    hidScreen.style.display = 'none';
+}
+
+function go_to_create_enemy() {
+    let displayScreen = document.getElementById('bloco1');
+    let hidScreen = document.getElementById('bloco2');
+    displayScreen.style.display = 'content';
+    hidScreen.style.display = 'none';
+}
+
+function reloadPage() {
+    location.reload()
+}
+
+function readable_mod(value) {
+    if (value >= 0) {
+        return String("( +" + value + " )");
+    }
+    return String("( " + value + " )");
+}
+
+function setAtributes(enemy) {
+    let forca = document.getElementById('e_forca');
+    let destreza = document.getElementById('e_destreza');
+    let constituicao = document.getElementById('e_constituicao');
+    let inteligencia = document.getElementById('e_inteligencia');
+    let sabedoria = document.getElementById('e_sabedoria');
+    let carisma = document.getElementById('e_carisma');
+
+    let mod_for = document.getElementById('mod_for');
+    let mod_des = document.getElementById('mod_des');
+    let mod_con = document.getElementById('mod_con');
+    let mod_int = document.getElementById('mod_int');
+    let mod_sab = document.getElementById('mod_sab');
+    let mod_car = document.getElementById('mod_car');
+
+    let name = document.getElementById('char_name');
+    let nivel = document.getElementById('char_lvl');
+    let tier = document.getElementById('char_tier');
+    let vida = document.getElementById('char_vida');
+    let mana = document.getElementById('char_mana');
+    let ca = document.getElementById('char_ca');
+    let arma = document.getElementById('char_arma');
+    let ataque = document.getElementById('char_ataque');
+    let dano = document.getElementById('char_dano');
+    let armadura = document.getElementById('char_armadura');
+
+    forca.innerHTML = enemy.forca;
+    mod_for.innerHTML = readable_mod(enemy.mods[0]);
+    destreza.innerHTML = enemy.destreza;
+    mod_des.innerHTML = readable_mod(enemy.mods[1]);
+    constituicao.innerHTML = enemy.constituicao;
+    mod_con.innerHTML = readable_mod(enemy.mods[2]);
+    inteligencia.innerHTML = enemy.inteligencia;
+    mod_int.innerHTML = readable_mod(enemy.mods[3]);
+    sabedoria.innerHTML = enemy.sabedoria;
+    mod_sab.innerHTML = readable_mod(enemy.mods[4]);
+    carisma.innerHTML = enemy.carisma;
+    mod_car.innerHTML = readable_mod(enemy.mods[5]);
+
+    name.innerHTML = enemy.name;
+    nivel.innerHTML = enemy.nivel;
+    tier.innerHTML = enemy.tier;
+    vida.innerHTML = enemy.vidaMaxima;
+    mana.innerHTML = enemy.manaMaxima;
+    ca.innerHTML = enemy.Ca;
+    arma.innerHTML = enemy.arma;
+    ataque.innerHTML = enemy.ataque;
+    dano.innerHTML = enemy.dano;
+    armadura.innerHTML = enemy.armadura;
+
+
+
+
+}
+
+
+
+
+//let monstro = new Enemy("Kuma", 1000, 20, "Boss", 0, 0, 0, 0, 0, 0, "Arco", 4, true);
+//console.log(monstro);

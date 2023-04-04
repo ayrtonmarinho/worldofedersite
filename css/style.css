@@ -38,7 +38,7 @@ body{
 /* CSS */
 .button-49,
 .button-49:after {
-  width: 150px;
+  width: 250px;
   height: 76px;
   line-height: 78px;
   font-size: 20px;
@@ -130,7 +130,7 @@ body{
 @media (min-width: 768px) {
   .button-49,
   .button-49:after {
-    width: 200px;
+    width: 300px;
     height: 86px;
     line-height: 88px;
   }

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WOE: Enemy Generator</title>
+    <link rel="stylesheet" href="css/monstercreator.css" />
+  </head>
+  <body>
+    <div id="container">
+      <div id="bloco1">
+        <h1>Gerador de Inimigos</h1>
+        <br /><br />
+        <table>
+          <tr>
+            <td id="firstStatusb1">
+              <label for="nome">Nome:</label><br />
+              <input
+                type="text"
+                id="nome"
+                name="nome"
+                value="No Name"
+              /><br /><br />
+
+              <label for="vida_base">Vida Base:</label><br />
+              <input
+                type="number"
+                class="numberRight"
+                id="vida_base"
+                name="vida_base"
+                min="10"
+                value="10"
+              />
+              <br /><br />
+
+              <label for="tier">Tier:</label><br />
+              <select id="tier">
+                <option value="Normal" selected>Normal</option>
+                <option value="Elite">Elite</option>
+                <option value="Boss">Boss</option>
+              </select>
+            </td>
+
+            <td id="firstStatusb2">
+              <label for="nivel">Nível:</label><br />
+              <input
+                type="number"
+                id="nivel"
+                name="nivel"
+                min="1"
+                max="20"
+                value="1"
+                class="numberLeft"
+              /><br /><br />
+              <label for="armadura">Armadura:</label><br />
+              <input
+                type="number"
+                id="armadura"
+                name="armadura"
+                class="numberLeft"
+                min="0"
+                value="0"
+              /><br /><br />
+
+              <label for="arma">Arma:</label><br />
+              <select id="arma">
+                <option value="Adaga">Adaga</option>
+                <option value="Arco">Arco</option>
+                <option value="Besta">Besta</option>
+                <option value="Firegun">Firegun</option>
+                <option value="Espada">Espada</option>
+                <option value="Espadão">Espadão</option>
+                <option value="Machado">Machado</option>
+                <option value="Machadão">Machadão</option>
+                <option value="Foice">Foice</option>
+                <option value="Orbe">Orbe</option>
+                <option value="Cajado">Cajado</option>
+                <option value="Dual">Dual</option>
+                <option value="Lança">Lança</option>
+                <option value="Swallow">Swallow</option>
+                <option value="Haloblade">Haloblade</option>
+                <option value="Katana">Katana</option>
+                <option value="Estilingue">Estilingue</option>
+                <option value="Soqueira">Soqueira</option>
+                <option value="Martelo">Martelo</option>
+                <option value="Sem-arma" selected>Sem Arma</option>
+              </select>
+            </td>
+          </tr>
+        </table>
+        <br /><br />
+        <h2>Atributos</h2>
+        <table>
+          <tr>
+            <td id="atributesLeft">
+              <label for="for">FOR:</label><br />
+              <input
+                type="number"
+                id="for"
+                name="for"
+                min="1"
+                max="30"
+                value="10"
+                class="numberRight"
+              /><br /><br />
+
+              <label for="des">DES:</label><br />
+              <input
+                type="number"
+                id="des"
+                name="des"
+                min="1"
+                max="30"
+                value="10"
+                class="numberRight"
+              /><br /><br />
+
+              <label for="con">CON:</label><br />
+              <input
+                type="number"
+                id="con"
+                name="con"
+                min="1"
+                max="30"
+                value="10"
+                class="numberRight"
+              /><br /><br />
+            </td>
+            <td id="atributesRight">
+              <label for="int">INT:</label><br />
+              <input
+                type="number"
+                id="int"
+                name="int"
+                min="1"
+                max="30"
+                value="10"
+                class="numberLeft"
+              /><br /><br />
+
+              <label for="sab">SAB:</label><br />
+              <input
+                type="number"
+                id="sab"
+                name="sab"
+                min="1"
+                max="30"
+                value="10"
+                class="numberLeft"
+              /><br /><br />
+
+              <label for="car">CAR:</label><br />
+              <input
+                type="number"
+                id="car"
+                name="car"
+                min="1"
+                max="30"
+                value="10"
+                class="numberLeft"
+              /><br /><br />
+            </td>
+          </tr>
+        </table>
+        <label>
+          <input id="aleatorio" type="checkbox" name="frutas" value="banana" />
+          Gerar Atributos Aleatórios </label
+        ><br /><br />
+        <br /><br />
+        <button class="noselect" onclick="gerar_inimigo()">
+          Gerar Inimigo<span aria-hidden></span>
+        </button>
+        <button class="cybr-btn" onclick="location.href='index.html'">
+          Voltar<span aria-hidden></span>
+        </button>
+      </div>
+
+      <div id="bloco2">
+        <h1>Personagem Gerado</h1>
+        <br /><br />
+        <table id="char_stats">
+          <tr>
+            <td id="td_name" colspan="3">
+              <strong>Nome:</strong> <span id="char_name"> </span>
+            </td>
+          </tr>
+          <tr>
+            <td id="td_b1">
+              <strong>Nível: </strong><span id="char_lvl"></span>
+            </td>
+            <td id="td_b1">
+              <strong>Tier: </strong> <span id="char_tier"></span>
+            </td>
+          </tr>
+          <tr>
+            <td id="td_b1">
+              <strong>Mana: </strong><span id="char_mana"></span>
+            </td>
+            <td id="td_b1">
+              <strong>Vida Máxima: </strong> <span id="char_vida"></span>
+            </td>
+          </tr>
+          <tr>
+            <td id="td_b1"><strong>CA: </strong> <span id="char_ca"></span></td>
+            <td id="td_b1">
+              <strong>Armadura: </strong><span id="char_armadura"></span>
+            </td>
+          </tr>
+          <tr>
+            <td id="td_b1" colspan="2">
+              <strong>Arma: </strong><span id="char_arma"></span>
+            </td>
+          </tr>
+          <tr>
+            <td id="td_b1" colspan="2">
+              <strong>Ataque: </strong>
+              <span id="char_ataque"></span>
+            </td>
+          </tr>
+          <tr>
+            <td id="td_b1" colspan="2">
+              <strong>Dano: </strong> <span id="char_dano"></span>
+            </td>
+          </tr>
+        </table>
+        <br /><br />
+
+        <table id="char_atributes">
+          <tr>
+            <td id="td_b2">
+              <strong>FOR:</strong>
+              <span id="e_forca" class="atrb"></span>&nbsp;<span
+                id="mod_for"
+                class="mod"
+              ></span>
+            </td>
+            <td id="td_b2">
+              <strong>INT:</strong>
+              <span id="e_inteligencia" class="atrb"></span>&nbsp;<span
+                id="mod_int"
+                class="mod"
+              ></span>
+            </td>
+          </tr>
+          <tr>
+            <td id="td_b2">
+              <strong>DES:</strong>
+              <span id="e_destreza" class="atrb"></span>&nbsp;<span
+                id="mod_des"
+                class="mod"
+              ></span>
+            </td>
+            <td id="td_b2">
+              <strong>SAB:</strong>
+              <span id="e_sabedoria" class="atrb"></span>&nbsp;<span
+                id="mod_sab"
+                class="mod"
+              ></span>
+            </td>
+          </tr>
+          <tr>
+            <td id="td_b2">
+              <strong>CON:</strong>
+              <span id="e_constituicao" class="atrb"></span>&nbsp;<span
+                id="mod_con"
+                class="mod"
+              ></span>
+            </td>
+            <td id="td_b2">
+              <strong>CAR:</strong>
+              <span id="e_carisma" class="atrb"></span>&nbsp;<span
+                id="mod_car"
+                class="mod"
+              ></span>
+            </td>
+          </tr>
+        </table>
+        <br /><br /><br />
+        <button id="reload" onclick="reloadPage()">Novo Inimigo</button><br />
+      </div>
+    </div>
+
+    <script src="js/Enemy.js"></script>
+  </body>
+</html>
