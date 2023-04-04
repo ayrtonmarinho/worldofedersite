@@ -1,0 +1,227 @@
+:root{
+    --cor_fonte_p: #ff3da5;
+    font-family: Cyber;
+    src: url("https://assets.codepen.io/605876/Blender-Pro-Bold.otf");
+    font-display: swap;
+}
+body {
+    background-color: rgb(86, 86, 86);
+}
+
+#container{
+    text-align: center;
+    width: 500px;
+    height: 720px;
+    background-color: white;
+    margin: auto;
+    background-color: rgb(37, 37, 37);
+    color: #1cb50e;
+}
+
+h1{
+    color:#ff3da5
+}
+
+#bloco1{
+    text-align: center;
+    margin: auto;
+    padding: 5px;
+    
+}
+
+#bloco2{
+  text-align: center;
+  margin: auto;
+  padding: 5px;
+  border-color: wheat;
+  border: solid;
+  display: none;
+}
+
+#td_b1{
+  width: 150px;
+  text-align: left;
+  border: 1px solid;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+table{
+    margin: auto;
+}
+
+#td_b2{
+    width: 120px;
+    text-align: left;
+}
+
+#td_name{
+    text-align: left;
+}
+
+#char_stats{
+    width: 400px;
+    
+}
+
+#char_atributes{
+    width: 240px;
+}
+
+#firstStatusb1{
+    width: 200px;
+    text-align:end;
+    padding-right: 10px;
+    
+}
+
+#firstStatusb2{
+    width: 200px;
+    text-align:start;
+    padding-left: 10px;
+    
+}
+
+.numberLeft {
+    text-align: left;
+    width: 50px;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    background-color: rgb(37, 37, 37);
+    color: #ff3da5;
+}
+
+.numberRight {
+    text-align: right;
+    width: 50px;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    background-color: rgb(37, 37, 37);
+    color: #ff3da5;
+}
+
+input[type=text]{
+    text-align: right;
+    font-weight: bolder;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    background-color: rgb(37, 37, 37);
+    color: #ff3da5;
+}
+
+#atributesLeft{
+    width: 200px;
+    text-align:end;
+    padding-right: 10px;
+    background-color: rgb(37, 37, 37);
+    
+    
+}
+
+#atributesRight{
+    width: 200px;
+    text-align:start;
+    padding-right: 10px;
+    background-color: rgb(37, 37, 37);
+    
+    
+}
+
+.mod{
+    color: #c1c105;
+}
+
+.atrb{
+    color: #ff3da5;
+}
+
+select{
+    background-color: rgb(37, 37, 37);
+    color: #ff3da5;
+}
+
+/* Status and Atributes Custom Color*/
+#char_name{
+    color: #ffffff;
+}
+#char_lvl{
+    color: #c1c105;
+}
+#char_tier{
+    color: #9558ff;
+}
+#char_vida{
+    color: #fa4444;
+}
+#char_mana{
+    color: rgb(0, 119, 255);
+}
+#char_ca{
+    color: rgb(208, 208, 208);
+}
+#char_armadura{
+    color: #a5a4a1;
+}
+#char_arma{
+    color: #c685ff;
+}
+#char_ataque{
+    color: #ff6e34;
+}
+#char_dano{
+    color: #e69a01;
+}
+
+
+
+/* Button Style */
+
+
+
+@font-face {
+    font-family: Cyber;
+    src: url("https://assets.codepen.io/605876/Blender-Pro-Bold.otf");
+    font-display: swap;
+  }
+  
+
+  *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: rgb(37, 37, 37);
+    font-family: 'Raleway', sans-serif;
+}
+
+button{
+  padding: 25px 30px;
+  background-color: rgb(37, 37, 37);
+  color: #03e9f4;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  letter-spacing: 4px;
+  overflow: hidden;
+  transition: 0.5s;
+  cursor: pointer;
+}
+
+button:hover{
+    background: #03e9f4;
+    color: rgb(37, 37, 37);
+    box-shadow: 0 0 5px #03e9f4,
+                0 0 25px #03e9f4,
+                0 0 50px #03e9f4,
+                0 0 200px #03e9f4;
+     -webkit-box-reflect:below 1px linear-gradient(transparent, rgb(37, 37, 37));
+}

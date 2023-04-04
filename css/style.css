@@ -1,15 +1,19 @@
 #main{
     text-align: center;
-    width: 450px;
+    width: 900px;
     margin: auto;
     background-color: black;
     color: white;
     height: 500px;
+    
 
 }
-
+#logo{
+  width: 100%;
+}
 body{
     background-color: black;
+    color: white;
 }
 
 #titulo{
@@ -18,12 +22,23 @@ body{
     background-color: black;
 }
 
+#main-box {
+  border: solid;
+  border-top: none;
+  border-bottom: none;
+  border-width: 1px;
+  border-color: rgb(65, 65, 65);
+  padding-top: 5%;
+  padding-bottom: 1%;
+ 
+}
+
 
 
 /* CSS */
 .button-49,
 .button-49:after {
-  width: 150px;
+  width: 250px;
   height: 76px;
   line-height: 78px;
   font-size: 20px;
@@ -115,7 +130,7 @@ body{
 @media (min-width: 768px) {
   .button-49,
   .button-49:after {
-    width: 200px;
+    width: 300px;
     height: 86px;
     line-height: 88px;
   }
