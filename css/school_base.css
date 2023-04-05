@@ -13,6 +13,10 @@ body{
     
 }
 
+li{
+    list-style-type:square;
+}
+
 a:link {
     text-decoration: none;
     color: black;
@@ -46,6 +50,7 @@ table{
 
 td {
     background-color: rgb(248, 248, 248);
+    width: 1920px;
     padding: 5px;
     padding-left: 20px;
     border: 1px solid;
