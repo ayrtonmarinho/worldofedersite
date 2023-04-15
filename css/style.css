@@ -3,7 +3,7 @@
     width: 900px;
     margin: auto;
     background-color: rgb(255, 255, 255);
-    color: white;
+    color: rgb(125, 125, 125);
     height: 500px;
     
 
@@ -13,7 +13,7 @@
 }
 body{
     background-color: rgb(255, 255, 255);
-    color: white;
+    color: rgb(94, 91, 91);
 }
 
 #titulo{
@@ -43,7 +43,7 @@ body{
   line-height: 78px;
   font-size: 20px;
   font-family: 'Bebas Neue', sans-serif;
-  background: linear-gradient(45deg, transparent 5%, #572481 5%);
+  background: linear-gradient(45deg, transparent 5%, #262526 5%);
   border: 0;
   color: #fff;
   letter-spacing: 3px;
