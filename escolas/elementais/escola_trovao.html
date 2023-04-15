@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>World Of Eder - Escola do Trovão</title>
+    <title>Escola do Trovão</title>
     <link rel="stylesheet" href="../../css/school_base.css" />
   </head>
   <body>
@@ -58,6 +58,16 @@
               </p>
             </td>
           </tr>
+          <tr>
+            <th colspan="2" class="skill_title">Thunder Skin</th>
+          </tr>
+          <tr>
+            <td class="skill_description">
+              <p>
+                Reduz o dano de <trovao>trovão</trovao> recebido em 50%. Aumenta o dano de <fogo>fogo</fogo> recebido em 50%.
+              </p>
+            </td>
+          </tr>
         </table>
         <br /><br />
         <h3>Habilidades</h3>
@@ -68,11 +78,31 @@
           <tr>
             <td class="skill_description">
               <p>
-                Concentra energia na mão e a direciona para um alvo causando
+                Concentra energia na mão e a direciona para um alvo causando 
                 (mod.INT)d12+arcanismo como dano de <trovao>trovão</trovao>.
                 Aplica o efeito condutor. Sem preparação. Consome 2 MP. Usar
                 esta habilidade em alvos com condutor aumenta o dano em 25% e
                 zera o custo de mana. Alcance 25m.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <th colspan="2" class="skill_title">Relâmpago</th>
+          </tr>
+          <tr>
+            <td class="skill_description">
+              <p>
+                Concentra-se para conjurar um raio no alvo escolhido causando (mod.INT)d12+arcanismo como dano de <trovao>trovão</trovao>. Alvos próximos recebem metade do dano. Consome 2 MP. 3 turnos de preparação. Críticos Causam 3x o dano. Alcance 30m
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <th colspan="2" class="skill_title">Thunder Enchant</th>
+          </tr>
+          <tr>
+            <td class="skill_description">
+              <p>
+                Encanta a arma ou armadura com eletricidade. Ao causar dano será adicionado dano extra de (mod.INT)d6+arcanismo como dano de <trovao>trovão</trovao> e aplicar efeito condutor. Sem preparação. Consome 1 MP. Sem preparação. Dura 1d4+mod.INT ataques.
               </p>
             </td>
           </tr>
@@ -83,6 +113,19 @@
         <!--Rank II-->
         <h2 id="rank2">RANK II</h2>
         <h3>Talentos</h3>
+        <table>
+          <tr>
+            <th colspan="2" class="skill_title">Explosão de Eletricidade</th>
+          </tr>
+          <tr>
+            <td class="skill_description">
+              <p>
+                Caso tenha resultado crítico ao conjurar magias de eletricidade o dano de condutor será dobrado.                                                                                                                                                                  
+              </p>
+            </td>
+          </tr>
+        </table>
+        <br /><br />
         <h3>Habilidades</h3>
         <table>
           <tr>
@@ -99,8 +142,19 @@
               </p>
             </td>
           </tr>
+          <tr>
+            <th colspan="2" class="skill_title">Corrente Elétrica</th>
+          </tr>
+          <tr>
+            <td class="skill_description">
+              <p>
+                Cria uma corrente de eletricidade que se espalha para os alvos causando (mod.INT)d6+arcanismo como dano de <trovao>trovão</trovao>. Se os alvos estiverem marcados com condutor o efeito de condutor será aplicado causando o dobro do dano e será necessário rolar apenas uma vez o dano. Consome 5 MP. Atinge todos os alvos com distâncias de até 2m. Condutor expande o alcance para o dobro.
+              </p>
+            </td>
+          </tr>
         </table>
         <br /><br />
+
         <!-- RANK III -->
         <h2 id="rank3">RANK III</h2>
         <h3>Talentos</h3>
@@ -145,8 +199,77 @@
         </table>
         <br />
         <br />
+        <!-- RANK IV -->
+        <h2 id="rank4">RANK IV</h2>
+        <h3>Talentos</h3>
+        <table>
+          <tr>
+            <th colspan="2" class="skill_title">Free Thunder</th>
+          </tr>
+          <tr>
+            <td class="skill_description">
+              <p>
+                A cada rodada um raio irá atingir um alvo aleatório. O alvo poderá rolar um dado de esquiva considerando Acrobacia, Salvaguarda (DES), ou o mod.DES. O dano recebido pelo alvo é de (mod.INT)d18+arcanismo de trovão. Tem 10% de chance de causar <trovao>Hyper Volt</trovao>.
+                <ul>
+                  <li>Hyper Volt: causa 600% do dano como dano de trovão</li>
+                </ul>
+              </p>
+            </td>
+          </tr>
+        </table>
+        <br /><br />
+        <h3>Habilidades</h3>
+        <table>
+          <tr>
+            <th colspan="2" class="skill_title">Thunder Storm</th>
+          </tr>
+          <tr>
+            <td class="skill_description">
+              <p>
+                Conjura por 4 rodadas para invocar uma tempestade de raios que causa 2x(mod.INT)d18+arcanismo como dano de trovão a 1d12 alvos por rodada. Pode aplicar o <trovao>Hyper Volt</trovao> com 15% de chance. Se estiver chovendo ativa o Combo Field. Consome 50 MP. Dura 1d6+mod.INT  rodadas.
+              </p>
+              <ul>
+                <li><trovao>Combo Field - Thunder Storm:</trovao> Aumenta a chance de Hyper Volt para 25%. Role a cada rodada 1d20 para saber se os raios serão críticos. Críticos causam x3 dano.
+                </li>
+              </ul>
+            </td>
+          </tr>
+        </table>
+        <br>
+        <br>
+
+        <!-- RANK V -->
+        <h2 id="rank5">RANK V</h2>
+        <h1><trovao>Arconte do Trovão</trovao></h1>
+        <p>O usuário se torna a máxima autoridade em poderes de trovão. Abrindo caminho para habilidades únicas e recebendo um recurso chamado Energia Elemental (EM) que é utilizado para utilizar as habilidades do arconte. Além disso,  arcontes são curados quando recebem dano de trovão.
+        </p>
+        <p>EM (<trovao>Trovão</trovao>) → é definido por 100 +10 por cada ponto modificador de Inteligência. Esse é o valor máximo que pode ser acumulado. Em combate a EM inicia em 0.
+        </p>
+        <p>Você produz 10+mod.INT/2 em EM sempre que conjurar uma habilidade de trovão que não consuma EM. Críticos com habilidades de trovão dão o (modificador crítico) de EM.
+        </p>
+        <p>Sempre que ocorrer um dano de trovão na rodada vigente você recebe 5+mod.INT/2 de EM. Independente se foi causado por você ou não.
+        </p>
+        <p>A Arma do Arconte pode ser embutida com Trovão convertendo todo dano causado por ela como dano de trovão. Para isso ele deve gastar 3 de EM por rodada até que a arma esteja imbuída com trovão.
+        </p>
+        <table>
+          <tr>
+            <th colspan="2" class="skill_title"><trovao>Habilidades do Arconte do Trovão</trovao></th>
+          </tr>
+          <tr>
+            <td class="skill_description">
+              <ul>
+              <li><p><trovao>Passo do Trovão:</trovao>
+                Utilizando sua ação de movimento você pode se mover no campo de batalha livremente sem considerar seu movimento. Se mover para um local a 1.5 m de distância do inimigo causa o dano de sua arma como dano de <trovao>trovão</trovao> a ele. Consome 15 EM</li>
+              </p>
+                <li><trovao>Esfera Eletro Destrutiva:</trovao> Cria uma pequena esfera elétrica em um local escolhido por você. Essa esfera acumula energia sempre que alguma habilidade de trovão é conjurada ou dano de trovão é causado. Após 10 rodadas a esfera irá desferir um dano massivo em área que causa o (número de contadores de trovão gerados x 100)x dano da arma como dano de trovão. Consome 150 EM.
+                </li><br>
+                <li><trovao>God 's Speed:</trovao> Desperta o poder do trovão ganhando uma velocidade tremenda, quase como se o tempo parasse para todos menos para você. Durante esse efeito você pode fazer 3 ações completas em uma única rodada. As ações não precisam ser feitas no seu turno, mas devem ser feitas dentro da rodada. Adicionalmente seu Bônus de Ataque é dobrado e suas conjurações são instantâneas. Após o efeito você entra em exaustão estágio 1.  Consome 100 de EM.</li>
+              </ul>
+            </td>
+          </tr>
+        </table>
       </div>
     </main>
-    <footer></footer>
+    <footer>World Of Eder - 2023</footer>
   </body>
 </html>

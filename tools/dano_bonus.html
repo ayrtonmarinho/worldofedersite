@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WOE: Dano Causado</title>
+    <link rel="stylesheet" href="/css/dano_causado.css" />
+  </head>
+  <body>
+    <h3 id="voltar" onclick="location.href='/index.html'">Voltar</h3>
+    <header></header>
+    <nav></nav>
+    <main class="container">
+      <div>
+        <h1>Dano Causado</h1>
+        <p>
+          <label for="">Dano dos Dados <i>(soma do dano dos dados)*</i></label>
+        </p>
+        <input type="number" id="dano_dado" />
+        <p>
+          <label for=""
+            >Dano Bonus da Arma <i>(ex: 30 = 30% de bonus)*</i></label
+          >
+        </p>
+        <input type="number" id="dano_arma" />
+
+        <p>
+          <label for="">Dano Critico <i>(ex: 1.5 = 50% dano bonus)*</i></label>
+        </p>
+        <input type="number" id="critical" value="2" />
+        <p>
+          <label for="">Outros Bonus<i>(10 = 10%)</i></label>
+        </p>
+        <input type="number" id="outros" />
+        <p><button onclick="calcular_dano()">Calcular</button></p>
+        <p>Dano Total Causado</p>
+        <p id="dano_total"></p>
+        <p id="warning"><i>* Campos obrigatórios.</i></p>
+      </div>
+    </main>
+    <footer></footer>
+    <script src="/js/dano_causado.js"></script>
+  </body>
+</html>
