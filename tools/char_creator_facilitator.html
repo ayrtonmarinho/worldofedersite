@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WOE: Char Facilitador</title>
+    <link rel="stylesheet" href="/css/char_facilitator.css" />
+  </head>
+  <body onload="default_onload()">
+    <header></header>
+    <nav></nav>
+    <main class="container">
+      <div id="main">
+        <h1>Atributos</h1>
+        <table>
+          <tr>
+            <th colspan="3">Fisicos</th>
+          </tr>
+          <tr>
+            <td>FOR</td>
+            <td>
+              <input
+                type="number"
+                placeholder="10"
+                min="8"
+                max="30"
+                name=""
+                id="in_for"
+                onchange="bonusMod()"
+              />
+            </td>
+            <td>
+              <span class="modificador"><p id="mod_for"></p></span>
+            </td>
+          </tr>
+          <tr>
+            <td>DES</td>
+            <td>
+              <input
+                type="number"
+                placeholder="10"
+                min="8"
+                max="30"
+                name=""
+                id="in_des"
+                onchange="bonusMod()"
+              />
+            </td>
+            <td>
+              <span class="modificador"><p id="mod_des"></p></span>
+            </td>
+          </tr>
+          <tr>
+            <td>CON</td>
+            <td>
+              <input
+                type="number"
+                placeholder="10"
+                min="8"
+                max="30"
+                name=""
+                id="in_con"
+                onchange="bonusMod()"
+              />
+            </td>
+            <td>
+              <span class="modificador"><p id="mod_con"></p></span>
+            </td>
+          </tr>
+        </table>
+        <table>
+          <tr>
+            <th colspan="3">Mentais</th>
+          </tr>
+          <tr>
+            <td>INT</td>
+            <td>
+              <input
+                type="number"
+                placeholder="10"
+                min="8"
+                max="30"
+                name=""
+                id="in_int"
+                onchange="bonusMod()"
+              />
+            </td>
+            <td>
+              <span class="modificador"><p id="mod_int"></p></span>
+            </td>
+          </tr>
+          <tr>
+            <td>SAB</td>
+            <td>
+              <input
+                type="number"
+                placeholder="10"
+                min="8"
+                max="30"
+                name=""
+                id="in_sab"
+                onchange="bonusMod()"
+              />
+            </td>
+            <td>
+              <span class="modificador"><p id="mod_sab"></p></span>
+            </td>
+          </tr>
+          <tr>
+            <td>CAR</td>
+            <td>
+              <input
+                type="number"
+                placeholder="10"
+                min="8"
+                max="30"
+                name=""
+                id="in_car"
+                onchange="bonusMod()"
+              />
+            </td>
+            <td>
+              <span class="modificador"><p id="mod_car"></p></span>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </main>
+    <footer></footer>
+    <script src="/js/char_facilitator.js"></script>
+  </body>
+</html>
