@@ -38,10 +38,12 @@ body{
 /* CSS */
 .button-49,
 .button-49:after {
-  width: 250px;
+  width: 100%;
+  max-width: 250px;
+  
   height: 76px;
   line-height: 78px;
-  font-size: 20px;
+  font-size: 1.125rem;
   font-family: 'Bebas Neue', sans-serif;
   background: linear-gradient(45deg, transparent 5%, #262526 5%);
   border: 0;
@@ -139,10 +141,11 @@ body{
 /*Main Button Story*/
 .button-50,
 .button-50:after {
-  width: 250px;
+  width: 100%;
+  max-width: 250px;
   height: 76px;
   line-height: 78px;
-  font-size: 20px;
+  font-size: 1.125rem;
   font-family: 'Bebas Neue', sans-serif;
   background: linear-gradient(45deg, transparent 5%, #1c2b18 5%);
   border: 0;
