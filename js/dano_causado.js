@@ -6,10 +6,10 @@ function calcular_dano() {
     let outro_bonus = document.getElementById('outros').value
     let total = document.getElementById('dano_total')
 
-    if (outro_bonus) {
-        total.innerHTML = parseFloat((Number(dano_dados) * (Number(dano_bonus_arma) / 100 + 1) * Number(multiplicador_critico) * (Number(outro_bonus) / 100 + 1)).toFixed(2));
+    if (outro_bonus && outro_bonus > 0) {
+        total.innerHTML = Number(dano_dados) * (Number(dano_bonus_arma) / 100 + 1) * Number(multiplicador_critico) * ((Number(outro_bonus) / 100 + 1));
     } else {
-        total.innerHTML = parseFloat((Number(dano_dados) * (Number(dano_bonus_arma) / 100 + 1) * Number(multiplicador_critico)).toFixed(2));
+        total.innerHTML = Number(dano_dados) * (Number(dano_bonus_arma) / 100 + 1) * Number(multiplicador_critico);
     }
 
 
