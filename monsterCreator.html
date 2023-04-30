@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WOE: Enemy Generator</title>
+    <title>WOE: NPC Generator</title>
     <link rel="stylesheet" href="css/monstercreator.css" />
   </head>
   <body>
     <div id="container">
       <div id="bloco1">
-        <h1>Gerador de Inimigos</h1>
+        <h1>Gerador Simples de NPCs</h1>
         <br /><br />
         <table>
           <tr>
@@ -52,6 +52,7 @@
                 max="20"
                 value="1"
                 class="numberLeft"
+                onchange="checkNivel()"
               /><br /><br />
               <label for="armadura">Armadura:</label><br />
               <input
@@ -65,26 +66,27 @@
 
               <label for="arma">Arma:</label><br />
               <select id="arma">
-                <option value="Adaga">Adaga</option>
-                <option value="Arco">Arco</option>
-                <option value="Besta">Besta</option>
-                <option value="Firegun">Firegun</option>
-                <option value="Espada">Espada</option>
-                <option value="Espadão">Espadão</option>
-                <option value="Machado">Machado</option>
-                <option value="Machadão">Machadão</option>
-                <option value="Foice">Foice</option>
-                <option value="Orbe">Orbe</option>
-                <option value="Cajado">Cajado</option>
-                <option value="Dual">Dual</option>
-                <option value="Lança">Lança</option>
-                <option value="Swallow">Swallow</option>
-                <option value="Haloblade">Haloblade</option>
-                <option value="Katana">Katana</option>
-                <option value="Estilingue">Estilingue</option>
-                <option value="Soqueira">Soqueira</option>
-                <option value="Martelo">Martelo</option>
-                <option value="Sem-arma" selected>Sem Arma</option>
+                <option value="Adaga">Adaga [DES]</option>
+                <option value="Arco">Arco [DES]</option>
+                <option value="Besta">Besta [FOR]</option>
+                <option value="Firegun">Firegun [DES]</option>
+                <option value="Espada">Espada [DES]</option>
+                <option value="Espadão">Espadão [FOR]</option>
+                <option value="Machado">Machado [DES]</option>
+                <option value="Machadão">Machadão [FOR]</option>
+                <option value="Foice">Foice [DES]</option>
+                <option value="Orbe">Orbe [INT]</option>
+                <option value="Cajado">Cajado [INT]</option>
+                <option value="Dual">Dual [DES]</option>
+                <option value="Lança">Lança [FOR]</option>
+                <option value="Swallow">Swallow [FOR]</option>
+                <option value="Haloblade">Haloblade [DES]</option>
+                <option value="Katana">Katana [FOR]</option>
+                <option value="Estilingue">Estilingue [DES]</option>
+                <option value="Soqueira">Soqueira [FOR]</option>
+                <option value="Martelo">Martelo [FOR]</option>
+                <option value="Bordão">Bordão [FOR]</option>
+                <option value="Sem Arma" selected>Sem Arma [DES]+[FOR]</option>
               </select>
             </td>
           </tr>
@@ -164,10 +166,33 @@
           </tr>
         </table>
         <label>
-          <input id="aleatorio" type="checkbox" name="frutas" value="banana" />
+          <input
+            class="checkbox"
+            id="aleatorio"
+            type="checkbox"
+            name="random"
+            value="random"
+          />
           Gerar Atributos Aleatórios </label
         ><br /><br />
-        <br /><br />
+        <div id="hidden_box_tank">
+          <label id="tank_type_label">
+            <input
+              class="checkbox"
+              id="tank_type"
+              type="checkbox"
+              name="tank-type"
+              value="tank"
+              disabled="true"
+            />
+            TANK Talent
+            <span class="information_t1"
+              >(REF: Na progressão ao atingir nivel 17 o jogador pode escolher
+              entre 3 talentos passivos. Esse aumenta a vida máxima em
+              35%.)</span
+            ></label
+          >
+        </div>
         <button class="noselect" onclick="gerar_inimigo()">
           Gerar Inimigo<span aria-hidden></span>
         </button>
