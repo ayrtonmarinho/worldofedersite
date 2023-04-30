@@ -1,6 +1,6 @@
 class Enemy {
 
-    constructor(name, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, aleatorio) {
+    constructor(name, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, aleatorio, tank_type) {
         this.name = name;
         this.baseVida = baseVida;
         this.nivel = parseInt(nivel);
@@ -15,6 +15,7 @@ class Enemy {
         if (aleatorio == true) {
             this.randomAtributes();
         }
+        this.tank = tank_type;
         this.difficult = this.updateAtributes(tier);
         this.arma = this.myWeapon(arma);
         this.mods = this.setModificadores();
@@ -30,6 +31,18 @@ class Enemy {
 
     updateVidaMaxima() {
         let vida = (this.baseVida + (this.gerarModificador(this.constituicao) * this.nivel)) * this.getTierLifeBonus() + this.generateDice(8);
+        if (this.nivel >= 13) {
+            vida = vida * 1.25;
+        }
+        if (this.nivel >= 17 && this.tank) {
+            vida = vida * 1.35;
+        }
+        if (this.nivel >= 18) {
+            vida = vida + 100;
+        }
+        if (this.nivel == 20) {
+            vida = vida * 6;
+        }
         return vida;
     }
 
@@ -110,7 +123,7 @@ class Enemy {
     }
 
     randomWeapon() {
-        let armas = ["Adaga", "Arco", "Besta", "Firegun", "Espada", "Espadão", "Machado", "Machadão", "Foice", "Orbe", "Cajado", "Dual", "Lança", "Swallow", "Haloblade", "Katana", "Estilingue", "Soqueira", "Martelo", "Sem Arma"];
+        let armas = ["Adaga", "Arco", "Besta", "Firegun", "Espada", "Espadão", "Machado", "Machadão", "Foice", "Orbe", "Cajado", "Dual", "Lança", "Swallow", "Haloblade", "Katana", "Estilingue", "Soqueira", "Martelo", "Sem Arma", "Bordão"];
         let value = Math.random(armas.length - 1);
         let arma = armas[value];
         return arma;
@@ -160,7 +173,7 @@ class Enemy {
     }
 
     allWeapons() {
-        let armas = ["Adaga", "Arco", "Besta", "Firegun", "Espada", "Espadão", "Machado", "Machadão", "Foice", "Orbe", "Cajado", "Dual", "Lança", "Swallow", "Haloblade", "Katana", "Estilingue", "Soqueira", "Martelo", "Sem Arma"]
+        let armas = ["Adaga", "Arco", "Besta", "Firegun", "Espada", "Espadão", "Machado", "Machadão", "Foice", "Orbe", "Cajado", "Dual", "Lança", "Swallow", "Haloblade", "Katana", "Estilingue", "Soqueira", "Martelo", "Sem Arma", "Bordão"]
         return armas;
     }
 
@@ -230,6 +243,9 @@ class Enemy {
         } else if (myWeapon == armas[19]) {
             arma = String(Number(this.mods[0]) + Number(this.mods[1])) + "d4+" + String(this.mods[0]) + "+" + String(this.mods[1]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[0]) + "+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+        } else if (myWeapon == armas[20]) {
+            arma = String(this.mods[0]) + "d10+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
         }
 
         let result = [attack, arma];
@@ -306,7 +322,7 @@ function createEnemy() {
     let tier = selected_tier.options[selected_tier.selectedIndex].text;
     let armadura = Number(document.getElementById('armadura').value);
     let selected_arma = document.getElementById('arma');
-    let arma = selected_arma.options[selected_arma.selectedIndex].text;
+    let arma = selected_arma.options[selected_arma.selectedIndex].value;
     let forca = Number(document.getElementById('for').value);
     let destreza = Number(document.getElementById('des').value)
     let constituicao = Number(document.getElementById('con').value)
@@ -314,16 +330,24 @@ function createEnemy() {
     let sabedoria = Number(document.getElementById('sab').value)
     let carisma = Number(document.getElementById('car').value)
     let aleatorio = document.getElementById('aleatorio')
+    let tank = document.getElementById('tank_type')
 
     let enemy;
 
 
     if (aleatorio.checked) {
-        enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, true);
+        if (nivel >= 17 && tank.checked) {
+            enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, true, true);
+        } else {
+            enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, true, false);
+        }
 
     } else {
-        enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, false);
-
+        if (nivel >= 17 && tank.checked) {
+            enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, false, true);
+        } else {
+            enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, false, false);
+        }
     }
 
 
@@ -409,9 +433,21 @@ function setAtributes(enemy) {
     dano.innerHTML = enemy.dano;
     armadura.innerHTML = enemy.armadura;
 
+}
 
+function checkNivel() {
+    let tank_type = document.getElementById('tank_type');
+    let nivel = document.getElementById('nivel').value;
+    let tank_label = document.getElementById('tank_type_label')
+    if (nivel >= 17) {
+        tank_type.disabled = false;
+        tank_label.style.display = "block";
 
-
+    } else {
+        tank_type.disabled = true;
+        tank_label.style.display = "none";
+        tank_type.checked = false;
+    }
 }
 
 
