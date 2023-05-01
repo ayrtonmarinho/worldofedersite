@@ -44,6 +44,7 @@ epiragon {
     padding: 10px;
     color: #ff94a0;
     transition: color 0.5s;
+    cursor: pointer;
 }
 epiragon:hover {
     color: #fb6f7f;
