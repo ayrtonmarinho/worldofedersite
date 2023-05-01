@@ -41,33 +41,82 @@ td{
 
 epiragon {
     font-size: 20px;
-    padding: 10px;
-    color: #ff94a0;
+    padding: 15px;
+    color: #fb6f7f;
     transition: color 0.5s;
     cursor: pointer;
 }
 epiragon:hover {
-    color: #fb6f7f;
+    color: #ffaeb7;
 }
 
 novyatt {
     font-size: 20px;
-    padding: 10px;
-    color: #5e5e5e;
+    padding: 15px;
+    color: #434343;
     transition: color 0.5s;
+    cursor: pointer;
 }
 novyatt:hover{
-    color: #908f6b;
+    color: #919090;
 }
 
 siaahra {
     font-size: 20px;
-    padding: 10px;
-    color: #5e5e5e;
+    padding: 15px;
+    color: #695d2f;
     transition: color 0.5s;
+    cursor: pointer;
 }
 siaahra:hover{
-    color: #51524e;
+    color: #bc9b17;
+}
+
+maera {
+    font-size: 20px;
+    padding: 15px;
+    color: #079074;
+    transition: color 0.5s;
+    cursor: pointer;
+}
+maera:hover{
+    color: #05e2b6;
+}
+
+thundaera {
+    font-size: 20px;
+    padding: 15px;
+    color: #4919e6;
+    transition: color 0.5s;
+    cursor: pointer;
+    
+}
+thundaera:hover{
+    color: #9676ff;
+}
+
+yggbrasil {
+    font-size: 20px;
+    padding: 15px;
+    color: #267604;
+    transition: color 0.5s;
+    cursor: pointer;
+    
+}
+yggbrasil:hover{
+    color: #78df4c;
+}
+
+glaciterno {
+    font-size: 20px;
+    padding: 15px;
+    color: #4388ad;
+    transition: color 0.5s;
+    cursor: pointer;
+    
+}
+glaciterno:hover{
+    color: #1ac3f6;
 }
 
 
