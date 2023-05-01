@@ -3,10 +3,22 @@ body{
 }
 
 .conteiner{
-    width: 80%;
+    width: 95%;
     height: 700px;
     margin: auto;
     text-align: center;
+}
+
+#map_img {
+    width: 80%;
+    height: 80%;
+    border-radius: 5px;
+}
+
+#nav {
+    width: 100%;
+    border-bottom: 1px solid #e2e2e2;
+    margin-bottom: 10px;
 }
 
 #tr_limitador{
@@ -23,7 +35,7 @@ footer{
 
 a {
     text-decoration: none;
-    font-size: 18pt;
+    font: size 1rem;;
 }
 
 table {
@@ -41,35 +53,110 @@ td{
 
 epiragon {
     font-size: 20px;
-    padding: 10px;
-    color: #ff94a0;
+    padding: 15px;
+    color: #fb6f7f;
     transition: color 0.5s;
     cursor: pointer;
 }
 epiragon:hover {
-    color: #fb6f7f;
+    color: #ffaeb7;
 }
 
 novyatt {
     font-size: 20px;
-    padding: 10px;
-    color: #5e5e5e;
+    padding: 15px;
+    color: #434343;
     transition: color 0.5s;
+    cursor: pointer;
 }
 novyatt:hover{
-    color: #908f6b;
+    color: #919090;
 }
 
 siaahra {
     font-size: 20px;
-    padding: 10px;
-    color: #5e5e5e;
+    padding: 15px;
+    color: #695d2f;
     transition: color 0.5s;
+    cursor: pointer;
 }
 siaahra:hover{
-    color: #51524e;
+    color: #bc9b17;
 }
 
+maera {
+    font-size: 20px;
+    padding: 15px;
+    color: #079074;
+    transition: color 0.5s;
+    cursor: pointer;
+}
+maera:hover{
+    color: #05e2b6;
+}
+
+thundaera {
+    font-size: 20px;
+    padding: 15px;
+    color: #4919e6;
+    transition: color 0.5s;
+    cursor: pointer;
+    
+}
+thundaera:hover{
+    color: #9676ff;
+}
+
+yggbrasil {
+    font-size: 20px;
+    padding: 15px;
+    color: #267604;
+    transition: color 0.5s;
+    cursor: pointer;
+    
+}
+yggbrasil:hover{
+    color: #78df4c;
+}
+
+glaciterno {
+    font-size: 20px;
+    padding: 15px;
+    color: #4388ad;
+    transition: color 0.5s;
+    cursor: pointer;
+    
+}
+glaciterno:hover{
+    color: #1ac3f6;
+}
+
+/*Seletor de Tipo de Escolar CSS*/
+mundo {
+    font-size: 2.5rem;
+    padding: 15px;
+    color: #525453;
+    transition: color 0.5s;
+    cursor: pointer;
+    font-weight: bolder;
+    
+}
+mundo:hover{
+    color: #8e8e8e;
+}
+
+divindades {
+    font-size: 2.5rem;
+    padding: 15px;
+    color: #006eff;
+    transition: color 0.5s;
+    cursor: pointer;
+    font-weight: bolder;
+    
+}
+divindades:hover{
+    color: #569dfa;
+}
 
 .voltar:hover{
     color: rgb(246, 86, 86);
