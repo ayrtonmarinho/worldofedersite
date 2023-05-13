@@ -1,6 +1,11 @@
+//Global Vars
+var escolas_aprendidas = [];
+var limite_escolas = 1;
+
+
 class Enemy {
 
-    constructor(name, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, aleatorio, tank_type) {
+    constructor(name, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, aleatorio, tank_type, escolas) {
         this.name = name;
         this.baseVida = baseVida;
         this.nivel = parseInt(nivel);
@@ -26,6 +31,7 @@ class Enemy {
         this.dano = this.generalAttack()[1];
         this.ataque = this.generalAttack()[0];
         this.skills = [];
+        this.schools = escolas;
 
     }
 
@@ -438,7 +444,23 @@ function setAtributes(enemy) {
 function checkNivel() {
     let tank_type = document.getElementById('tank_type');
     let nivel = document.getElementById('nivel').value;
-    let tank_label = document.getElementById('tank_type_label')
+    let tank_label = document.getElementById('tank_type_label');
+
+    //pontos de conhecimento
+    //pop_school(nivel);
+
+    if (nivel >= 5) {
+        limite_escolas = 2;
+    }
+    if (nivel >= 10) {
+        limite_escolas = 3;
+    }
+    if (nivel >= 15) {
+        limite_escolas = 4;
+    }
+    if (nivel >= 20) {
+        limite_escolas = 5;
+    }
     if (nivel >= 17) {
         tank_type.disabled = false;
         tank_label.style.display = "block";
@@ -448,7 +470,130 @@ function checkNivel() {
         tank_label.style.display = "none";
         tank_type.checked = false;
     }
+    set_pc();
 }
+
+function show_rank() {
+    let selected_school = document.getElementById('schools');
+    let escola = selected_school.options[selected_school.selectedIndex].value;
+
+    let rank = document.getElementById('rank');
+
+    let escolas_elementais = ['Oceano', 'Trovão', 'Natureza', 'Luxuria', 'Festiva', 'Dureza', 'Glacial', 'Solar', 'Lunar', 'Morte', 'Destruição', 'Vazio'];
+    let isRank = false;
+    for (let i = 0; i < escolas_elementais.length; i++) {
+        if (escola == escolas_elementais[i]) {
+            isRank = true;
+        }
+    }
+    if (isRank) {
+        rank.style.display = "block";
+    } else {
+        rank.style.display = "none";
+    }
+
+}
+
+function list_schools() {
+    let selected_school = document.getElementById('schools');
+    let escola = selected_school.options[selected_school.selectedIndex].value;
+    let rank = document.getElementById('rank').value;
+
+
+    if (limite_escolas > 0) {
+
+        let escolas_elementais = ['Oceano', 'Trovão', 'Natureza', 'Luxuria', 'Festiva', 'Dureza', 'Glacial', 'Solar', 'Lunar', 'Morte', 'Destruição', 'Vazio'];
+        let isRank = false;
+        for (let i = 0; i < escolas_elementais.length; i++) {
+            if (escola == escolas_elementais[i]) {
+                isRank = true;
+            }
+        }
+        if (isRank) {
+            if (!not_repeat_school(escola)) {
+                console.log(rank + " " + limite_escolas);
+                if (rank <= limite_escolas) {
+                    let item = escola + ", " + String(numero_romano(rank));
+                    escolas_aprendidas.push(item)
+                    school_print(item);
+                    limite_escolas = limite_escolas - rank;
+                }
+
+            }
+
+        } else {
+            if (!not_repeat_school(escola)) {
+                escolas_aprendidas.push(escola)
+                school_print(escola);
+                limite_escolas = limite_escolas - 1;
+                console.log(limite_escolas);
+            }
+        }
+    }
+    set_pc();
+
+}
+
+function not_repeat_school(school) {
+
+    for (let i = 0; i < escolas_aprendidas.length; i++) {
+        elemento = escolas_aprendidas[i].split(',', 1);
+        if (elemento == school) {
+            return true
+        }
+    }
+}
+
+function set_pc() {
+    pontos_de_conhecimento = document.getElementById('ponto_conhecimento');
+    pontos_de_conhecimento.innerHTML = limite_escolas;
+}
+
+function pop_school(escola) {
+    for (let i = 0; i < escolas_aprendidas.length; i++) {
+        if (escola == escolas_aprendidas[i]) {
+            escolas_aprendidas.pop()
+        }
+    }
+}
+
+function school_print(escola) {
+    let lista_escolas = document.getElementById('escolas_add');
+    let school_element = document.createElement('p');
+    limite = escolas_aprendidas.length;
+
+    school_element.id = escola;
+    school_element.className = 'schoolItem';
+    school_element.title = 'Clickar na escola adicionada ira remove-la.'
+    school_element.addEventListener('click', function () {
+        elemento = document.getElementById(escola);
+        console.log(escolas_aprendidas)
+        limite_escolas = limite_escolas + 1;
+        pop_school(escola);
+
+        set_pc();
+        elemento.parentNode.removeChild(elemento);
+        console.log(escolas_aprendidas);
+    });
+    school_element.innerHTML = escola;
+    lista_escolas.appendChild(school_element);
+}
+
+function numero_romano(valor) {
+    if (valor == 1) {
+        return "I";
+    } else if (valor == 2) {
+        return "II";
+    } else if (valor == 3) {
+        return "III";
+    } else if (valor == 4) {
+        return "IV";
+    } else if (valor == 5) {
+        return "Arconte";
+    }
+}
+
+
 
 
 

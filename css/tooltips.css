@@ -1,0 +1,25 @@
+label[title] {
+    position: relative;
+    /* Define a posição do tooltip */
+  }
+
+  
+label[title]:hover::after {
+    content: attr(title);
+    /* Define o conteúdo do tooltip */
+    background-color: #000;
+    /* Define a cor de fundo do tooltip */
+    color: #fff;
+    /* Define a cor do texto do tooltip */
+    padding: 4px 8px;
+    /* Define o preenchimento do tooltip */
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    transform: translateX(-50%);
+    /* Define a posição e a animação do tooltip */
+    white-space: nowrap;
+    z-index: 1;
+    /* Define a ordem de sobreposição do tooltip */
+}
+  

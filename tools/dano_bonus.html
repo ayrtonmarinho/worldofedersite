@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WOE: Dano Causado</title>
     <link rel="stylesheet" href="/css/dano_causado.css" />
+    <link rel="stylesheet" href="/css/tooltips.css" />
   </head>
   <body>
     <h3 id="voltar" onclick="location.href='/index.html'">Voltar</h3>
@@ -26,7 +27,11 @@
         <input type="number" id="dano_arma" />
 
         <p>
-          <label for="">Dano Critico <i>(ex: 2 = valor padrão)*</i></label>
+          <label
+            title="O dano critico é referente ao acerto critico. O padrão é 2x o dano causado."
+            for=""
+            >Dano Critico <i>(ex: 2 = valor padrão)*</i></label
+          >
         </p>
         <input type="number" id="critical" value="2" />
         <p>

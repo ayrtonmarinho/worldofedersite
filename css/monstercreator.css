@@ -275,3 +275,50 @@ button:hover{
                 0 0 200px #03e9f4;
      -webkit-box-reflect:below 1px linear-gradient(transparent, rgb(37, 37, 37));
 }
+
+optgroup[label]{
+    color: #9558ff;
+}
+
+option{
+    color: white;
+}
+
+#add_escola {
+    border: 1px solid rgb(227, 102, 252);
+    color: #ffffff;
+    font-weight: bolder;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#add_escola:hover {
+    background-color: #9558ff;
+}
+
+#add_escola:active {
+    background-color: #dc5ec5;
+}
+
+#escolas_add{
+    margin-top: 20px;
+}
+
+#ponto_conhecimento{
+    color:yellow;
+    font-size: 20px;
+}
+
+.schoolItem{
+    font-size: 20px;
+    color: #548aff;
+    margin: 5px;
+}
+
+.schoolItem:hover{
+    color: rgb(238, 68, 68);
+
+}
+
