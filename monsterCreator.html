@@ -7,7 +7,7 @@
     <title>WOE: NPC Generator</title>
     <link rel="stylesheet" href="css/monstercreator.css" />
   </head>
-  <body>
+  <body onload="set_pc()">
     <div id="container">
       <div id="bloco1">
         <h1>Gerador Simples de NPCs</h1>
@@ -92,6 +92,99 @@
           </tr>
         </table>
         <br /><br />
+        <div id="escolas">
+          <table id="escolas_T">
+            <tr>
+              <th colspan="2">Escola : Rank</th>
+            </tr>
+            <td>
+              <select name="" id="schools" onchange="show_rank()">
+                <option disabled selected>Escolha uma Escola</option>
+                <optgroup label="Elementais">
+                  <option value="Trovão">Trovão</option>
+                  <option value="Glacial">Glacial</option>
+                  <option value="Oceano">Oceano</option>
+                  <option value="Festiva">Festiva</option>
+                  <option value="Solar">Solar</option>
+                  <option value="Lunar">Lunar</option>
+                  <option value="Natureza">Natureza</option>
+                  <option value="Dureza">Dureza</option>
+                  <option value="Luxuria">Luxuria</option>
+                </optgroup>
+                <optgroup label="Proibidas">
+                  <option value="Morte">Morte</option>
+                  <option value="Destruição">Destruição</option>
+                  <option value="Vazio">Vazio</option>
+                </optgroup>
+                <optgroup label="Esquecidas">
+                  <option value="Ar">Ar</option>
+                  <option value="Luz">Luz</option>
+                </optgroup>
+
+                <optgroup label="Epiragon (Mundo)">
+                  <option value="Ink Magic">Ink Magic</option>
+                  <option value="Mons'Moncê">Mons'Moncê</option>
+                  <option value="Thrownbadder">Thrownbadder</option>
+                  <option value="Arcana Arsenal">Arcana Arsenal</option>
+                  <option value="Time Lord">Time Lord</option>
+                  <option value="Cyrus Knight">Cyrus Knight</option>
+                  <option value="Necromancia">Necromancia</option>
+                  <option value="Magi's">Magi's</option>
+                  <option value="Unvatellus">Unvatellus</option>
+                </optgroup>
+                <optgroup label="Novyatt (Mundo)">
+                  <option value="Smokeyaëgger">Smokeyaëgger</option>
+                  <option value="Witchaegger">Witchaegger</option>
+                  <option value="Ninja">Ninja</option>
+                  <option value="Moppusutairu">Moppusutairu</option>
+                  <option value="Monge Guardião">Monge Guardião</option>
+                  <option value="Hiero Star">Hiero Star</option>
+                  <option value="Elementalista">Elementalista</option>
+                </optgroup>
+                <optgroup label="Siaahra (Mundo)">
+                  <option value="Geomante">Geomante</option>
+                  <option value="Cartomante">Cartomante</option>
+                  <option value="Crystal Singer">Crystal Singer</option>
+                  <option value="Sand Mage">Sand Mage</option>
+                  <option value="Chaos Mage">Chaos Mage</option>
+                </optgroup>
+                <optgroup label="Thundaera (Mundo)">
+                  <option value="Alquimista">Alquimista</option>
+                  <option value="Mana Scholar">Mana Scholar</option>
+                  <option value="Exorcista">Exorcista</option>
+                </optgroup>
+                <optgroup label="Yggbrasil (Mundo)">
+                  <option value="Herbalista">Herbalista</option>
+                  <option value="Fairy Prophet">Fairy Prophet</option>
+                </optgroup>
+                <optgroup label="Glaciterno (Mundo)">
+                  <option value="Drainär">Drainär</option>
+                </optgroup>
+                <optgroup label="Maera (Mundo)">
+                  <option value="Magic Trickster">Magic Trickster</option>
+                </optgroup>
+              </select>
+            </td>
+            <td>
+              <input
+                type="number"
+                name=""
+                class="numberRight"
+                max="5"
+                min="1"
+                id="rank"
+                value="1"
+                style="display: None"
+              />
+            </td>
+          </table>
+          <p>Pontos de Conhecimento: <span id="ponto_conhecimento"></span></p>
+          <br />
+          <span id="add_escola" onclick="list_schools()">Adicionar Escola</span>
+          <br />
+          <div id="escolas_add"></div>
+        </div>
+        <br />
         <h2>Atributos</h2>
         <table>
           <tr>
