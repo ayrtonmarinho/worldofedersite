@@ -176,6 +176,11 @@ select{
     color: #e69a01;
 }
 
+#add_escola{
+    height: 200px;
+    overflow-y: scroll;
+}
+
 
 forca {
     color: #f16018;
@@ -228,6 +233,16 @@ input[type="checkbox"]:disabled {
     height: 50px;
 }
 
+.singleSchool{
+    margin: auto;
+    margin-top: 5px;
+    width: 50%;
+    border: 1px solid rgb(50, 211, 255);
+    border-radius: 4px;
+    background-color: rgb(255, 255, 255);
+    color: #161616;
+    font-weight: bold;
+}
 /* Button Style */
 
 
@@ -258,7 +273,7 @@ button{
   background-color: rgb(37, 37, 37);
   color: #03e9f4;
   font-weight: bold;
-  border: none;
+  border: 1px solid #03e9f4;
   border-radius: 5px;
   letter-spacing: 4px;
   overflow: hidden;
