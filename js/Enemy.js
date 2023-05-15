@@ -343,16 +343,16 @@ function createEnemy() {
 
     if (aleatorio.checked) {
         if (nivel >= 17 && tank.checked) {
-            enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, true, true);
+            enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, true, true, escolas_aprendidas);
         } else {
-            enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, true, false);
+            enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, true, false, escolas_aprendidas);
         }
 
     } else {
         if (nivel >= 17 && tank.checked) {
-            enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, false, true);
+            enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, false, true, escolas_aprendidas);
         } else {
-            enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, false, false);
+            enemy = new Enemy(nome, baseVida, nivel, tier, forca, destreza, constituicao, inteligencia, sabedoria, carisma, arma, armadura, false, false, escolas_aprendidas);
         }
     }
 
@@ -438,7 +438,30 @@ function setAtributes(enemy) {
     ataque.innerHTML = enemy.ataque;
     dano.innerHTML = enemy.dano;
     armadura.innerHTML = enemy.armadura;
+    set_schools(enemy.schools);
 
+}
+
+function set_schools(escolas) {
+    for (let i = 0; i < escolas.length; i++) {
+        let myschools = document.getElementById('myschools');
+        let school_element = document.createElement('p');
+        school_element.id = escolas.escola;
+        school_element.className = 'singleSchool';
+        let escolas_elementais = ['Oceano', 'Trovão', 'Natureza', 'Luxuria', 'Festiva', 'Dureza', 'Glacial', 'Solar', 'Lunar', 'Morte', 'Destruição', 'Vazio'];
+        let isRank = false;
+        for (let f = 0; f < escolas_elementais.length; f++) {
+            if (escolas[i].escola == escolas_elementais[f]) {
+                isRank = true;
+            }
+        }
+        if (isRank) {
+            school_element.innerHTML = escolas[i].escola + " " + numero_romano(escolas[i].rank);
+        } else {
+            school_element.innerHTML = escolas[i].escola;
+        }
+        myschools.appendChild(school_element);
+    }
 }
 
 function checkNivel() {
@@ -449,17 +472,19 @@ function checkNivel() {
     //pontos de conhecimento
     //pop_school(nivel);
 
+    fator_escolas = sum_of_ranks();
+
     if (nivel >= 5) {
-        limite_escolas = 2;
+        limite_escolas = normalize_limit(2 - fator_escolas);
     }
     if (nivel >= 10) {
-        limite_escolas = 3;
+        limite_escolas = normalize_limit(3 - fator_escolas);
     }
     if (nivel >= 15) {
-        limite_escolas = 4;
+        limite_escolas = normalize_limit(4 - fator_escolas);
     }
     if (nivel >= 20) {
-        limite_escolas = 5;
+        limite_escolas = normalize_limit(5 - fator_escolas);
     }
     if (nivel >= 17) {
         tank_type.disabled = false;
@@ -500,7 +525,7 @@ function list_schools() {
     let rank = document.getElementById('rank').value;
 
 
-    if (limite_escolas > 0) {
+    if (limite_escolas > 0 & escola != "none") {
 
         let escolas_elementais = ['Oceano', 'Trovão', 'Natureza', 'Luxuria', 'Festiva', 'Dureza', 'Glacial', 'Solar', 'Lunar', 'Morte', 'Destruição', 'Vazio'];
         let isRank = false;
@@ -513,7 +538,8 @@ function list_schools() {
             if (!not_repeat_school(escola)) {
                 console.log(rank + " " + limite_escolas);
                 if (rank <= limite_escolas) {
-                    let item = escola + ", " + String(numero_romano(rank));
+                    //let item = escola + ", " + String(numero_romano(rank));
+                    let item = { "escola": escola, "rank": rank }
                     escolas_aprendidas.push(item)
                     school_print(item);
                     limite_escolas = limite_escolas - rank;
@@ -523,8 +549,9 @@ function list_schools() {
 
         } else {
             if (!not_repeat_school(escola)) {
-                escolas_aprendidas.push(escola)
-                school_print(escola);
+                let item = { "escola": escola, "rank": 1 }
+                escolas_aprendidas.push(item)
+                school_print(item);
                 limite_escolas = limite_escolas - 1;
                 console.log(limite_escolas);
             }
@@ -537,7 +564,7 @@ function list_schools() {
 function not_repeat_school(school) {
 
     for (let i = 0; i < escolas_aprendidas.length; i++) {
-        elemento = escolas_aprendidas[i].split(',', 1);
+        elemento = escolas_aprendidas[i].escola;
         if (elemento == school) {
             return true
         }
@@ -551,7 +578,7 @@ function set_pc() {
 
 function pop_school(escola) {
     for (let i = 0; i < escolas_aprendidas.length; i++) {
-        if (escola == escolas_aprendidas[i]) {
+        if (escola.escola == escolas_aprendidas[i].escola) {
             escolas_aprendidas.pop()
         }
     }
@@ -562,20 +589,25 @@ function school_print(escola) {
     let school_element = document.createElement('p');
     limite = escolas_aprendidas.length;
 
-    school_element.id = escola;
+    school_element.id = escola.escola;
     school_element.className = 'schoolItem';
     school_element.title = 'Clickar na escola adicionada ira remove-la.'
     school_element.addEventListener('click', function () {
-        elemento = document.getElementById(escola);
-        console.log(escolas_aprendidas)
-        limite_escolas = limite_escolas + 1;
-        pop_school(escola);
+        alertify.confirm('ATENÇÃO', 'Se deseja remover a escola [' + escola.escola + '] confirme abaixo.', function () {
+            elemento = document.getElementById(escola.escola);
+            console.log(escolas_aprendidas)
+            limite_escolas = limite_escolas + Number(escola.rank);
 
-        set_pc();
-        elemento.parentNode.removeChild(elemento);
-        console.log(escolas_aprendidas);
+            pop_school(escola);
+
+            set_pc();
+            elemento.parentNode.removeChild(elemento);
+            console.log(escolas_aprendidas);
+            alertify.success('Escola [' + escola.escola + '] removida!')
+        }
+            , function () { alertify.error('Cancelado!') });
     });
-    school_element.innerHTML = escola;
+    school_element.innerHTML = escola.escola + " " + escola.rank;
     lista_escolas.appendChild(school_element);
 }
 
@@ -593,6 +625,25 @@ function numero_romano(valor) {
     }
 }
 
+function sum_of_ranks() {
+    let soma = 0;
+    console.log("Tamanho do vetor", escolas_aprendidas)
+    console.log("Antes do if " + soma);
+    for (let i = 0; i < escolas_aprendidas.length; i++) {
+        soma += Number(escolas_aprendidas[i].rank);
+        console.log("Dentro do For " + soma);
+
+    }
+
+    return soma;
+}
+
+function normalize_limit(valor) {
+    if (valor < 0) {
+        return 0;
+    }
+    return valor;
+}
 
 
 

@@ -6,12 +6,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WOE: NPC Generator</title>
     <link rel="stylesheet" href="css/monstercreator.css" />
+    <!-- CSS -->
+    <link
+      rel="stylesheet"
+      href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"
+    />
+    <!-- Default theme -->
+    <link
+      rel="stylesheet"
+      href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"
+    />
+    <!-- Semantic UI theme -->
+    <link
+      rel="stylesheet"
+      href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/semantic.min.css"
+    />
+    <!-- Bootstrap theme -->
+    <link
+      rel="stylesheet"
+      href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/bootstrap.min.css"
+    />
   </head>
   <body onload="set_pc()">
     <div id="container">
       <div id="bloco1">
         <h1>Gerador Simples de NPCs</h1>
-        <br /><br />
+        <br />
         <table>
           <tr>
             <td id="firstStatusb1">
@@ -91,7 +111,7 @@
             </td>
           </tr>
         </table>
-        <br /><br />
+        <br />
         <div id="escolas">
           <table id="escolas_T">
             <tr>
@@ -99,7 +119,9 @@
             </tr>
             <td>
               <select name="" id="schools" onchange="show_rank()">
-                <option disabled selected>Escolha uma Escola</option>
+                <option disabled selected value="none">
+                  Escolha uma Escola
+                </option>
                 <optgroup label="Elementais">
                   <option value="Trovão">Trovão</option>
                   <option value="Glacial">Glacial</option>
@@ -267,7 +289,7 @@
             value="random"
           />
           Gerar Atributos Aleatórios </label
-        ><br /><br />
+        ><br />
         <div id="hidden_box_tank">
           <label id="tank_type_label">
             <input
@@ -293,6 +315,7 @@
           Voltar<span aria-hidden></span>
         </button>
       </div>
+      <br />
 
       <div id="bloco2">
         <h1>Personagem Gerado</h1>
@@ -394,11 +417,16 @@
             </td>
           </tr>
         </table>
+        <br /><br />
+        <h2>Escolas</h2>
+        <div id="myschools"></div>
+
         <br /><br /><br />
         <button id="reload" onclick="reloadPage()">Novo Inimigo</button><br />
       </div>
     </div>
 
     <script src="js/Enemy.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
   </body>
 </html>
