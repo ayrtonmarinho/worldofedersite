@@ -10,9 +10,12 @@ body{
 }
 
 #map_img {
-    width: 80%;
-    height: 80%;
-    border-radius: 5px;
+    width: 100%;
+    height: 100%;
+    max-width: 900px;
+    max-height: 700px;
+
+    object-fit: contain;
 }
 
 #nav {
