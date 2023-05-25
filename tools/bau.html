@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/itens.css">
+    <link
+      rel="stylesheet"
+      href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"
+    />
+    <!-- Default theme -->
+    <link
+      rel="stylesheet"
+      href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"
+    />
+    <!-- Semantic UI theme -->
+    <link
+      rel="stylesheet"
+      href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/semantic.min.css"
+    />
+    <!-- Bootstrap theme -->
+    <link
+      rel="stylesheet"
+      href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/bootstrap.min.css"
+    />
+</head>
+<body>
+    <div id="pick_itens">
+        <label for="arma">Arma:</label><br />
+              <select id="arma">
+                <option value="Adaga">Adaga</option>
+                <option value="Arco">Arco</option>
+                <option value="Besta">Besta</option>
+                <option value="Firegun">Firegun</option>
+                <option value="Espada">Espada</option>
+                <option value="Espadão">Espadão</option>
+                <option value="Machado">Machado</option>
+                <option value="Machadão">Machadão</option>
+                <option value="Foice">Foice</option>
+                <option value="Orbe">Orbe</option>
+                <option value="Cajado">Cajado</option>
+                <option value="Dual">Dual</option>
+                <option value="Lança">Lança</option>
+                <option value="Swallow">Swallow</option>
+                <option value="Haloblade">Haloblade</option>
+                <option value="Katana">Katana</option>
+                <option value="Estilingue">Estilingue</option>
+                <option value="Soqueira">Soqueira</option>
+                <option value="Martelo">Martelo</option>
+                <option value="Bordão">Bordão</option>
+                <option value="Random" selected>Aleatorio</option>
+              </select>
+              <p>Espada<especial></especial></p>
+              <p>Espada<raro></raro></p>
+              <p>Espada<lendario></lendario></p>
+              <p>Espada<mitico></mitico></p>
+              <p>Espada<eternal></eternal></p>
+    </div>
+    <div id="drops">
+        <div class="weapon_card" id="weapon_card" onclick="salvarDivComoPNG()">
+            <p class="item_title">Severum</p>
+            <p class="icons"><lendario title="Raridade da arma"></lendario><espada title="Tipo da arma"></espada></p>
+            <p><dano title="Dano da arma">D8</dano></p>
+            <div class="bonus" title="Bonus da arma, add-on" >
+                <p class="bonus_status"><mana></mana><plus></plus><numero>15</numero></p>
+                <p class="bonus_status"><atk></atk><plus></plus><numero>1</numero></p>
+                <p class="bonus_status"><letal></letal><plus></plus><numero>8</numero></p>
+            </div>
+        </div>
+        <br>
+
+        <div class="weapon_card">
+            <p>Nome</p>
+            <p class="icons"><mitico></mitico></p>
+            <p><for></for><dex></dex><con></con></p>
+            <p><int></int><sab></sab><car></car></p>
+            <p><dano></dano></p>
+            <div class="bonus"></div>
+        </div>
+        
+    </div>
+    <div class="dado">
+        <div class="face">
+          <span class="valor">1</span>
+        </div>
+      </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+    <script src="/js/item_card.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+</body>
+</html>

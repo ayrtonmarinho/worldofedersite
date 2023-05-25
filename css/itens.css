@@ -1,0 +1,462 @@
+:root {
+  --text-shadow: -1px 1px 2px #000000;
+  --font-size-atb: 14px;
+  --attribute-size: 35px;
+  --bonus-symbol: 10px;
+  --bonus-value: 20px;
+}
+
+
+.item_title{
+  margin-bottom: -10px;
+  font-size: 25px;
+  font-weight: bold;
+  text-shadow: var(--text-shadow);
+  color: rgb(94, 85, 37);
+}
+
+/*Raridades*/
+especial{
+    border: 0.2px solid rgb(251, 255, 212);
+    border-radius: 3px;
+    box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+    background-color: rgb(185, 173, 255);
+    color: rgb(226, 226, 226);
+    font-weight: bold;
+    margin-left: 2px;
+    padding: 2px;
+    font-size: 11px;
+    text-shadow: -1px 1px 2px #000000;
+    
+}
+
+especial::before{
+  content: "Especial";
+}
+
+raro{
+    border: 0.2px solid rgb(251, 255, 212);
+    border-radius: 3px;
+    box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+    background-color: rgb(117, 99, 16);
+    color: rgb(226, 226, 226);
+    font-weight: bold;
+    margin-left: 2px;
+    padding: 2px;
+    font-size: 11px;
+    text-shadow: -1px 1px 2px #000000;
+    
+}
+
+raro::before{
+  content: "Raro";
+}
+
+lendario{
+    border: 0.2px solid rgb(251, 255, 212);
+    border-radius: 3px;
+    box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(-45deg,#180142, #e6c8ff, #8a09f5, #94affa, #9667e7, #7b7bf1, #dcbdfc, #4707dd, #6c00f8);
+    background-size: 800% 800%;
+    animation: gradient-animation 8s ease infinite;
+    color: rgb(226, 226, 226);
+    font-weight: bold;
+    margin-left: 2px;
+    padding: 2px;
+    font-size: 11px;
+    text-shadow: -1px 1px 2px #000000;
+    
+}
+lendario::before{
+  content: "Lendário";
+}
+
+mitico{
+    border: 0.2px solid rgb(251, 255, 212);
+    border-radius: 3px;
+    box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(-45deg, #ff2bed, #f28dff, #ee38ff, #c8aeeb, #ff3ea8, #bc7bf1, #f561fa, #f849f8, #ff008c);
+    background-size: 800% 800%;
+    animation: gradient-animation 8s ease infinite;
+    color: rgb(226, 226, 226);
+    font-weight: bold;
+    margin-left: 2px;
+    padding: 2px;
+    font-size: 11px;
+    text-shadow: -1px 1px 2px #000000;
+    
+}
+
+mitico::before{
+  content: "Mítico";
+}
+
+@keyframes gradient-animation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+eternal{
+    border: 0.2px solid rgb(251, 255, 212);
+    border-radius: 3px;
+    box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(-45deg, #3fd2ff, #a4fff7, #24beda, #00b7ff, #6495ED, #00BFFF, #87CEEB, #ADD8E6, #0ec5f3);
+    background-size: 800% 800%;
+    animation: gradient-animation 8s ease infinite;
+    color: rgb(226, 226, 226);
+    font-weight: bold;
+    margin-left: 2px;
+    padding: 2px;
+    font-size: 11px;
+    text-shadow: -1px 1px 2px #000000;
+    
+}
+
+eternal::before{
+  content: "Eternal";
+}
+
+.weapon_card{
+  margin: auto;
+  width: 200px;
+  height: 300px;
+  border: 3px solid rgb(71, 61, 27);
+  border-radius: 3px;
+  border-style:outset;
+  text-align: center;
+  background-color: #cec4b2;
+  
+}
+
+.bonus_status{
+  margin-top:-14px ;
+}
+
+.bonus{
+  width: 150px;
+  height: 100px;
+  margin: auto;
+}
+
+/*Atributos Tags*/
+dex{
+  width: var(--attribute-size);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(211, 185, 70);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 1px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+dex::before{
+  content: "DES";
+}
+
+for{
+  width: var(--attribute-size);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(201, 73, 34);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+for::before{
+  content: "FOR";
+}
+
+con{
+  width: var(--attribute-size);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(255, 97, 97);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+con::before{
+  content: "CON";
+}
+
+int{
+  width: var(--attribute-size);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(28, 118, 221);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+int::before{
+  content: "INT";
+}
+
+sab{
+  width: var(--attribute-size);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(22, 145, 69);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+sab::before{
+  content: "SAB";
+}
+
+car{
+  width: var(--attribute-size);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(185, 80, 211);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+car::before{
+  content: "CAR";
+}
+
+
+/*Tipo de Arma*/
+
+espada{
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(100, 100, 100);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: 11px;
+  text-shadow: var(--text-shadow);
+  
+}
+espada::before{
+  content: "Espada";
+}
+
+
+
+plus{
+  width: var(--bonus-symbol);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(83, 248, 105);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 1px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: var(--text-shadow);
+  
+}
+plus::before{
+  content: "⇧";
+}
+
+minus{
+  width: var(--bonus-symbol);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(231, 135, 135);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 1px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: var(--text-shadow);
+  
+}
+minus::before{
+  content: "⇩";
+}
+
+
+dano{
+  display: flex;
+  width: 56px;
+  height: 56px;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(255, 0, 43);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin:auto;
+  margin-bottom: 30px;
+  padding: 2px;
+  font-size: 28px;
+  text-shadow: var(--text-shadow);
+  justify-content: center;
+  align-items:center;
+  
+  
+}
+
+numero{
+  width: var(--bonus-value);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(51, 49, 49);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 1px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: var(--text-shadow);
+  
+}
+
+ca{
+  width: var(--attribute-size);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(61, 59, 59);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 1px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: var(--text-shadow);
+  
+}
+ca::before{
+  content: "CA";
+}
+
+crt{
+  width: var(--attribute-size);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(253, 88, 37);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 1px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: var(--text-shadow);
+  
+}
+crt::before{
+  content: "CRT";
+}
+
+mana{
+  width: var(--attribute-size);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(27, 126, 255);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 1px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: var(--text-shadow);
+  
+}
+mana::before{
+  content: "Mana";
+}
+
+atk{
+  width: var(--attribute-size);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(49, 49, 48);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 1px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: var(--text-shadow);
+  
+}
+atk::before{
+  content: "ATK";
+}
+
+letal{
+  width: var(--attribute-size);
+  display: inline-block;
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(-45deg, #2a2a2b, #2a1230, #808283, #6d0202, #3a3b3d, #5e071d, #4c4e4e, #1d0101, #ca0a0a);
+  background-size: 800% 800%;
+  animation: gradient-animation 8s ease infinite;
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 1px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: var(--text-shadow);
+  
+}
+letal::before{
+  content: "Letal";
+}
+
+
+
+
+
+
