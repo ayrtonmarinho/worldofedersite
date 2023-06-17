@@ -1,0 +1,38 @@
+[
+    {
+        "name":"Comum",
+        "id": 1,
+        "html_tag":"<comum></comum>"
+
+    },
+    {
+        "name":"Especial",
+        "id": 2,
+        "html_tag":"<especial></especial>"
+
+    },
+    {
+        "name":"Raro",
+        "id": 3,
+        "html_tag":"<raro></raro>"
+
+    },
+    {
+        "name":"Lendário",
+        "id": 4,
+        "html_tag":"<lendario></lendario>"
+
+    },
+    {
+        "name":"Mítico",
+        "id": 5,
+        "html_tag":"<mitico></mitico>"
+
+    },
+    {
+        "name":"Eternal",
+        "id": 6,
+        "html_tag":"<eternal></eternal>"
+
+    }
+]
