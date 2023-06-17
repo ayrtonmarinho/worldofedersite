@@ -169,8 +169,10 @@ class Enemy {
             weaponType[0] = weaponType[0] + "+5";
             result = weaponType;
         } else if (tier == 'Boss') {
-            weaponType[1] = "3x(" + weaponType[1] + ")";
-            weaponType[0] = weaponType[0] + "+15";
+            if (this.nivel >= 20) {
+                weaponType[1] = "2x(" + weaponType[1] + ")";
+            }
+            weaponType[0] = weaponType[0] + "+"+String(this.nivel);
             result = weaponType;
         } else if (tier == 'Normal') {
             result = weaponType;

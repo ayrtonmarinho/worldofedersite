@@ -1,0 +1,34 @@
+[
+    {
+        "weapon_type":"Arco",
+        "html_tag":"<arco></arco>",
+        "weapon_name":"Arco",
+        "wp_dmg":[10,12],
+        "wp_critical":[20,19]
+        
+    },
+    {
+        "weapon_type":"Adaga",
+        "html_tag":"<adaga></adaga>",
+        "weapon_name":"Adaga",
+        "wp_dmg":[4,6],
+        "wp_critical":[19,18]
+        
+    },
+    {
+        "weapon_type":"Espada",
+        "html_tag":"<espada></espada>",
+        "weapon_name":"Espada",
+        "wp_dmg":[8,10],
+        "wp_critical":[20]
+        
+    },
+    {
+        "weapon_type":"Espada",
+        "html_tag":"<chicote></chicote>",
+        "weapon_name":"Chicote",
+        "wp_dmg":[8,10],
+        "wp_critical":[20]
+        
+    }
+]
