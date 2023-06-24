@@ -31,8 +31,11 @@ h1{
 
 #bloco2{
   text-align: center;
+  width: 500px;
+  height: 80%;
   margin: auto;
   padding: 5px;
+  border: 1px solid;
   border-color: wheat;
   border: solid;
   display: none;
@@ -47,17 +50,22 @@ h1{
   border-right: none;
 }
 
+
+#card_char{
+    background-color: rgb(37, 37, 37);;
+}
+
 table{
     margin: auto;
 }
 
 #td_b2{
-    width: 120px;
-    text-align: left;
+    width: 150px;
+    
 }
 
 #td_name{
-    text-align: left;
+    width: 500px;
 }
 
 #char_stats{
@@ -66,7 +74,8 @@ table{
 }
 
 #char_atributes{
-    width: 240px;
+    margin: auto;
+    width: 350px;
 }
 
 #firstStatusb1{
