@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WOE: NPC Generator</title>
     <link rel="stylesheet" href="css/monstercreator.css" />
+    <link rel="stylesheet" href="css/itens.css" />
     <!-- CSS -->
     <link
       rel="stylesheet"
@@ -179,7 +180,7 @@
                 <optgroup label="Yggbrasil (Mundo)">
                   <option value="Herbalista">Herbalista</option>
                   <option value="Fairy Prophet">Fairy Prophet</option>
-                  <option value="Druida">Fairy Prophet</option>
+                  <option value="Druida">Druida</option>
                 </optgroup>
                 <optgroup label="Glaciterno (Mundo)">
                   <option value="Drainär">Drainär</option>
@@ -325,49 +326,46 @@
 
       <div id="bloco2">
         <h1>Personagem Gerado</h1>
-        <br /><br />
+        <div id="card_char">
+          <br /><br />
+          <pname id="char_name"></pname>
+          
         <table id="char_stats">
           <tr>
-            <td id="td_name" colspan="3">
-              <strong>Nome:</strong> <span id="char_name"> </span>
+            <td id="td_b1">
+              <nivel></nivel><ns1 id="char_lvl"></ns1></span>
+            </td>
+            <td id="td_b1">
+              <tier></tier><span id="char_tier"></span>
             </td>
           </tr>
           <tr>
             <td id="td_b1">
-              <strong>Nível: </strong><span id="char_lvl"></span>
+              <mana></mana><ns1 id="char_mana"></ns1>
             </td>
             <td id="td_b1">
-              <strong>Tier: </strong> <span id="char_tier"></span>
-            </td>
-          </tr>
-          <tr>
-            <td id="td_b1">
-              <strong>Mana: </strong><span id="char_mana"></span>
-            </td>
-            <td id="td_b1">
-              <strong>Vida Máxima: </strong> <span id="char_vida"></span>
+              <vida></vida><ns1 id="char_vida"></ns1>
             </td>
           </tr>
           <tr>
-            <td id="td_b1"><strong>CA: </strong> <span id="char_ca"></span></td>
+            <td id="td_b1"><ca></ca><ns1 id="char_ca"></ns1></td>
             <td id="td_b1">
-              <strong>Armadura: </strong><span id="char_armadura"></span>
+              <armadura></armadura><ns1 id="char_armadura"></ns1>
             </td>
           </tr>
           <tr>
             <td id="td_b1" colspan="2">
-              <strong>Arma: </strong><span id="char_arma"></span>
+              <arma></arma><ns1 id="char_arma"></ns1>
             </td>
           </tr>
           <tr>
             <td id="td_b1" colspan="2">
-              <strong>Ataque: </strong>
-              <span id="char_ataque"></span>
+              <ataque></ataque><ns1 id="char_ataque"></ns1>
             </td>
           </tr>
           <tr>
             <td id="td_b1" colspan="2">
-              <strong>Dano: </strong> <span id="char_dano"></span>
+             <dmg></dmg><ns1 id="char_dano"></ns1>
             </td>
           </tr>
         </table>
@@ -376,50 +374,50 @@
         <table id="char_atributes">
           <tr>
             <td id="td_b2">
-              <strong>FOR:</strong>
-              <span id="e_forca" class="atrb"></span>&nbsp;<span
+              <for></for>
+              <ns2 id="e_forca" class="atrb"></ns2>&nbsp;<ns2
                 id="mod_for"
                 class="mod"
-              ></span>
+              ></ns2>
             </td>
             <td id="td_b2">
-              <strong>INT:</strong>
-              <span id="e_inteligencia" class="atrb"></span>&nbsp;<span
+              <int></int>
+              <ns2 id="e_inteligencia" class="atrb"></ns2>&nbsp;<ns2
                 id="mod_int"
                 class="mod"
-              ></span>
+              ></ns2>
             </td>
           </tr>
           <tr>
             <td id="td_b2">
-              <strong>DES:</strong>
-              <span id="e_destreza" class="atrb"></span>&nbsp;<span
+              <dex></dex>
+              <ns2 id="e_destreza" class="atrb"></ns2>&nbsp;<ns2
                 id="mod_des"
                 class="mod"
-              ></span>
+              ></ns2>
             </td>
             <td id="td_b2">
-              <strong>SAB:</strong>
-              <span id="e_sabedoria" class="atrb"></span>&nbsp;<span
+              <sab></sab>
+              <ns2 id="e_sabedoria" class="atrb"></ns2>&nbsp;<ns2
                 id="mod_sab"
                 class="mod"
-              ></span>
+              ></ns2>
             </td>
           </tr>
           <tr>
             <td id="td_b2">
-              <strong>CON:</strong>
-              <span id="e_constituicao" class="atrb"></span>&nbsp;<span
+              <con></con>
+              <ns2 id="e_constituicao" class="atrb"></ns2>&nbsp;<ns2
                 id="mod_con"
                 class="mod"
-              ></span>
+              ></ns2>
             </td>
             <td id="td_b2">
-              <strong>CAR:</strong>
-              <span id="e_carisma" class="atrb"></span>&nbsp;<span
+              <car></car>
+              <ns2 id="e_carisma" class="atrb"></ns2>&nbsp;<ns2
                 id="mod_car"
                 class="mod"
-              ></span>
+              ></ns2>
             </td>
           </tr>
         </table>
@@ -428,11 +426,13 @@
         <div id="myschools"></div>
 
         <br /><br /><br />
+        </div>
         <button id="reload" onclick="reloadPage()">Novo NPC</button><br />
       </div>
     </div>
 
     <script src="js/Enemy.js"></script>
     <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
   </body>
 </html>

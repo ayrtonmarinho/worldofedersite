@@ -323,6 +323,8 @@ function gerar_inimigo() {
 
 function createEnemy() {
 
+    let card_char = document.getElementById('card_char');
+
     let nome = document.getElementById('nome').value;
     let baseVida = Number(document.getElementById('vida_base').value);
     let nivel = document.getElementById('nivel').value;
@@ -363,6 +365,8 @@ function createEnemy() {
 
     go_to_exibirEnemy();
 
+    make_char_card(card_char)
+
     console.log(enemy);
 }
 
@@ -386,9 +390,24 @@ function reloadPage() {
 
 function readable_mod(value) {
     if (value >= 0) {
-        return String("( +" + value + " )");
+        return String("+" + value);
     }
-    return String("( " + value + " )");
+    return String(value);
+}
+
+function setTierTag(enemy) {
+   
+    var tierTag = document.createElement('boss');
+    if (enemy.tier == 'Boss') {
+        var tierTag = document.createElement('boss');
+        return tierTag;
+    } else if (enemy.tier == "Elite") {
+        var tierTag = document.createElement('elite');
+        return tierTag;
+    } else {
+        var tierTag = document.createElement('normal');
+        return tierTag;
+    }
 }
 
 function setAtributes(enemy) {
@@ -429,10 +448,10 @@ function setAtributes(enemy) {
     mod_sab.innerHTML = readable_mod(enemy.mods[4]);
     carisma.innerHTML = enemy.carisma;
     mod_car.innerHTML = readable_mod(enemy.mods[5]);
-
+    
     name.innerHTML = enemy.name;
     nivel.innerHTML = enemy.nivel;
-    tier.innerHTML = enemy.tier;
+    tier.appendChild(setTierTag(enemy));
     vida.innerHTML = enemy.vidaMaxima;
     mana.innerHTML = enemy.manaMaxima;
     ca.innerHTML = enemy.Ca;
@@ -647,6 +666,31 @@ function normalize_limit(valor) {
     return valor;
 }
 
+function make_char_card(elemento) {
+    elemento.addEventListener('click', function () {
+        alertify.confirm('Salvar Card', 'Deseja salvar o item como PNG.', function () {
+          //var div = document.getElementById("card_char");
+          var scale = 1.15; // Aumentar a escala por 2 (pode ajustar conforme necessário)
+        
+          // Definir a largura e a altura da div com base na escala
+          elemento.style.width = elemento.offsetWidth * scale + "px";
+          elemento.style.height = elemento.offsetHeight * scale + "px";
+        
+          html2canvas(elemento, { scale: scale }).then(function(canvas) {
+            var img = canvas.toDataURL("image/png");
+            var link = document.createElement('a');
+            link.href = img;
+            link.download = 'elemento_imagem.png';
+            link.click();
+        
+            // Redefinir a largura e a altura da elemento para o valor original
+            elemento.style.width = "";
+            elemento.style.height = "";
+          });
+        }
+            , function () { alertify.error('Cancelado!') });
+    });
+}
 
 
 

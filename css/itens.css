@@ -1,10 +1,14 @@
 :root {
   --text-shadow: -1px 1px 2px #000000;
   --font-size-atb: 14px;
-  --attribute-size: 40px;
+  --attribute-size: 75px;
+  --attribute-size-names: 75px;
+  --bonus-value-n1: 25px;
+  --bonus-value-n2: 35px;
   --bonus-symbol: 10px;
   --bonus-value: 20px;
-  --font-card: 
+  --font-card: ;
+  --text-aling: center;
 }
 
 body {
@@ -153,13 +157,14 @@ eternal::before{
 dex{
   width: var(--attribute-size);
   display: inline-block;
+  text-align: var(--text-aling);
   border: 0.2px solid rgb(251, 255, 212);
   border-radius: 3px;
   box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
   background-color: rgb(211, 185, 70);
   color: rgb(226, 226, 226);
   font-weight: bold;
-  margin: 1px;
+  margin: 3px;
   padding: 2px;
   font-size: var(--font-size-atb);
   text-shadow: -1px 1px 2px #000000;
@@ -172,6 +177,7 @@ dex::before{
 for{
   width: var(--attribute-size);
   display: inline-block;
+  text-align: var(--text-aling);
   border: 0.2px solid rgb(251, 255, 212);
   border-radius: 3px;
   box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
@@ -191,6 +197,7 @@ for::before{
 con{
   width: var(--attribute-size);
   display: inline-block;
+  text-align: var(--text-aling);
   border: 0.2px solid rgb(251, 255, 212);
   border-radius: 3px;
   box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
@@ -210,6 +217,7 @@ con::before{
 int{
   width: var(--attribute-size);
   display: inline-block;
+  text-align: var(--text-aling);
   border: 0.2px solid rgb(251, 255, 212);
   border-radius: 3px;
   box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
@@ -229,6 +237,7 @@ int::before{
 sab{
   width: var(--attribute-size);
   display: inline-block;
+  text-align: var(--text-aling);
   border: 0.2px solid rgb(251, 255, 212);
   border-radius: 3px;
   box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
@@ -248,6 +257,7 @@ sab::before{
 car{
   width: var(--attribute-size);
   display: inline-block;
+  text-align: var(--text-aling);
   border: 0.2px solid rgb(251, 255, 212);
   border-radius: 3px;
   box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
@@ -349,6 +359,40 @@ dano{
 numero{
   width: var(--bonus-value);
   display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(51, 49, 49);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 1px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: var(--text-shadow);
+  
+}
+
+ns1{
+  display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(51, 49, 49);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 1px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: var(--text-shadow);
+  
+}
+
+ns2{
+  width: var(--bonus-value-n2);
+  display: inline-block;
+  text-align: var(--text-aling);
   border: 0.2px solid rgb(251, 255, 212);
   border-radius: 3px;
   box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
@@ -365,13 +409,14 @@ numero{
 ca{
   width: var(--attribute-size);
   display: inline-block;
+  text-align: var(--text-aling);
   border: 0.2px solid rgb(251, 255, 212);
   border-radius: 3px;
   box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
-  background-color: rgb(61, 59, 59);
+  background-color: rgb(211, 185, 70);
   color: rgb(226, 226, 226);
   font-weight: bold;
-  margin: 1px;
+  margin: 3px;
   padding: 2px;
   font-size: var(--font-size-atb);
   text-shadow: var(--text-shadow);
@@ -390,7 +435,7 @@ crt{
   background-color: rgb(253, 88, 37);
   color: rgb(226, 226, 226);
   font-weight: bold;
-  margin: 1px;
+  margin: 3px;
   padding: 2px;
   font-size: var(--font-size-atb);
   text-shadow: var(--text-shadow);
@@ -403,13 +448,14 @@ crt::before{
 mana{
   width: var(--attribute-size);
   display: inline-block;
+  text-align: var(--text-aling);
   border: 0.2px solid rgb(251, 255, 212);
   border-radius: 3px;
   box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
   background-color: rgb(27, 126, 255);
   color: rgb(226, 226, 226);
   font-weight: bold;
-  margin: 1px;
+  margin: 3px;
   padding: 2px;
   font-size: var(--font-size-atb);
   text-shadow: var(--text-shadow);
@@ -459,8 +505,222 @@ letal::before{
   content: "Letal";
 }
 
+nivel{
+  width: var(--attribute-size-names);
+  display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(116, 100, 50);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+nivel::before{
+  content: "Nível";
+}
 
 
+tier{
+  width: var(--attribute-size-names);
+  display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(27, 27, 26);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+tier::before{
+  content: "Tier";
+}
+
+boss{
+  width: var(--attribute-size-names);
+  display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(108, 17, 168);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+boss::before{
+  content: "Boss";
+}
+
+elite{
+  width: var(--attribute-size-names);
+  display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(255, 76, 5);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+elite::before{
+  content: "Elite";
+}
+
+normal{
+  width: var(--attribute-size-names);
+  display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(112, 110, 110);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 1px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+normal::before{
+  content: "Normal";
+}
+
+vida{
+  width: var(--attribute-size-names);
+  display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(255, 59, 85);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+vida::before{
+  content: "Vida";
+}
+
+arma{
+  width: var(--attribute-size-names);
+  display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(241, 121, 40);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+arma::before{
+  content: "Arma";
+}
+
+ataque{
+  width: var(--attribute-size-names);
+  display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(18, 19, 17);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+ataque::before{
+  content: "Ataque";
+}
+
+armadura{
+  width: var(--attribute-size-names);
+  display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(112, 114, 90);
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+armadura::before{
+  content: "Armadura";
+}
+
+dmg{
+  width: var(--attribute-size-names);
+  display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(60, 60, 60);;
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  padding: 2px;
+  font-size: var(--font-size-atb);
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+dmg::before{
+  content: "Dano";
+}
 
 
-
+pname{
+  width: 400px;
+  display: inline-block;
+  text-align: var(--text-aling);
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background-color: rgb(17, 16, 16);;
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin: 3px;
+  margin-bottom: 5px;
+  padding: 2px;
+  font-size: 18px;
+  text-shadow: -1px 1px 2px #000000;
+  
+}
