@@ -1,0 +1,34 @@
+[
+    {
+        "label": "moeda",
+        "nome": "Ouro",
+        "raridade": "comum",
+        "descricao": "Moeda de troca para compra e venda.",
+        "chance": 0.5,
+        "qtd": 50
+    },
+    {
+        "label": "moeda",
+        "nome": "Prata",
+        "raridade": "comum",
+        "descricao": "Moeda de troca para compra e venda.",
+        "chance": 0.7,
+        "qtd": 600
+    },
+    {
+        "label": "moeda",
+        "nome": "Platina",
+        "raridade": "comum",
+        "descricao": "Moeda de troca para compra e venda.",
+        "chance": 0.2,
+        "qtd": 1
+    },
+    {
+        "label": "espada",
+        "nome": "Ouro",
+        "raridade": "comum",
+        "descricao": "Moeda de troca para compra e venda.",
+        "chance": 0.5,
+        "qtd": 50
+    },
+]
