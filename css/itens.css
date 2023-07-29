@@ -79,6 +79,27 @@ lendario::before{
   content: "Lendário";
 }
 
+
+caotico{
+  border: 0.2px solid rgb(251, 255, 212);
+  border-radius: 3px;
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(-45deg,#fd003f, #f7aaaa, #f50909, #b71c1c, #e76787, #f17b7b, #cd0024, #db0000, #fb0e49);
+  background-size: 800% 800%;
+  animation: gradient-animation 8s ease infinite;
+  color: rgb(226, 226, 226);
+  font-weight: bold;
+  margin-left: 2px;
+  padding: 2px;
+  font-size: 11px;
+  text-shadow: -1px 1px 2px #000000;
+  
+}
+caotico::before{
+content: "Caótico";
+}
+
+
 mitico{
     border: 0.2px solid rgb(251, 255, 212);
     border-radius: 3px;

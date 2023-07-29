@@ -14,32 +14,29 @@
     <nav></nav>
     <main class="container">
       <div>
-        <h1><i>Dano Causado</i></h1>
+        <h1>Dano/Cura Causado</h1>
         <p>
-          <label for="">Dano dos Dados <i>(soma do dano dos dados)*</i></label>
+          <label for="">Dano/Cura dos Dados<br> <i class="tooltip-1">(soma do dano dos dados)*</i></label>
         </p>
         <input type="number" id="dano_dado" />
         <p>
           <label for=""
-            >Dano Bonus da Arma <i>(ex: 30 = 30% de bonus)*</i></label
+            >Bonus de Dano/Cura <br><i class="tooltip-1">(para cada bonificação separe por virgula, 
+              <br>exemplo: vc possui 30%+40%+60%, deve colocar 30,40,60)*</i></label
           >
         </p>
-        <input type="number" id="dano_arma" />
+        <input type="text" id="dano_arma" />
 
         <p>
           <label
             title="O dano critico é referente ao acerto critico. O padrão é 2x o dano causado."
             for=""
-            >Dano Critico <i>(ex: 2 = valor padrão)*</i></label
+            >Dano Critico <br><i class="tooltip-1">(ex: 2 = valor padrão)*</i></label
           >
         </p>
         <input type="number" id="critical" value="2" />
-        <p>
-          <label for="">Outros Bonus<i>(ex: 10 = 10% de bonus)</i></label>
-        </p>
-        <input type="number" id="outros" />
         <p><button onclick="calcular_dano()">Calcular</button></p>
-        <p>Dano Total Causado</p>
+        <p>Dano/Cura Total Causado</p>
         <p id="dano_total"></p>
         <p id="warning"><i>* Campos obrigatórios.</i></p>
       </div>

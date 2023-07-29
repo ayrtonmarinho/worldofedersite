@@ -22,16 +22,15 @@ h1{
     align-items: center;
     justify-content: center;
     padding: 20px;
-    width: 100%;
+    width: 40%;
     height: 100%;
-    max-width: 500px;
-    max-height: 1000px;
     margin: auto;
     text-align: center;
     background: transparent;
     border-radius: 20px;
     border: 2px solid rgba(255, 255, 255, .5);
     backdrop-filter: blur(75px);
+    margin-bottom: 5px;
 }
 
 #dano_total {
@@ -76,8 +75,13 @@ p{
     color: rgb(255, 255, 255);
 }
 
+.tooltip-1{
+    color: rgb(56, 161, 7);
+    font-size: 12px;
+}
+
 input{
-    width: 100%;
+    width: 80%;
     text-align: center;
     height: 47px;
     background-color: rgba(255, 255, 255, 0.32);
@@ -94,6 +98,10 @@ input{
     color: rgb(255, 255, 255);
     cursor: pointer;
     transition: 0.5s;
+    margin-top: 20px;
+    margin-left: 30px;
+    width: 50px;
+    height: 10px;
 }
 
 #voltar:hover{
