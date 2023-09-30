@@ -129,7 +129,7 @@ class Enemy {
     }
 
     randomWeapon() {
-        let armas = ["Adaga", "Arco", "Besta", "Firegun", "Espada", "Espadão", "Machado", "Machadão", "Foice", "Orbe", "Cajado", "Dual", "Lança", "Swallow", "Haloblade", "Katana", "Estilingue", "Soqueira", "Martelo", "Sem Arma", "Bordão"];
+        let armas = ["Adaga", "Arco", "Besta", "Firegun", "Espada", "Espadão", "Machado", "Machadão", "Foice", "Orbe", "Cajado", "Dual", "Lança", "Swallow", "Haloblade", "Katana", "Estilingue", "Soqueira", "Martelo", "Sem Arma", "Bordão","FORÇA","DESTREZA","CONSTITUIÇÃO","INTELIGÊNCIA","SABEDORIA","CARISMA"];
         let value = Math.random(armas.length - 1);
         let arma = armas[value];
         return arma;
@@ -181,7 +181,7 @@ class Enemy {
     }
 
     allWeapons() {
-        let armas = ["Adaga", "Arco", "Besta", "Firegun", "Espada", "Espadão", "Machado", "Machadão", "Foice", "Orbe", "Cajado", "Dual", "Lança", "Swallow", "Haloblade", "Katana", "Estilingue", "Soqueira", "Martelo", "Sem Arma", "Bordão"]
+        let armas = ["Adaga", "Arco", "Besta", "Firegun", "Espada", "Espadão", "Machado", "Machadão", "Foice", "Orbe", "Cajado", "Dual", "Lança", "Swallow", "Haloblade", "Katana", "Estilingue", "Soqueira", "Martelo", "Sem Arma", "Bordão","FORÇA","DESTREZA","CONSTITUIÇÃO","INTELIGÊNCIA","SABEDORIA","CARISMA"]
         return armas;
     }
 
@@ -254,6 +254,24 @@ class Enemy {
         } else if (myWeapon == armas[20]) {
             arma = String(this.mods[0]) + "d10+" + String(this.mods[0]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+        }else if (myWeapon == armas[21]) {
+            arma = String(this.mods[0]) + "d12+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+        }else if (myWeapon == armas[22]) {
+            arma = String(this.mods[1]) + "d6+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+            attack = "D20+" + String(this.mods[1]) + "+" + String(this.proficiencia);
+        }else if (myWeapon == armas[23]) {
+            arma = String(this.mods[2]) + "d8+" + String(this.mods[2]) + "+" + String(this.proficiencia);
+            attack = "D20+" + String(this.mods[2]) + "+" + String(this.proficiencia);
+        }else if (myWeapon == armas[24]) {
+            arma = String(this.mods[3]) + "d14+" + String(this.mods[3]) + "+" + String(this.proficiencia);
+            attack = "D20+" + String(this.mods[3]) + "+" + String(this.proficiencia);
+        }else if (myWeapon == armas[25]) {
+            arma = String(this.mods[4]) + "d8+" + String(this.mods[4]) + "+" + String(this.proficiencia);
+            attack = "D20+" + String(this.mods[4]) + "+" + String(this.proficiencia);
+        }else if (myWeapon == armas[26]) {
+            arma = String(this.mods[5]) + "d10+" + String(this.mods[5]) + "+" + String(this.proficiencia);
+            attack = "D20+" + String(this.mods[5]) + "+" + String(this.proficiencia);
         }
 
         let result = [attack, arma];
