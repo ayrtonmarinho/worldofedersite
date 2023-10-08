@@ -10,7 +10,7 @@ class Enemy {
         this.baseVida = baseVida;
         this.nivel = parseInt(nivel);
         this.tier = tier;
-        this.proficiencia = Math.floor(this.nivel / 2) + 1;
+        this.proficiencia = this.setProficiencia();
         this.forca = parseInt(forca);
         this.destreza = parseInt(destreza);
         this.constituicao = parseInt(constituicao);
@@ -129,7 +129,7 @@ class Enemy {
     }
 
     randomWeapon() {
-        let armas = ["Adaga", "Arco", "Besta", "Firegun", "Espada", "Espadão", "Machado", "Machadão", "Foice", "Orbe", "Cajado", "Dual", "Lança", "Swallow", "Haloblade", "Katana", "Estilingue", "Soqueira", "Martelo", "Sem Arma", "Bordão","FORÇA","DESTREZA","CONSTITUIÇÃO","INTELIGÊNCIA","SABEDORIA","CARISMA"];
+        let armas = ["Adaga", "Arco", "Besta", "Firegun", "Espada", "Espadão", "Machado", "Machadão", "Foice", "Orbe", "Cajado", "Dual", "Lança", "Swallow", "Haloblade", "Katana", "Estilingue", "Soqueira", "Martelo", "Sem Arma", "Bordão","FORÇA","DESTREZA","CONSTITUIÇÃO","INTELIGÊNCIA","SABEDORIA","CARISMA","Alabarda","Chainblade","Maça"];
         let value = Math.random(armas.length - 1);
         let arma = armas[value];
         return arma;
@@ -181,7 +181,7 @@ class Enemy {
     }
 
     allWeapons() {
-        let armas = ["Adaga", "Arco", "Besta", "Firegun", "Espada", "Espadão", "Machado", "Machadão", "Foice", "Orbe", "Cajado", "Dual", "Lança", "Swallow", "Haloblade", "Katana", "Estilingue", "Soqueira", "Martelo", "Sem Arma", "Bordão","FORÇA","DESTREZA","CONSTITUIÇÃO","INTELIGÊNCIA","SABEDORIA","CARISMA"]
+        let armas = ["Adaga", "Arco", "Besta", "Firegun", "Espada", "Espadão", "Machado", "Machadão", "Foice", "Orbe", "Cajado", "Dual", "Lança", "Swallow", "Haloblade", "Katana", "Estilingue", "Soqueira", "Martelo", "Sem Arma", "Bordão","FORÇA","DESTREZA","CONSTITUIÇÃO","INTELIGÊNCIA","SABEDORIA","CARISMA","Alabarda","Chainblade","Maça"]
         return armas;
     }
 
@@ -272,6 +272,15 @@ class Enemy {
         }else if (myWeapon == armas[26]) {
             arma = String(this.mods[5]) + "d10+" + String(this.mods[5]) + "+" + String(this.proficiencia);
             attack = "D20+" + String(this.mods[5]) + "+" + String(this.proficiencia);
+        }else if (myWeapon == armas[27]) {
+            arma = String(this.mods[0]) + "d14+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+        }else if (myWeapon == armas[28]) {
+            arma = String(this.mods[0]) + "d12+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+        }else if (myWeapon == armas[29]) {
+            arma = String(this.mods[0]) + "d10+" + String(this.mods[0]) + "+" + String(this.proficiencia);
+            attack = "D20+" + String(this.mods[0]) + "+" + String(this.proficiencia);
         }
 
         let result = [attack, arma];
@@ -308,6 +317,14 @@ class Enemy {
         this.inteligencia = this.generateDiceValue();
         this.sabedoria = this.generateDiceValue();
         this.carisma = this.generateDiceValue();
+    }
+
+    setProficiencia() {
+        if (this.nivel < 4) {
+            return 1;
+        } else {
+            return Math.floor(this.nivel / 2);
+        }
     }
 
 
@@ -502,6 +519,7 @@ function set_schools(escolas) {
         myschools.appendChild(school_element);
     }
 }
+
 
 function checkNivel() {
     let tank_type = document.getElementById('tank_type');
@@ -709,7 +727,6 @@ function make_char_card(elemento) {
             , function () { alertify.error('Cancelado!') });
     });
 }
-
 
 
 
