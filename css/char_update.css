@@ -1,0 +1,88 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+    color: rgb(19, 20, 19);
+    background-color: rgb(37, 37, 37);
+}
+
+
+
+#nv3dice, #nv7dice, #nv11dice, #nv16dice, #tTalent, #escolha_18, #outros, #vida_total{
+    display: none;
+}
+
+#bloco1 {
+    width: 450px;
+    height: 850px;
+    border-radius: 4px;
+    border: 1px solid rgb(243, 243, 243);
+    margin: auto;
+    padding: 10px;
+    
+    background-color: rgb(116, 116, 116);
+    text-align: center;
+}
+
+p{
+    font-size: 16pt;
+    font-weight: bold;
+}
+
+#vetor_vida{
+    width: 90%;
+    color: rgb(25, 117, 2);
+    font-size: 14px;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    text-align: center;
+}
+
+button {
+    background-color: rgb(255, 255, 255);
+    width: 80%;
+    height: 40px;
+    font-size: 20px;
+    border-radius: 4px;
+    
+}
+
+button:hover {
+    background-color: rgb(0, 0, 0);
+    width: 80%;
+    height: 40px;
+    font-size: 20px;
+    color: azure;
+    border-radius: 4px;
+    
+}
+
+button:active {
+    background-color: rgb(95, 27, 221);
+    width: 80%;
+    height: 40px;
+    font-size: 20px;
+    color: azure;
+    border-radius: 10px;
+    
+}
+
+#nivel {
+    color: rgb(219, 216, 8);
+}
+
+#vida_total {
+    font-size: 50px;
+    text-align: center;
+    color: rgb(158, 5, 5);
+    font-weight: bolder;
+    -webkit-text-stroke-width: 1.5px;
+    -webkit-text-stroke-color: black;
+}
+
+h1{
+    text-align: center;
+    color: rgb(219, 219, 219);
+}
+
+h3 {
+    color: rgb(103, 144, 180);
+    text-align: center;
+}
