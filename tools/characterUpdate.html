@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facilitador de Criação de Personagem</title>
+    <link rel="stylesheet" href="/css/char_update.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Facilitador de Criação de Personagem</h1>
+        <h3>Este facilitador pode ser usado para calcular a vida do seu personagem. Ele segue as regras de progressão.</h3>
+        <div id="bloco1">
+            <p class="tAtributo">Nível: <span id="nivel"></span></p>
+            <p class="tAtributo">Vetor de Vida</p>
+            <input type="text" name="" id="vetor_vida" onchange="setLevel()">
+            <p>Constituição: <input type="number" name="" value="10" max="30" min="8" id="con"></p>
+            <p class="hit_dice">Dado de Vida
+                <select name="dados_de_vida" id="hit_dice">
+                    <option value="4">D4</option>
+                    <option value="6">D6</option>
+                    <option value="8">D8</option>
+                    <option value="10">D10</option>
+                    <option value="12">D12</option>
+                    <option value="14">D14</option>
+                </select>
+            </p>
+            
+            <p id="tAtributo">Escola da Dureza RANK I+: <input type="checkbox" name="" id="dureza"></p>
+            <p id="nv3dice">Nivel 3 - Dado de Vida D6: <br><input type="number" value="0" min="1" max="6" name="" id="nv3hpdice"></p>
+            <p id="nv7dice">Nivel 7 - Dado de Vida D10: <br><input type="number" value="0" min="1" max="10" name="" id="nv7hpdice"></p>
+            <p id="nv11dice">Nivel 11 - Dado de Vida D10: <br><input type="number" value="0" min="1" max="10" name="" id="nv11hpdice"></p>
+            <p id="nv16dice">Nivel 16 - Dado de Vida D20: <br><input type="number" value="0" min="1" max="20" name="" id="nv20hpdice"></p>
+            <p id="tTalent">Nivel 17 - Tank Talent: <input type="checkbox" name="" id="tank_talent" value="sim"></p>
+            <p id="escolha_18">Escolha do Nivel 18: <br>
+                <span class="escolha18"><input type="radio" name="escolha-18" value="50" id="50_vida" checked>50 de Vida Adicional </span><br>
+                <span class="escolha18"><input type="radio" name="escolha-18" value="65" id="65_vida">65 de Vida Adicional </span><br>
+                <span class="escolha18"><input type="radio" name="escolha-18" value="100" id="100_vida">100 de Vida Adicional </span><br>
+            </p>
+            <p id="outros">Outros Adicionais de Vida em %: <input type="text" name="" id="outros_adds"></p>
+            <p id="resultado_vida"><span id="vida_maxima"></span></p>
+            <button onclick="gerarVida()">Calcular</button>&nbsp
+            <br>
+            <p><span id="vida_total"></span></p>
+        </div>
+    </div>
+    <script src="/js/character_update.js"></script>
+</body>
+</html>
