@@ -179,7 +179,7 @@ function sumValorArreyPosition(array, valor) {
 
 function getConMod() {
     let con = parseInt(document.getElementById('con').value);
-    let mod = Math.round(con / 2 - 5);
+    let mod = Math.floor(con / 2 - 5);
     return mod;
 }
 
