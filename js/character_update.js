@@ -36,6 +36,7 @@ function displayAdds(nivel) {
     let nv16 = document.getElementById('nv16dice');
     let tTalent = document.getElementById('tTalent');
     let escolha_18 = document.getElementById('escolha_18');
+    let heroic = document.getElementById('heroic_achertype');
 
     if (nivel >= 3 & nivel < 7) {
         nv3.style.display = "block";
@@ -44,6 +45,7 @@ function displayAdds(nivel) {
         nv16.style.display = "none";
         tTalent.style.display = "none";
         escolha_18.style.display = "none";
+        heroic.style.display = "none";
     } else if (nivel >= 7 & nivel < 11) {
         nv3.style.display = "block";
         nv7.style.display = "block";
@@ -51,6 +53,8 @@ function displayAdds(nivel) {
         nv16.style.display = "none";
         tTalent.style.display = "none";
         escolha_18.style.display = "none";
+        heroic.style.display = "none";
+        heroic.style.display = "none";
     } else if (nivel >= 11 & nivel < 16) {
         nv3.style.display = "block";
         nv7.style.display = "block";
@@ -58,6 +62,7 @@ function displayAdds(nivel) {
         nv16.style.display = "none";
         tTalent.style.display = "none";
         escolha_18.style.display = "none";
+        heroic.style.display = "none";
     } else if (nivel >= 16 & nivel < 17) {
         nv3.style.display = "block";
         nv7.style.display = "block";
@@ -65,6 +70,7 @@ function displayAdds(nivel) {
         nv16.style.display = "block";
         tTalent.style.display = "none";
         escolha_18.style.display = "none";
+        heroic.style.display = "none";
     } else if (nivel >= 17 & nivel < 18) {
         nv3.style.display = "block";
         nv7.style.display = "block";
@@ -72,13 +78,23 @@ function displayAdds(nivel) {
         nv16.style.display = "block";
         tTalent.style.display = "block";
         escolha_18.style.display = "none";
-    } else if (nivel >= 18) {
+        heroic.style.display = "none";
+    } else if (nivel >= 18 & nivel <20) {
         nv3.style.display = "block";
         nv7.style.display = "block";
         nv11.style.display = "block";
         nv16.style.display = "block";
         tTalent.style.display = "block";
         escolha_18.style.display = "block";
+        heroic.style.display = "none";
+    } else if (nivel >= 20) {
+        nv3.style.display = "block";
+        nv7.style.display = "block";
+        nv11.style.display = "block";
+        nv16.style.display = "block";
+        tTalent.style.display = "block";
+        escolha_18.style.display = "block";
+        heroic.style.display = "block";
     } else {
         nv3.style.display = "none";
         nv7.style.display = "none";
@@ -86,6 +102,7 @@ function displayAdds(nivel) {
         nv16.style.display = "none";
         tTalent.style.display = "none";
         escolha_18.style.display = "none";
+        heroic.style.display = "none";
     }
 }
 
@@ -101,6 +118,7 @@ function sumOfLifeBonus(nivel, vetor) {
 function gerarVida() {
     let max_hp = 0;
     let hp_bonus_18 = 0;
+    let hp_20 = 0;
     let vetor_vida = convertToNumberArray();
     vetor_vida = sumValorArreyPosition(vetor_vida, getConMod());
     let nivel = document.getElementById('nivel').innerText;
@@ -144,12 +162,30 @@ function gerarVida() {
         
     }
 
-    max_hp = normalize_hp(vetor_vida, is_tank, hp_bonus_18, dureza, hit_dice);
+    if (nivel == 20) {
+        const radioButton = document.querySelector('input[type="radio"][class="heroic_ac"]:checked');
+        let vida_calculada_20 = heroic_archetype_hp(radioButton.value, getConMod());
+        hp_20 = vida_calculada_20;
+    }
+
+    max_hp = normalize_hp(vetor_vida, is_tank, hp_bonus_18, dureza, hit_dice, hp_20);
     console.log(max_hp);
     vidaTotal(max_hp);
 
 
     
+}
+
+function heroic_archetype_hp(tipo, modCon) {
+    let vida_bonus_20 = 0;
+    if (tipo == 'dps') {
+        vida_bonus_20 = 12000 + (modCon * 150);
+    } else if (tipo == 'support') {
+        vida_bonus_20 = 16000 + (modCon * 300);
+    } else if (tipo == 'tank') {
+        vida_bonus_20 = 24000 + (modCon * 600);
+    }
+    return vida_bonus_20;
 }
 
 function hpBonus(vida_total) {
@@ -183,7 +219,7 @@ function getConMod() {
     return mod;
 }
 
-function normalize_hp(vetor, isTank, bonusHp, dureza, hit_dice) {
+function normalize_hp(vetor, isTank, bonusHp, dureza, hit_dice, hp_20) {
     let hp_by_level = [];
     let tam = vetor.length;
     let soma = 0;
@@ -209,7 +245,7 @@ function normalize_hp(vetor, isTank, bonusHp, dureza, hit_dice) {
                 soma += bonusHp;
             }
             if (i == 19) {
-                soma = soma * 6;
+                soma = soma + hp_20;
             }
             if (dureza) {
                 soma = terraformar(soma, i + 1);

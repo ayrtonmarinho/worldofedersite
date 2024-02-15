@@ -6,13 +6,13 @@ body {
 
 
 
-#nv3dice, #nv7dice, #nv11dice, #nv16dice, #tTalent, #escolha_18, #outros, #vida_total{
+#nv3dice, #nv7dice, #nv11dice, #nv16dice, #tTalent, #escolha_18, #outros, #vida_total, #heroic_achertype{
     display: none;
 }
 
 #bloco1 {
     width: 450px;
-    height: 850px;
+    height: 900px;
     border-radius: 4px;
     border: 1px solid rgb(243, 243, 243);
     margin: auto;
@@ -23,7 +23,7 @@ body {
 }
 
 p{
-    font-size: 16pt;
+    font-size: 15pt;
     font-weight: bold;
 }
 
@@ -104,4 +104,27 @@ h3 {
     text-align: center;
     color: rgb(22, 170, 170);
     cursor: pointer;
+}
+
+.heroic_achertype {
+    font-size: 9pt;
+    font-weight: bold;
+}
+
+#tag_dps {
+    color: rgb(150, 46, 46);
+    font-weight: bolder;
+    font-size: 13pt;
+}
+
+#tag_support {
+    color: rgb(31, 68, 170);
+    font-weight: bolder;
+    font-size: 10pt;
+}
+
+#tag_tank {
+    color: rgb(43, 44, 51);
+    font-weight: bolder;
+    font-size: 13pt;
 }
