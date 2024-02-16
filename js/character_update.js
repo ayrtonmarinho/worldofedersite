@@ -258,7 +258,7 @@ function normalize_hp(vetor, isTank, bonusHp, dureza, hit_dice, hp_20) {
 }
 
 function terraformar(valor, nivel) {
-    if (nivel == 3 | nivel == 6 | nivel == 9 | nivel == 12 | nivel == 15 | nivel == 19) {
+    if (nivel == 3 | nivel == 6 | nivel == 9 | nivel == 12 | nivel == 15 | nivel == 18 | nivel == 20) {
         return (valor + hpBonus(valor));
     }
     return valor;
