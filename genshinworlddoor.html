@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio de Itens</title>
+    <style>
+            body {
+                background-color: #292929;
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            }
+            #main_ {
+            background-color: #c9c9c9;
+            margin: auto;
+            width: 60%;
+            border: 1px solid black;
+            text-align: center;
+            border-radius: 5px;
+            }
+
+            #resultado {
+            text-align: center;
+            margin: auto;
+            width: 800px;
+            margin-bottom: 20px;
+            }
+
+            .fourstar{
+            border: 0.2px solid rgb(251, 255, 212);
+            border-radius: 3px;
+            box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(-45deg, #a020f0, #b666ff, #8a2be2, #9370db, #7b68ee, #9a32cd, #ba55d3, #8b008b, #663399);
+            background-size: 800% 800%;
+            animation: gradient-animation 8s ease infinite;
+            color: rgb(255, 255, 255);
+            font-weight: bold;
+            margin-left: 2px;
+            padding: 2px;
+            font-size: 20px;
+            text-shadow: -1px 1px 2px #000000;
+            
+        }
+        .fivestar{
+            border: 0.2px solid rgb(251, 255, 212);
+            border-radius: 3px;
+            box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(-45deg, #ff8c00, #ffa500, #ffb347, #ffd700, #ffc04c, #e59400, #ffae42, #ffcc33, #e3a857);
+            background-size: 800% 800%;
+            animation: gradient-animation 8s ease infinite;
+            color: rgb(255, 255, 255);
+            font-weight: bold;
+            margin-left: 2px;
+            padding: 2px;
+            font-size: 20px;
+            text-shadow: -1px 1px 2px #000000;
+            
+        }
+
+        @keyframes gradient-animation {
+            0% {
+            background-position: 0% 50%;
+            }
+            50% {
+            background-position: 100% 50%;
+            }
+            100% {
+            background-position: 0% 50%;
+            }
+        }
+    </style>
+    <script>
+        // Vetores de itens
+        const moedas = [10, 20, 50, 100, 200, 500];
+        const itens4Estrelas = [
+    "A Fisgada", "A Doca", "A Flauta", "Akuoumaru", "Anel de Hakushin", "Arco Composto", "Arco de Favonius",
+    "Arco do Penhasco Obscuro", "Arco do Sacrifício", "Arco Enferrujado", "Arco Esmeralda do Caçador",
+    "Arco Quebra-Demônios", "Arco Real", "Barbatana do Quebra Ondas", "Bico de Íbis", "Brilho do Beco",
+    "Broca do Prospector", "Canção do Fiorde", "Canção do Silêncio", "Canção do Vasto Azul", "Caçador do Beco",
+    "Chuva Floral", "Codex de Favonius", "Contos de Dodoco", "Conversas dos Sábios do Deserto", "Crepúsculo Desvanecido",
+    "Cruzamento de Fleuve Cendre", "Cálice de Chifre Cinza Escarlate", "Diálogo", "Epílogo das Profundezas",
+    "Espada Antiga de Millelith", "Espada da Cruz de Narcissus", "Espada de Favonius", "Espada de Madeira",
+    "Espada do Advento", "Espada do Penhasco Obscuro", "Espada do Sacrifício", "Espada Grande de Katsuragi",
+    "Espada Longa Real", "Espada Negra", "Espada Pútrida", "Espada Real da Floresta", "Espadão do Sacrifício",
+    "Espadão Real", "Espinha Dorsal da Serpente", "Espinho de Ferro", "Estrela de Prata Enterrada na Neve",
+    "Estrela Itinerante", "Farpa", "Flor de Aço", "Fluxo da Pureza", "Foice do Penhasco Obscuro", "Fruto da Abundância",
+    "Fruto do Sabugueiro", "Grande Espada de Favonius", "Grimório Real", "Haste de Cinábrio", "Herdeiro do Sol",
+    "Justa Recompensa", "Kagotsurube Isshin", "Lança Cruzada de Kitain", "Lança da Espinha do Dragão",
+    "Lança de Caça Real", "Lança de Favonius", "Lança de Millelith", "Lança do Duelo", "Lança do Penhasco Obscuro",
+    "Lorde do Mar Luxuoso", "Lua de Mouun", "Luz Lunar de Xiphos", "Lâmina Amenoma Kageuta", "Lâmina das Ondas",
+    "Lâmina do Vento Mensageiro", "Mappa Mare", "Medidor de Alcance", "Mega Ultra Espada Mágica do Soberano",
+    "Memórias de Sacrifício", "O Sino", "Ode à Brisa Florescente", "Olho da Percepção", "Olho do Juramento",
+    "Osso Robusto", "Perdição do Dragão", "Perfurador de Luas", "Pique Crescente", "Predador",
+    "Prego Esmagador de Montanhas", "Protótipo Arcaico", "Protótipo da Luz Lunar Pálida", "Protótipo Estelar",
+    "Protótipo Rancor", "Protótipo Âmbar", "Pérola Solar", "Rugido do Leão", "Sacrifício de Jade", "Segadeira da Chuva",
+    "Serra Elétrica Portátil", "Sinfonia dos Indolentes", "Sombra Branca", "Tocador de Nuvens", "Valsa do Crepúsculo",
+    "Vassalo do Rei", "Vinho e Música", "Ágata do Penhasco Obscuro", "Água-Marinha de Mahara", "Águas Secas",
+    "Último Acorde"
+];
+        const itens5Estrelas = [
+            "Absolvição", "Agitação Trovejante", "Aqua Simulacra", "Arcana Original", "Arco de Amos", "Atlas Celestial",
+            "Báculo das Areias Escarlates", "Báculo de Homa", "Caminho do Caçador", "Canção da Patrulha do Pico",
+            "Canção dos Pinhos", "Chamado Ecoante da Garça", "Chave de Hierofania", "Chifres Vermelhos Destruidores de Pedras",
+            "Cortador de Jade Primordial", "Cortador de Montanhas", "Cortadora da Neblina Reforjada", "Elegia do Suspiro Final",
+            "Espada Áspera", "Espada Celestial", "Espinha Celestial", "Esplendor das Águas Silenciosas", "Esplendor Índigo",
+            "Estrela Invernal", "Falcão", "Fumetsu Gekka", "Harpa Celestial", "Hora do Surfe", "Juramento pela Liberdade",
+            "Lança de Jade Primitiva", "Luz das Folhas Cortadas", "Luz do Cortador de Grama", "Maremoto da Lua de Futsu",
+            "Memória da Poeira", "Oração Perdida aos Ventos Sagrados", "Orgulho Celestial", "Perfuradora Prismática",
+            "Presa do Rei da Montanha", "Prova de Kagura", "Reminiscências de Tulaytullah", "Rito do Fluxo Eterno",
+            "Semblante da Lua Carmesim", "Sinal dos Mares", "Sonhos Flutuantes das Mil Noites", "Subjugadora de Calamidades",
+            "Supervisão de Caixa", "Túmulo do Lobo", "Urakugo Rensai", "Veredito"
+        ];
+
+        function sortearItem(quantidade) {
+            let resultados = [];
+            const itemPreferido = document.getElementById("itemPreferido").value;
+            for (let i = 0; i < quantidade; i++) {
+                let resultado = "";
+                const chance = Math.random() * 100; // Gera um número de 0 a 100
+
+                if (quantidade === 1) {
+                    if (chance <= 1) {
+                        // 1% de chance de obter um item 5 estrelas
+                        let item5Estrelas = itens5Estrelas[Math.floor(Math.random() * itens5Estrelas.length)];
+                        if (Math.random() <= 0.5 && itemPreferido) {
+                            item5Estrelas = itemPreferido;
+                        }
+                        resultado = `Parabéns! Você ganhou um item 5 estrelas: <br><br> <span class="fivestar">${item5Estrelas}</span>`;
+                    } else if (chance <= 6) {
+                        // 5% de chance de obter um item 4 estrelas (1% + 5%)
+                        const item4Estrelas = itens4Estrelas[Math.floor(Math.random() * itens4Estrelas.length)];
+                        resultado = `Você ganhou um item 4 estrelas: <br><br> <span class="fourstar">${item4Estrelas}</span>`;
+                    } else {
+                        // 94% de chance de obter moedas
+                        const quantidadeMoedas = moedas[Math.floor(Math.random() * moedas.length)];
+                        resultado = `Você ganhou ${quantidadeMoedas} moedas!`;
+                    }
+                } else {
+                    if (chance <= 5) {
+                        // 5% de chance de obter um item 5 estrelas
+                        let item5Estrelas = itens5Estrelas[Math.floor(Math.random() * itens5Estrelas.length)];
+                        if (Math.random() <= 0.5 && itemPreferido) {
+                            item5Estrelas = itemPreferido;
+                        }
+                        resultado = `Parabéns! Você ganhou um item 5 estrelas: <br><br> <span class="fivestar">${item5Estrelas}</span>`;
+                    } else if (chance <= 20) {
+                        // 20% de chance de obter um item 4 estrelas (10% + 50%)
+                        const item4Estrelas = itens4Estrelas[Math.floor(Math.random() * itens4Estrelas.length)];
+                        resultado = `Você ganhou um item 4 estrelas: <br><br> <span class="fourstar">${item4Estrelas}</span>`;
+                    } else {
+                        // 40% de chance de obter moedas
+                        const quantidadeMoedas = moedas[Math.floor(Math.random() * moedas.length)];
+                        resultado = `Você ganhou ${quantidadeMoedas} moedas!`;
+                    }
+                }
+                resultados.push(resultado);
+            }
+            document.getElementById("resultado").innerHTML = resultados.join("<br><br>");
+        }
+    </script>
+</head>
+<body>
+    <div id="main_">
+      <h1>Sorteio de Itens</h1>
+    <label for="itemPreferido">Escolha seu item 5 estrelas preferido (opcional):</label>
+    <select id="itemPreferido">
+        <option value="">Nenhum</option>
+        <option value="Absolvição">Absolvição</option>
+        <option value="Agitação Trovejante">Agitação Trovejante</option>
+        <option value="Aqua Simulacra">Aqua Simulacra</option>
+        <option value="Arcana Original">Arcana Original</option>
+        <option value="Arco de Amos">Arco de Amos</option>
+        <option value="Atlas Celestial">Atlas Celestial</option>
+        <option value="Báculo das Areias Escarlates">Báculo das Areias Escarlates</option>
+        <option value="Báculo de Homa">Báculo de Homa</option>
+        <option value="Caminho do Caçador">Caminho do Caçador</option>
+        <option value="Canção da Patrulha do Pico">Canção da Patrulha do Pico</option>
+        <option value="Canção dos Pinhos">Canção dos Pinhos</option>
+        <option value="Chamado Ecoante da Garça">Chamado Ecoante da Garça</option>
+        <option value="Chave de Hierofania">Chave de Hierofania</option>
+        <option value="Chifres Vermelhos Destruidores de Pedras">Chifres Vermelhos Destruidores de Pedras</option>
+        <option value="Cortador de Jade Primordial">Cortador de Jade Primordial</option>
+        <option value="Cortador de Montanhas">Cortador de Montanhas</option>
+        <option value="Cortadora da Neblina Reforjada">Cortadora da Neblina Reforjada</option>
+        <option value="Elegia do Suspiro Final">Elegia do Suspiro Final</option>
+        <option value="Espada Áspera">Espada Áspera</option>
+        <option value="Espada Celestial">Espada Celestial</option>
+        <option value="Espinha Celestial">Espinha Celestial</option>
+        <option value="Esplendor das Águas Silenciosas">Esplendor das Águas Silenciosas</option>
+        <option value="Esplendor Índigo">Esplendor Índigo</option>
+        <option value="Estrela Invernal">Estrela Invernal</option>
+        <option value="Falcão">Falcão</option>
+        <option value="Fumetsu Gekka">Fumetsu Gekka</option>
+        <option value="Harpa Celestial">Harpa Celestial</option>
+        <option value="Hora do Surfe">Hora do Surfe</option>
+        <option value="Juramento pela Liberdade">Juramento pela Liberdade</option>
+        <option value="Lança de Jade Primitiva">Lança de Jade Primitiva</option>
+        <option value="Luz das Folhas Cortadas">Luz das Folhas Cortadas</option>
+        <option value="Luz do Cortador de Grama">Luz do Cortador de Grama</option>
+        <option value="Maremoto da Lua de Futsu">Maremoto da Lua de Futsu</option>
+        <option value="Memória da Poeira">Memória da Poeira</option>
+        <option value="Oração Perdida aos Ventos Sagrados">Oração Perdida aos Ventos Sagrados</option>
+        <option value="Orgulho Celestial">Orgulho Celestial</option>
+        <option value="Perfuradora Prismática">Perfuradora Prismática</option>
+        <option value="Presa do Rei da Montanha">Presa do Rei da Montanha</option>
+        <option value="Prova de Kagura">Prova de Kagura</option>
+        <option value="Reminiscências de Tulaytullah">Reminiscências de Tulaytullah</option>
+        <option value="Rito do Fluxo Eterno">Rito do Fluxo Eterno</option>
+        <option value="Semblante da Lua Carmesim">Semblante da Lua Carmesim</option>
+        <option value="Sinal dos Mares">Sinal dos Mares</option>
+        <option value="Sonhos Flutuantes das Mil Noites">Sonhos Flutuantes das Mil Noites</option>
+        <option value="Subjugadora de Calamidades">Subjugadora de Calamidades</option>
+        <option value="Supervisão de Caixa">Supervisão de Caixa</option>
+        <option value="Túmulo do Lobo">Túmulo do Lobo</option>
+        <option value="Urakugo Rensai">Urakugo Rensai</option>
+        <option value="Veredito">Veredito</option>
+    </select>
+    <br><br>
+    <button onclick="sortearItem(1)">Sortear 1 Item</button>
+    <button onclick="sortearItem(10)">Sortear 10 Itens</button>
+    <br><br><br>
+    <p id="resultado"></p>
+    </div>
+</body>
+</html>
