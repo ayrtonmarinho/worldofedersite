@@ -181,23 +181,23 @@
 
     function getAtributoAleatorio(nivel) {
       const atributos = [
-        { "Vida Max": `${getRandomInt(5, 14)}%` },
-        { "Cura Causada": `${getRandomInt(5, 14)}%` },
-        { "Cura Recebida": `${getRandomInt(5, 14)}%` },
-        { "Vida Flat": getRandomInt(5, 20) },
-        { "Mana Flat": getRandomInt(5, 20) },
-        { "Mana Max": `${getRandomInt(10, 20)}%` },
-        { "Dano Elemental": `${escalarTipoDano(getRandomInt(5, 14),nivel)} (${getRandomElement(["Agua", "Fogo", "Terra", "Trovão", "Ar", "Gelo", "Ilusão", "Luz", "Trevas", "Natureza", "Espirito", "Vazio", "Imaterial", "Cristal", "Ethereal", "Espectral", "Corrupção/Corrompido"])})` },
-        { "Dano Físico": `${escalarTipoDano(getRandomInt(5, 14),nivel)} (${getRandomElement(["perfurar", "contusão", "corte"])})` },
-        { "Roubo de Vida": `${getRandomInt(2, 5)}%` },
-        { "Poder": getRandomInt(2, 14) },
+        { "Vida Max": `${getRandomInt(3, 9)}%` },
+        { "Cura Causada": `${getRandomInt(3, 9)}%` },
+        { "Cura Recebida": `${getRandomInt(3, 9)}%` },
+        { "Vida Flat": getRandomInt(5, 10) },
+        { "Mana Flat": getRandomInt(5, 10) },
+        { "Mana Max": `${getRandomInt(10, 12)}%` },
+        { "Dano Elemental": `${escalarTipoDano(getRandomInt(3, 9),nivel)} (${getRandomElement(["Agua", "Fogo", "Terra", "Trovão", "Ar", "Gelo", "Ilusão", "Luz", "Trevas", "Natureza", "Espirito", "Vazio", "Imaterial", "Cristal", "Ethereal", "Espectral", "Corrupção/Corrompido"])})` },
+        { "Dano Físico": `${escalarTipoDano(getRandomInt(3, 9),nivel)} (${getRandomElement(["perfurar", "contusão", "corte"])})` },
+        { "Roubo de Vida": `${getRandomInt(2, 4)}%` },
+        { "Poder": getRandomInt(2, 8) },
         { "FOR": 1 },
         { "DES": 1 },
         { "CON": 1 },
         { "INT": 1 },
         { "SAB": 1 },
         { "CAR": 1 },
-        { "Letalidade": getRandomInt(1, 6) }
+        { "Letalidade": getRandomInt(1, 5) }
       ];
       return getRandomElement(atributos);
     }
