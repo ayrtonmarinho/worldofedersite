@@ -24,7 +24,7 @@
       background-color: #ffffff;
       padding: 30px;
       border: 1px solid #aaaaaa;
-      width: 250px;
+      width: 300px;
       margin: auto;
       border-radius: 5px;
       text-align: left;
@@ -75,7 +75,9 @@
 
     <div id="tipoEspecificoDiv" style="display: none; margin-top: 10px;">
       <label for="tipoEspecifico">Selecione o tipo específico:</label>
-      <select id="tipoEspecifico"></select>
+      <select id="tipoEspecifico">
+        <option value="aleatorio">Aleatório</option>
+      </select>
     </div>
 
     <label for="nivel" style="margin-top: 10px; display: block;">Nível:</label>
@@ -89,7 +91,7 @@
 
   <script>
     const armas = ["Adaga", "Arco", "Martelo", "Espada", "Chicote", "Espadão", "Machado", "Machadão", "Cajado", "Orbe", "Besta Pequena", "Besta Grande", "Bordão", "Tridente", "Claws", "Rapeira", "Escudo", "Katana", "Estilingue", "Lança", "Soqueira", "Foice", "Swallow", "Haloblade", "Maça", "Chain Blade", "Nunchaku", "Blade Fan", "Twinblades", "Wakizashi"];
-    const armaduras = ["Armadura Pesada", "Armadura Leve", "Armadura Média"];
+    const armaduras = ["Pesada", "Leve", "Média"];
     const acessorios = ["Anel", "Brinco", "Colar", "Cinto"];
 
     function atualizarOpcoes() {
@@ -99,13 +101,13 @@
 
       if (tipo === "arma") {
         tipoEspecificoDiv.style.display = "block";
-        tipoEspecificoSelect.innerHTML = armas.map(arma => `<option value="${arma}">${arma}</option>`).join("");
+        tipoEspecificoSelect.innerHTML = `<option value="aleatorio">Aleatório</option>` + armas.map(arma => `<option value="${arma}">${arma}</option>`).join("");
       } else if (tipo === "armadura") {
         tipoEspecificoDiv.style.display = "block";
-        tipoEspecificoSelect.innerHTML = armaduras.map(armadura => `<option value="${armadura}">${armadura}</option>`).join("");
+        tipoEspecificoSelect.innerHTML = `<option value="aleatorio">Aleatório</option>` + armaduras.map(armadura => `<option value="${armadura}">${armadura}</option>`).join("");
       } else if (tipo === "acessorio") {
         tipoEspecificoDiv.style.display = "block";
-        tipoEspecificoSelect.innerHTML = acessorios.map(acessorio => `<option value="${acessorio}">${acessorio}</option>`).join("");
+        tipoEspecificoSelect.innerHTML = `<option value="aleatorio">Aleatório</option>` + acessorios.map(acessorio => `<option value="${acessorio}">${acessorio}</option>`).join("");
       } else {
         tipoEspecificoDiv.style.display = "none";
       }
@@ -122,7 +124,17 @@
         item = getRandomElement([...armas, ...armaduras, ...acessorios]);
       } else if (tipo === "arma" || tipo === "armadura" || tipo === "acessorio") {
         const tipoEspecifico = document.getElementById("tipoEspecifico").value;
-        item = tipoEspecifico;
+        if (tipoEspecifico === "aleatorio") {
+          if (tipo === "arma") {
+            item = getRandomElement(armas);
+          } else if (tipo === "armadura") {
+            item = getRandomElement(armaduras);
+          } else if (tipo === "acessorio") {
+            item = getRandomElement(acessorios);
+          }
+        } else {
+          item = tipoEspecifico;
+        }
         if (tipo === "armadura") {
           atributos.push(escalarAtributo({ Defesa: getRandomInt(5, 20) }, nivel));
         }
@@ -145,9 +157,9 @@
     }
 
     function escalarTipoDano(valor, nivel){
-      let aumento = Math.floor(nivel) * 0.2;
+      let aumento = Math.floor(nivel) * 0.1;
       if (nivel==20){
-        aumento = Math.floor(nivel)*0.4;
+        aumento = Math.floor(nivel)*0.3;
       }
       if (nivel==1){
           valor = Math.floor(valor * 1);
@@ -158,19 +170,33 @@
       return valor;
     }
 
+    function splitElement(valor){
+      let elemento = valor.split(" ");
+      return elemento[1];
+    }
+
     function escalarAtributo(atributo, nivel) {
       const key = Object.keys(atributo)[0];
       let valor = Object.values(atributo)[0];
-      let aumento = Math.floor(nivel) * 0.2;
+      let aumento = Math.floor(nivel) * 0.1;
       if (nivel == 20) {
-        aumento = Math.floor(nivel) * 0.4;
+        aumento = Math.floor(nivel) * 0.3;
       }
 
-      if (typeof valor === "string" && valor.includes("%")) {
-        valor = Math.floor(parseFloat(valor) * (1 + aumento)) + "%";
-      } else if (typeof valor === "number") {
-        valor = Math.floor(valor * (1 + aumento));
+      
+      if(nivel>1){
+        if (typeof valor === "string" && valor.includes("%")) {
+          valor = Math.floor(parseFloat(valor) * (1 + aumento)) + "%";
+        }
+        else if(typeof valor === "string" && !valor.includes("%")){
+          valor = Math.floor(parseFloat(valor) * (1 + aumento)) + "% "+splitElement(valor);
+        }else{
+          valor = Math.floor(parseFloat(valor) * (1 + aumento));
+        }
+      }else{
+        valor;
       }
+      
 
       return { [key]: valor };
     }
@@ -181,23 +207,23 @@
 
     function getAtributoAleatorio(nivel) {
       const atributos = [
-        { "Vida Max": `${getRandomInt(3, 9)}%` },
-        { "Cura Causada": `${getRandomInt(3, 9)}%` },
-        { "Cura Recebida": `${getRandomInt(3, 9)}%` },
+        { "Vida Max": `${getRandomInt(3, 8)}%` },
+        { "Cura Causada": `${getRandomInt(3, 8)}%` },
+        { "Cura Recebida": `${getRandomInt(3, 8)}%` },
         { "Vida Flat": getRandomInt(5, 10) },
         { "Mana Flat": getRandomInt(5, 10) },
-        { "Mana Max": `${getRandomInt(10, 12)}%` },
-        { "Dano Elemental": `${escalarTipoDano(getRandomInt(3, 9),nivel)} (${getRandomElement(["Agua", "Fogo", "Terra", "Trovão", "Ar", "Gelo", "Ilusão", "Luz", "Trevas", "Natureza", "Espirito", "Vazio", "Imaterial", "Cristal", "Ethereal", "Espectral", "Corrupção/Corrompido"])})` },
-        { "Dano Físico": `${escalarTipoDano(getRandomInt(3, 9),nivel)} (${getRandomElement(["perfurar", "contusão", "corte"])})` },
+        { "Mana Max": `${getRandomInt(10, 20)}%` },
+        { "Dano Elemental": `${getRandomInt(5, 10)} (${getRandomElement(["Agua", "Fogo", "Terra", "Trovão", "Ar", "Gelo", "Ilusão", "Luz", "Trevas", "Natureza", "Espirito", "Vazio", "Imaterial", "Cristal", "Ethereal", "Espectral", "Corrupção/Corrompido"])})` },
+        { "Dano Físico": `${getRandomInt(5, 10)} (${getRandomElement(["perfurar", "contusão", "corte"])})` },
         { "Roubo de Vida": `${getRandomInt(2, 4)}%` },
-        { "Poder": getRandomInt(2, 8) },
+        { "Poder": getRandomInt(2, 6) },
         { "FOR": 1 },
         { "DES": 1 },
         { "CON": 1 },
         { "INT": 1 },
         { "SAB": 1 },
         { "CAR": 1 },
-        { "Letalidade": getRandomInt(1, 5) }
+        { "Letalidade": getRandomInt(1, 4) }
       ];
       return getRandomElement(atributos);
     }
