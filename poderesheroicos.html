@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Árvore de Habilidades RPG</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 10px;
+        }
+        #main {
+            display: grid;
+            place-items: center; /* Centraliza horizontal e verticalmente */
+        }
+        .tree {
+            display: inline-flex;
+            justify-content: space-around;
+        }
+        .column {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .skill {
+            margin: 20px;
+            padding: 2px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #636363;
+            cursor: pointer;
+            position: relative;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .skill img {
+            border: 1px solid white;
+            border-radius: 3px;
+            width: 90%;
+            height: 90%;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .skill:hover .tooltip {
+            display: block;
+        }
+        .tooltip {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10;
+            width: 200px;
+        }
+        .learned {
+            background-color: rgb(0, 255, 157);
+        }
+        .points-input {
+            margin-bottom: 10px;
+        }
+        .learned-list {
+            margin-top: 20px;
+        }
+        .url-input {
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        #voltar{
+            text-align: left;
+        }
+        #voltar:hover{
+            color: rgb(255, 53, 70);
+        }
+    </style>
+</head>
+<body>
+    <h3 id="voltar" onclick="location.href='/45187ee3-d56f-3afc-89b3-5d7905a131cf.html'">Voltar</h3>
+    <div id="main">
+        
+        <h1>Poderes Heroicos</h1>
+        <div class="points-input">
+            <label for="heroPoints">Pontos Heroicos:</label>
+            <input type="number" id="heroPoints" value="0">
+            <button onclick="updatePoints()">Atualizar Pontos</button>
+            <p>Pontos Gastos: <span id="spentPoints">0</span></p>
+        </div>
+        <div class="url-input">
+            <label for="configUrl">URL de Salvamento:</label>
+            <input type="text" id="configUrl" placeholder="Cole a URL de save aqui">
+            <button onclick="loadConfigFromUrl()">Carregar Save</button>
+            <button onclick="generateConfigUrl()">Gerar URL de Save</button>
+        </div>
+        <div class="tree">
+            <!-- Colunas serão geradas dinamicamente pelo JavaScript -->
+        </div>
+        <div class="learned-list">
+            <h2>Poderes Conquistados</h2>
+            <ul id="learnedSkills"></ul>
+        </div>
+
+    </div>
+    <script>
+        const skills = [
+            { id: 1, name: "Forca Interior", effect: "Aumenta o Poder para habilidades ofensivas não elementais em +15", requirements: [], image: "skills/skill001.png" },
+            { id: 2, name: "Toque Perfurante", effect: "Penetra a defesa do alvo em 25.", requirements: [1], image: "skills/skill002.png" },
+            { id: 3, name: "Ponto de Ferimento", effect: "A cada rodada quando você causar dano você pode rolar 1d6 com dificuldade 1 para causar um dano bônus igual a 10% da vida máxima do alvo.", requirements: [2], image: "skills/skill003.png" },
+            { id: 4, name: "Mestria Crítica", effect: "Reduz a dificuldade de acerto crítico em 2.", requirements: [3], image: "skills/skill004.png" },
+            { id: 5, name: "Desenvolvimento de Combate", effect: "Aumenta sua Força e Destreza em +2.", requirements: [4], image: "skills/skill005.png" },
+            { id: 6, name: "Maestria em Armas", effect: "Aumenta o grau de dano do dado da arma em 1 nível.", requirements: [5], image: "skills/skill006.png" },
+            { id: 7, name: "Ímpeto Intrusivo", effect: "A qualquer momento se você ainda não tiver agido na rodada pode antecipar a sua ação durante o turno dos envolvidos. Sua ação é consumida.", requirements: [6], image: "skills/skill007.png" },
+
+            { id: 8, name: "Vitalidade e Resiliência", effect: "Aumenta a vida máxima em 50 e reduz o dano não elemental recebido em 10 e o elemental em 15.", requirements: [], image: "skills/skill008.png" },
+            { id: 9, name: "Casca Grossa", effect: "Reduz o dano crítico recebido de todas as fontes em 30.", requirements: [8], image: "skills/skill009.png" },
+            { id: 10, name: "Vitalidade e Impacto", effect: "Quando você causa dano pode adicionar (Mod.CON/2)dado De Vida seu como dano bônus não elemental contra o alvo.", requirements: [9], image: "skills/skill010.png" },
+            { id: 11, name: "Vitalidade Essencial", effect: "Adicione 3 dados de vida cheios a sua vida máxima.", requirements: [10], image: "skills/skill011.png" },
+            { id: 12, name: "Desenvolvimento de Robustez", effect: "Aumenta sua Constituição em +4.", requirements: [11], image: "skills/skill012.png" },
+            { id: 13, name: "Espinhos", effect: "Quando receber dano corpo-a-corpo reflete o equivalente a (3+Mod.CON/2) dados de vida seus como dano não elemental para o atacante.", requirements: [12], image: "skills/skill013.png" },
+            { id: 14, name: "Defesa Critica", effect: "Ao receber dano você pode rolar d20 natural, se obtiver um 20 o dano recebido é reduzida a metade.", requirements: [13], image: "skills/skill014.png" },
+
+            { id: 15, name: "Elemental Warrior", effect: "Seu dano de Ataque Básico sempre causará metade de um elemento e metade de outro, abrindo possibilidade de reações elementais. A escolha de elementos ocorre no início do dia e não pode ser mudada até um descanso longo.", requirements: [6,25], image: "skills/skill015.png" },
+            { id: 16, name: "Cuidado Ofensivo", effect: "Quando você acerta um alvo causando dano você ganha um escudo igual a 6 dados de vida seus. Se o acerto for crítico você considera os dados cheios e com valor 2x. O escudo fica ativo até que você possa agir novamente.", requirements: [4,34,11], image: "skills/skill016.png" },
+            { id: 17, name: "Proteção Explosiva", effect: "Ao receber dano e estiver com escudo ativo em si mesmo e restar escudo após o dano recebido você causa o restante do escudo mais 15% da vida máxima do atacante como dano ao redor de si.", requirements: [13,34,2], image: "skills/skill017.png" },
+            { id: 18, name: "Balança Manática Vitalícia", effect: "Você pode trocar sua mana pela sua vida, vice-versa. Isso pode ocorrer a cada 2 rodadas.Quando você faz essa troca ganha 10 de Vida e 5 de mana que dura até o fim da rodada.", requirements: [28,11,32], image: "skills/skill018.png" },
+            { id: 19, name: "Hemorragia Fuderosa", effect: "Quando você causar dano não elemental a um inimigo role 1d100, se obtiver 5 ou menos no resultado cause nele hemorragia com na intensidade por resultado.<br>[5] → 50 de dano bônus.<br>[4] → 60 de dano bônus.<br>[3] → 80 de dano bônus.<br>[2] → 100 de dano bônus.<br>[1] → 100 de dano bônus + 1d100% de dano adicional."
+, requirements: [7,13,22,29], image: "skills/skill019.png" },
+            { id: 20, name: "Presente Maravilhoso", effect: "Você pode garantir a seus aliados buffs que não contam no limite de buffs. Cada buff acumula sua potência a cada rodada. Pode aplicar em 2 até aliados, depois de aplicado eles se acumulam em potência. <br>★ <strong>Might</strong>: aumenta o Poder em 4.<br> ★ <strong>Regeneração</strong>: cura 3 de mana e 4 de vida 1 vez na rodada.<br> ★ <strong>Proteção</strong>: reduz o dano recebido em 5.<br>★ <strong>Fúria</strong>: dano crítico aumenta em 0.1x.", requirements: [35,27,1,8], image: "skills/skill020.png" },
+            { id: 21, name: "Celestial Heroic Power", effect: "Adiciona +6 em todos os Atributos. A vida máxima aumenta em 150. +7 de Ataque. Dano Critico +1x. +20 de Poder.", requirements: [12,5,26,33], image: "skills/skill021.png" },
+            
+            { id: 22, name: "Força Elemental", effect: "Aumenta o Poder para habilidades elementais em +20.", requirements: [], image: "skills/skill022.png" },
+            { id: 23, name: "Mana Guardada", effect: "Quando sua mana chegar a 0 você ganha (Mod.INT)d10 ou (Mod.SAB)d8 ou (Mod.CAR) de mana bônus temporária.  O efeito se repete a cada 4 rodadas.", requirements: [22], image: "skills/skill023.png" },
+            { id: 24, name: "Conjuração Garantida", effect: "Você recebe 1 conjuração garantida. O efeito se repete a cada 6 rodadas.", requirements: [23], image: "skills/skill024.png" },
+            { id: 25, name: "Reação Elemental Prolongada", effect: "Aumenta a duração de suas reações de tempo em 1 contador.", requirements: [24], image: "skills/skill025.png" },
+            { id: 26, name: "Desenvolvimento Arcano", effect: "Aumenta sua Inteligência e Carisma em +2.", requirements: [25], image: "skills/skill026.png" },
+            { id: 27, name: "Magia Melhorada", effect: "Adiciona 1 dado extra da magia a ela. Se a magia for de efeito aumenta o efeito em um fator descrito nela.", requirements: [26], image: "skills/skill027.png" },
+            { id: 28, name: "Magias Certeiras", effect: "No ataque, se você errar habilidades que possuam conjuração, você causa metade do dano que causaria.Não tem efeito se você for interrompido.", requirements: [27], image: "skills/skill028.png" },
+            
+            { id: 29, name: "Orvalho de Cura", effect: "Aumenta a cura realizada em 20 e a potência de escudos aplicados em 30.", requirements: [], image: "skills/skill029.png" },
+            { id: 30, name: "Aura da Proteção", effect: "Aumenta a CA de todos os aliados em combate em 1.", requirements: [29], image: "skills/skill030.png" },
+            { id: 31, name: "Autoproteção", effect: "Você pode escolher uma cura mediana para ser conjurada em si mesmo quando sua vida estiver em risco. A  potência dessa cura é dobrada. Não podem ser curas de efeitos em área ou em grupo. O efeito tem recarga de 6 rodadas.", requirements: [30], image: "skills/skill031.png" },
+            { id: 32, name: "Dissipar Flagelo", effect: "Dano e efeitos por tempo sofridos por você de todas as fontes têm sua duração reduzida à metade.", requirements: [31], image: "skills/skill032.png" },
+            { id: 33, name: "Desenvolvimento da Sabedoria", effect: "Aumenta sua Sabedoria em +4.", requirements: [32], image: "skills/skill033.png" },
+            { id: 34, name: "Suporte Crítico", effect: "Suas curas e escudos podem ser críticas com efeito igual 1.5x do original.", requirements: [33], image: "skills/skill034.png" },
+            { id: 35, name: "Suporte Necessário", effect: "Caso sua mana tenha se esgotado você pode continuar usando suas habilidades de suporte mesmo sem mana por 3 rodadas. Recarga 8 rodadas.", requirements: [34], image: "skills/skill035.png" }
+        ];
+
+        let heroPoints = 0;
+        let learnedSkills = [];
+        let spentPoints = 0;
+
+        function updatePoints() {
+            heroPoints = parseInt(document.getElementById('heroPoints').value);
+            renderTree();
+        }
+
+        function colorTitle(skill){
+            if (skill<8){
+                return "#fc9d03";
+            }
+            else if(skill<15){
+                return "#ff304f"
+            }
+            else if(skill<22){
+                return "#b742ff"
+            }
+            else if(skill<29){
+                return "#2780f5"
+            }
+            else{
+                return "#27f591"
+            }
+        }
+
+        function pledge_icon(skill){
+            if (skill<8){
+                return "imgs/Poder_icon.png";
+            }
+            else if(skill<15){
+                return "imgs/Tank_icon.png"
+            }
+            else if(skill<22){
+                return "imgs/ultimate_icon.png"
+            }
+            else if(skill<29){
+                return "imgs/Magia_icon.png"
+            }
+            else{
+                return "imgs/Cura_icon.png"
+            }
+        }
+
+        function toggleSkill(skillId) {
+            const skill = skills.find(s => s.id === skillId);
+            if (learnedSkills.includes(skillId)) {
+                // Desaprender habilidade
+                learnedSkills = learnedSkills.filter(id => id !== skillId);
+                heroPoints += 1;
+                spentPoints -= 1;
+            } else if (heroPoints >= 1 && skill.requirements.every(req => learnedSkills.includes(req))) {
+                // Aprender habilidade
+                learnedSkills.push(skillId);
+                heroPoints -= 1;
+                spentPoints += 1;
+            }
+            document.getElementById('heroPoints').value = heroPoints;
+            document.getElementById('spentPoints').textContent = spentPoints;
+            renderTree();
+            updateLearnedList();
+        }
+
+        function updateLearnedList() {
+            const learnedList = document.getElementById('learnedSkills');
+            learnedList.innerHTML = learnedSkills.map(id => {
+                const skill = skills.find(s => s.id === id);
+                return `<li style="list-style: none; padding-left: 35px; background-image: url(${skill.image}); background-size: 30px 30px;background-repeat: no-repeat;
+  background-position: 0px center; padding-top: 7px; padding-bottom: 7px;"><strong>${skill.name}</strong>: ${skill.effect}</li>`;
+            }).join('');
+        }
+
+        function renderTree() {
+            const treeContainer = document.querySelector('.tree');
+            treeContainer.innerHTML = '';
+
+            const columns = 5;
+            for (let i = 0; i < columns; i++) {
+                const column = document.createElement('div');
+                column.className = 'column';
+                treeContainer.appendChild(column);
+            }
+
+            skills.forEach(skill => {
+                const columnIndex = Math.floor((skill.id - 1) / 7);
+                const column = treeContainer.children[columnIndex];
+                const skillElement = document.createElement('div');
+                skillElement.className = `skill ${learnedSkills.includes(skill.id) ? 'learned' : ''}`;
+                skillElement.innerHTML = `
+                    <img src="${skill.image}" alt="${skill.name}">
+                    <div class="tooltip">
+                        <strong><span style="color: ${colorTitle(skill.id)};">${skill.name}</span></strong><br>
+                        <strong>Efeito</strong>: <span style="color: #fcba03; font-style: italic;">${skill.effect}</span><br>
+                        <strong>Requisitos</strong>: <span style="color: #fa3737; font-style: italic;">${skill.requirements.map(req => skills.find(s => s.id === req).name).join(', ') || 'Nenhum'}</span>
+                    </div>
+                `;
+                skillElement.onclick = () => toggleSkill(skill.id);
+                column.appendChild(skillElement);
+            });
+        }
+
+        function generateConfigUrl() {
+            const baseUrl = window.location.href.split('?')[0];
+            const params = new URLSearchParams();
+            params.set('heroPoints', heroPoints);
+            params.set('learnedSkills', learnedSkills.join(','));
+            const url = `${baseUrl}?${params.toString()}`;
+            document.getElementById('configUrl').value = url;
+            alert("URL de configuração gerada! Cole-a para compartilhar.");
+        }
+
+        function loadConfigFromUrl() {
+            const url = document.getElementById('configUrl').value;
+            const params = new URLSearchParams(new URL(url).search);
+            heroPoints = parseInt(params.get('heroPoints')) || 0;
+            learnedSkills = params.get('learnedSkills') ? params.get('learnedSkills').split(',').map(Number) : [];
+            spentPoints = learnedSkills.length;
+            document.getElementById('heroPoints').value = heroPoints;
+            document.getElementById('spentPoints').textContent = spentPoints;
+            renderTree();
+            updateLearnedList();
+        }
+
+        // Carregar configuração da URL ao iniciar (se houver)
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('heroPoints') || params.has('learnedSkills')) {
+            loadConfigFromUrl();
+        } else {
+            renderTree();
+        }
+    </script>
+</body>
+</html>
