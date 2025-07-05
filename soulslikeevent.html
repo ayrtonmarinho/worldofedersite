@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Personagem RPG</title>
+    <style>
+        :root {
+            --primary-color: #353535;
+            --secondary-color: #5f5f5f;
+            --accent-color: #e4e4e4;
+            --text-color: #b89421;
+            --light-color: #2c2c2c;
+            --card-bg: #818181;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #242424;
+            color: var(--text-color);
+        }
+        
+        h1, h2, h3 {
+            color: var(--accent-color);
+        }
+        
+        .form-container {
+            background-color: var(--light-color);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+        
+        input[type="number"], select {
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus, select:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+        }
+        
+        .attribute-scaling-section {
+            grid-column: span 2;
+            background-color: rgba(106, 90, 205, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .attribute-checkbox {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: rgba(34, 34, 34, 0.7);
+            border-radius: 5px;
+        }
+        
+        .attribute-checkbox input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        
+        .rank-selector {
+            margin-left: 5px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            margin-top: 15px;
+        }
+        
+        button:hover {
+            background-color: var(--accent-color);
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            display: none;
+            background: linear-gradient(135deg, #222222 0%, #525151 100%);
+            border: 1px solid rgba(106, 90, 205, 0.2);
+        }
+        
+        .card-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--secondary-color);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-item {
+            background-color: rgba(230, 230, 230, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .stat-item strong {
+            color: var(--accent-color);
+        }
+        
+        .damage-section {
+            margin-top: 20px;
+            background-color: rgba(230, 230, 230, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid gold;
+        }
+        
+        .damage-breakdown {
+            margin-top: 10px;
+        }
+        
+        .damage-source {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .damage-total {
+            font-weight: bold;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid gold;
+            font-size: 1.1em;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .attribute-scaling-section {
+                grid-column: span 1;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Gerador de Personagem</h1>
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="forca">Força:</label>
+                <input type="number" id="forca" min="0" value="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="destreza">Destreza:</label>
+                <input type="number" id="destreza" min="0" value="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="constituicao">Constituição:</label>
+                <input type="number" id="constituicao" min="0" value="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="inteligencia">Inteligência:</label>
+                <input type="number" id="inteligencia" min="0" value="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="sabedoria">Sabedoria:</label>
+                <input type="number" id="sabedoria" min="0" value="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="carisma">Carisma:</label>
+                <input type="number" id="carisma" min="0" value="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="dano">Dano Base da Arma:</label>
+                <select id="dano">
+                    <option value="3">d3</option>
+                    <option value="4">d4</option>
+                    <option value="6" selected>d6</option>
+                    <option value="8">d8</option>
+                    <option value="10">d10</option>
+                    <option value="12">d12</option>
+                    <option value="14">d14</option>
+                    <option value="16">d16</option>
+                    <option value="18">d18</option>
+                    <option value="20">d20</option>
+                    <option value="25">d25</option>
+                    <option value="30">d30</option>
+                    <option value="50">d50</option>
+                    <option value="100">d100</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="attribute-scaling-section">
+            <h3>Escalonamento de Dano</h3>
+            <p>Selecione quais atributos contribuem para o dano e seus respectivos ranks:</p>
+            <div id="attribute-scaling">
+                <!-- Checkboxes serão gerados aqui pelo JavaScript -->
+            </div>
+        </div>
+        
+        <button id="gerar">Atualizar Personagem</button>
+    </div>
+    
+    <div id="card" class="card">
+        <div class="card-header">
+            <h2>Informações do Personagem</h2>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-item">
+                <strong>Vida Máxima:</strong> <span id="vida-maxima">0</span>
+            </div>
+            <div class="stat-item">
+                <strong>Força:</strong> <span id="card-forca">0</span>
+            </div>
+            <div class="stat-item">
+                <strong>Destreza:</strong> <span id="card-destreza">0</span>
+            </div>
+            <div class="stat-item">
+                <strong>Constituição:</strong> <span id="card-constituicao">0</span>
+            </div>
+            <div class="stat-item">
+                <strong>Inteligência:</strong> <span id="card-inteligencia">0</span>
+            </div>
+            <div class="stat-item">
+                <strong>Sabedoria:</strong> <span id="card-sabedoria">0</span>
+            </div>
+            <div class="stat-item">
+                <strong>Carisma:</strong> <span id="card-carisma">0</span>
+            </div>
+        </div>
+        
+        <div class="damage-section">
+            <h3>Dano da Arma</h3>
+            <p>Base: <strong>d<span id="card-dano-base">0</span></strong></p>
+            
+            <div class="damage-breakdown" id="damage-breakdown">
+                <!-- Detalhes do dano serão inseridos aqui -->
+            </div>
+            
+            <div class="damage-total">
+                Dano Total: <strong>d<span id="card-dano-total-base">0</span> + <span id="card-dano-total-bonus">0</span></strong>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const attributes = [
+                { id: 'forca', name: 'Força' },
+                { id: 'destreza', name: 'Destreza' },
+                { id: 'constituicao', name: 'Constituição' },
+                { id: 'inteligencia', name: 'Inteligência' },
+                { id: 'sabedoria', name: 'Sabedoria' },
+                { id: 'carisma', name: 'Carisma' }
+            ];
+            
+            const ranks = [
+                { value: 'D', multiplier: 1, name: 'D (x1)' },
+                { value: 'C', multiplier: 2, name: 'C (x2)' },
+                { value: 'B', multiplier: 3, name: 'B (x3)' },
+                { value: 'A', multiplier: 5, name: 'A (x5)' },
+                { value: 'S', multiplier: 7, name: 'S (x7)' }
+            ];
+            
+            const attributeScalingDiv = document.getElementById('attribute-scaling');
+            
+            // Criar checkboxes e seletores de rank para cada atributo
+            attributes.forEach(attr => {
+                const div = document.createElement('div');
+                div.className = 'attribute-checkbox';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `scale-${attr.id}`;
+                checkbox.name = `scale-${attr.id}`;
+                
+                const label = document.createElement('label');
+                label.htmlFor = `scale-${attr.id}`;
+                label.textContent = attr.name;
+                
+                const select = document.createElement('select');
+                select.className = 'rank-selector';
+                select.id = `rank-${attr.id}`;
+                
+                ranks.forEach(rank => {
+                    const option = document.createElement('option');
+                    option.value = rank.value;
+                    option.textContent = rank.name;
+                    select.appendChild(option);
+                });
+                
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                div.appendChild(select);
+                attributeScalingDiv.appendChild(div);
+            });
+            
+            // Gerar card quando o botão for clicado
+            document.getElementById('gerar').addEventListener('click', function() {
+                // Obter valores dos atributos
+                const forca = parseInt(document.getElementById('forca').value) || 0;
+                const destreza = parseInt(document.getElementById('destreza').value) || 0;
+                const constituicao = parseInt(document.getElementById('constituicao').value) || 0;
+                const inteligencia = parseInt(document.getElementById('inteligencia').value) || 0;
+                const sabedoria = parseInt(document.getElementById('sabedoria').value) || 0;
+                const carisma = parseInt(document.getElementById('carisma').value) || 0;
+                const danoBase = document.getElementById('dano').value;
+                
+                // Calcular vida máxima
+                const vidaMaxima = 100 + (constituicao * 5);
+                
+                // Calcular dano da arma
+                let danoBonusTotal = 0;
+                const damageBreakdown = [];
+                
+                attributes.forEach(attr => {
+                    const checkbox = document.getElementById(`scale-${attr.id}`);
+                    if (checkbox.checked) {
+                        const rankSelect = document.getElementById(`rank-${attr.id}`);
+                        const rankValue = rankSelect.value;
+                        const attributeValue = parseInt(document.getElementById(attr.id).value) || 0;
+                        
+                        // Encontrar o multiplicador do rank selecionado
+                        const rank = ranks.find(r => r.value === rankValue);
+                        const multiplier = rank ? rank.multiplier : 0;
+                        const bonus = attributeValue * multiplier;
+                        
+                        danoBonusTotal += bonus;
+                        damageBreakdown.push({
+                            attribute: attr.name,
+                            value: attributeValue,
+                            rank: rankValue,
+                            multiplier: multiplier,
+                            bonus: bonus
+                        });
+                    }
+                });
+                
+                // Exibir no card
+                document.getElementById('vida-maxima').textContent = vidaMaxima;
+                document.getElementById('card-forca').textContent = forca;
+                document.getElementById('card-destreza').textContent = destreza;
+                document.getElementById('card-constituicao').textContent = constituicao;
+                document.getElementById('card-inteligencia').textContent = inteligencia;
+                document.getElementById('card-sabedoria').textContent = sabedoria;
+                document.getElementById('card-carisma').textContent = carisma;
+                
+                // Exibir detalhes do dano
+                document.getElementById('card-dano-base').textContent = danoBase;
+                document.getElementById('card-dano-total-base').textContent = danoBase;
+                document.getElementById('card-dano-total-bonus').textContent = danoBonusTotal;
+                
+                const damageBreakdownDiv = document.getElementById('damage-breakdown');
+                damageBreakdownDiv.innerHTML = '';
+                
+                if (damageBreakdown.length > 0) {
+                    damageBreakdown.forEach(item => {
+                        const damageSource = document.createElement('div');
+                        damageSource.className = 'damage-source';
+                        
+                        const sourceText = document.createElement('span');
+                        sourceText.textContent = `${item.attribute} (${item.rank}):`;
+                        
+                        const sourceValue = document.createElement('span');
+                        sourceValue.textContent = `${item.value} × ${item.multiplier} = +${item.bonus}`;
+                        
+                        damageSource.appendChild(sourceText);
+                        damageSource.appendChild(sourceValue);
+                        damageBreakdownDiv.appendChild(damageSource);
+                    });
+                } else {
+                    const noBonus = document.createElement('p');
+                    noBonus.textContent = 'Nenhum atributo selecionado para escalonamento de dano';
+                    damageBreakdownDiv.appendChild(noBonus);
+                }
+                
+                // Mostrar o card com animação
+                const card = document.getElementById('card');
+                card.style.display = 'block';
+                card.style.animation = 'fadeIn 0.5s';
+                
+                // Rolagem suave para o card
+                card.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>
