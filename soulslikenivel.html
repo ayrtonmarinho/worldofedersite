@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Almas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result-item {
+            margin-bottom: 10px;
+        }
+        .result-title {
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .highlight {
+            background-color: #e6f7ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Calculadora de Niveis Por Almas</h1>
+    
+    <div class="form-group">
+        <label for="currentLevel">Nível Atual:</label>
+        <input type="number" id="currentLevel" min="1" value="1">
+    </div>
+    
+    <div class="form-group">
+        <label for="currentExp">Almas Atuais:</label>
+        <input type="number" id="currentExp" min="0" value="0">
+    </div>
+    
+    <div class="form-group">
+        <label for="desiredLevel">Nível Desejado (opcional):</label>
+        <input type="number" id="desiredLevel" min="2" placeholder="Deixe em branco para calcular níveis possíveis">
+    </div>
+    
+    <button onclick="calculate()">Calcular</button>
+    
+    <div id="resultCard" class="card" style="display: none;">
+        <h2>Resultados</h2>
+        <div class="result-item">
+            <span class="result-title">Nível atual do jogador:</span>
+            <span id="resultCurrentLevel"></span>
+        </div>
+        <div class="result-item">
+            <span class="result-title">Almas atuais do jogador:</span>
+            <span id="resultCurrentExp"></span>
+        </div>
+        <div class="result-item">
+            <span class="result-title">Nível desejado:</span>
+            <span id="resultDesiredLevel"></span>
+        </div>
+        <div class="result-item">
+            <span class="result-title">Almas necessárias:</span>
+            <span id="resultExpNeeded"></span>
+        </div>
+        <div class="result-item">
+            <span class="result-title">Níveis possíveis com almas atuais:</span>
+            <span id="resultPossibleLevels"></span>
+        </div>
+        
+        <h3>Detalhamento por Nível</h3>
+        <div id="expTable"></div>
+    </div>
+
+    <script>
+        function calculateExpForLevel(targetLevel) {
+            let expNeeded = 0;
+            let currentExpForNextLevel = 350;
+            
+            for (let level = 2; level <= targetLevel; level++) {
+                expNeeded += currentExpForNextLevel;
+                currentExpForNextLevel = Math.floor(currentExpForNextLevel * 1.10); // Aumenta 10%
+            }
+            
+            return expNeeded;
+        }
+        
+        function getExpForNextLevel(level) {
+            if (level < 2) return 0;
+            let exp = 350;
+            for (let i = 3; i <= level; i++) {
+                exp = Math.floor(exp * 1.10);
+            }
+            return exp;
+        }
+        
+        function calculatePossibleLevels(currentLevel, currentExp) {
+            let levelsGained = 0;
+            let expNeededForNextLevel = getExpForNextLevel(currentLevel + levelsGained);
+            let remainingExp = currentExp;
+            
+            while (remainingExp >= expNeededForNextLevel) {
+                remainingExp -= expNeededForNextLevel;
+                levelsGained++;
+                expNeededForNextLevel = getExpForNextLevel(currentLevel + levelsGained);
+            }
+            
+            return levelsGained;
+        }
+        
+        function generateExpTable(currentLevel, currentExp, maxLevel) {
+            let tableHTML = '<table>';
+            tableHTML += '<tr><th>Nível</th><th>Almas para Próximo</th><th>Almas Acumuladas</th><th>Status</th></tr>';
+            
+            let cumulativeExp = 0;
+            let remainingExp = currentExp;
+            let canReach = true;
+            
+            for (let level = currentLevel; level <= maxLevel; level++) {
+                const expForNext = level === 1 ? 350 : getExpForNextLevel(level);
+                const neededFromCurrent = cumulativeExp;
+                
+                let status = '';
+                let rowClass = '';
+                
+                if (level === currentLevel) {
+                    status = 'Nível Atual';
+                    rowClass = 'highlight';
+                } else if (remainingExp >= expForNext) {
+                    status = 'Alcançável';
+                    remainingExp -= expForNext;
+                } else {
+                    status = 'Insuficiente';
+                    canReach = false;
+                }
+                
+                tableHTML += `<tr class="${rowClass}">`;
+                tableHTML += `<td>${level}</td>`;
+                tableHTML += `<td>${level === maxLevel ? '-' : expForNext.toLocaleString()}</td>`;
+                tableHTML += `<td>${cumulativeExp.toLocaleString()}</td>`;
+                tableHTML += `<td>${status}</td>`;
+                tableHTML += '</tr>';
+                
+                if (level < maxLevel) {
+                    cumulativeExp += expForNext;
+                }
+                
+                if (!canReach && level > currentLevel) break;
+            }
+            
+            tableHTML += '</table>';
+            return tableHTML;
+        }
+        
+        function calculate() {
+            const currentLevel = parseInt(document.getElementById('currentLevel').value);
+            const currentExp = parseInt(document.getElementById('currentExp').value);
+            const desiredLevelInput = document.getElementById('desiredLevel').value;
+            
+            // Validar entrada
+            if (isNaN(currentLevel) || currentLevel < 1) {
+                alert("Por favor, insira um nível atual válido (≥1)");
+                return;
+            }
+            
+            if (isNaN(currentExp) || currentExp < 0) {
+                alert("Por favor, insira uma quantidade de almas válida (≥0)");
+                return;
+            }
+            
+            // Calcular níveis possíveis
+            const possibleLevels = calculatePossibleLevels(currentLevel, currentExp);
+            const maxPossibleLevel = currentLevel + possibleLevels;
+            
+            // Determinar até qual nível mostrar na tabela
+            let maxLevelToShow = maxPossibleLevel;
+            if (desiredLevelInput && !isNaN(parseInt(desiredLevelInput))) {
+                const desiredLevel = parseInt(desiredLevelInput);
+                if (desiredLevel <= currentLevel) {
+                    alert("O nível desejado deve ser maior que o nível atual");
+                    return;
+                }
+                maxLevelToShow = Math.max(desiredLevel, maxPossibleLevel);
+            } else {
+                // Mostrar até 5 níveis à frente ou até onde a exp permitir
+                maxLevelToShow = Math.max(maxPossibleLevel, currentLevel + 5);
+            }
+            
+            // Exibir resultados
+            document.getElementById('resultCurrentLevel').textContent = currentLevel;
+            document.getElementById('resultCurrentExp').textContent = currentExp.toLocaleString();
+            
+            if (desiredLevelInput && !isNaN(parseInt(desiredLevelInput))) {
+                const desiredLevel = parseInt(desiredLevelInput);
+                const expNeeded = calculateExpForLevel(desiredLevel) - calculateExpForLevel(currentLevel);
+                document.getElementById('resultDesiredLevel').textContent = desiredLevel;
+                document.getElementById('resultExpNeeded').textContent = expNeeded.toLocaleString();
+            } else {
+                document.getElementById('resultDesiredLevel').textContent = "Não especificado";
+                document.getElementById('resultExpNeeded').textContent = "N/A";
+            }
+            
+            document.getElementById('resultPossibleLevels').textContent = 
+                possibleLevels > 0 ? 
+                `+${possibleLevels} (até nível ${maxPossibleLevel})` : 
+                "Almas insuficientes para subir de nível";
+            
+            // Gerar e exibir tabela
+            document.getElementById('expTable').innerHTML = generateExpTable(
+                currentLevel, 
+                currentExp, 
+                maxLevelToShow
+            );
+            
+            document.getElementById('resultCard').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

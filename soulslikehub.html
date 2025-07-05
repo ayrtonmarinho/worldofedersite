@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Souls Like - Jogos</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #222;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-image: url('https://iili.io/FlRTKvt.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+        }
+        
+        .header {
+            text-align: center;
+            margin: 30px 0;
+            z-index: 1;
+        }
+        
+        .title {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            color: #d44e37;
+            font-family: 'Times New Roman', serif;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            margin-top: 10px;
+            color: #ccc;
+        }
+        
+        .games-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+            width: 90%;
+            max-width: 1000px;
+            margin-bottom: 50px;
+            z-index: 1;
+        }
+        
+        .game-button {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            border: none;
+            border-radius: 5px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .game-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            border: solid 1px;
+            border-color: aliceblue;
+        }
+        
+        .game-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.3));
+        }
+        
+        .game-title {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            z-index: 2;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+        }
+        
+        .game-button a {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+        }
+        
+        @media (max-width: 600px) {
+            .games-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .title {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">As Ilhas de Jormandurr</h1>
+        <p class="subtitle"></p>
+    </div>
+    
+    <div class="games-container" id="gamesContainer">
+        <!-- Os botões dos jogos serão inseridos aqui via JavaScript -->
+    </div>
+
+    <script>
+        // Array de jogos com seus dados
+        const games = [
+            {
+                title: "Armas, Dano e Vida",
+                imageUrl: "https://iili.io/FlRuh0l.png",
+                link: "soulslikeevent.html"
+            },
+            {
+                title: "Niveis Alcançáveis",
+                imageUrl: "https://iili.io/FlRuXf4.png",
+                link: "soulslikenivel.html"
+            },
+            
+        ];
+        
+        // Função para criar os botões dos jogos
+        function createGameButtons() {
+            const container = document.getElementById('gamesContainer');
+            
+            games.forEach(game => {
+                const gameButton = document.createElement('button');
+                gameButton.className = 'game-button';
+                gameButton.style.backgroundImage = `url('${game.imageUrl}')`;
+                
+                const gameTitle = document.createElement('span');
+                gameTitle.className = 'game-title';
+                gameTitle.textContent = game.title;
+                
+                const gameLink = document.createElement('a');
+                gameLink.href = game.link;
+                gameLink.target = '_blank';
+                
+                gameButton.appendChild(gameTitle);
+                gameButton.appendChild(gameLink);
+                container.appendChild(gameButton);
+            });
+        }
+        
+        // Chamada da função quando a página carrega
+        window.onload = createGameButtons;
+        
+        // Função para alterar o background (caso queira mudar dinamicamente)
+        function changeBackground(imageUrl) {
+            document.body.style.backgroundImage = `url('${imageUrl}')`;
+        }
+        
+        // Exemplo de como mudar o background:
+        // changeBackground('https://nova-url-da-imagem.jpg');
+    </script>
+</body>
+</html>
