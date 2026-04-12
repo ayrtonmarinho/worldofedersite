@@ -4,29 +4,25 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>World Of Eder</title>
   </head>
   <body id="login_form">
     <i id="mode_icon" class="fa-solid fa-moon"></i>
-    <!--
-    <audio id="player" autoplay>
-      <source src="audio/woeprologo.mp3" type="audio/mp3" />
-    </audio>
-    -->
     <header id="main-box">
-      
       <div id="main">
-        <img id="logo" src="imgs/woe_titulo.png" alt="" srcset="" />
+        <img id="logo" src="imgs/woe_titulo.png" alt="World Of Eder" />
         <header id="titulo"><h1>Bem Vindo ao Eder</h1></header>
         <div id="login_box">
-          <p class="loginbox">Usuário</p>
-          <input type="text" name="user" id="username">
-          <p class="loginbox">Senha</p>
-          <input type="password" name="password" id="password">
-          <p><a href="http://google.com" target="_blank">Esqueci a senha. Porra!</a></p>
-          <p><button id="login_button" onclick="login()">Conectar</button></p>
+          <label class="loginbox" for="username">Usuário</label>
+          <input type="text" name="user" id="username" placeholder="Seu nome de aventureiro...">
+          
+          <label class="loginbox" for="password">Senha</label>
+          <input type="password" name="password" id="password" placeholder="Sua senha...">
+          
+          <a href="http://google.com" target="_blank">Esqueci a senha. Porra!</a>
+          <button id="login_button" onclick="login()">Conectar</button>
           <span id="warning_login"></span>
         </div>
       </div>
