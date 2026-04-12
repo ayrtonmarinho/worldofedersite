@@ -568,18 +568,19 @@
 
             let trees = getLocalTrees();
             if (!trees[currentTreeId]) {
-                trees[currentTreeId] = { id: currentTreeId, name: "Árvore Atual", data: treeData };
+                trees[currentTreeId] = { tree_id: currentTreeId, name: "Árvore Atual", data: treeData };
             } else {
                 trees[currentTreeId].data = treeData;
+                trees[currentTreeId].tree_id = currentTreeId; // Garantir a chave certa
             }
             saveLocalTrees(trees);
 
             localStorage.setItem("poe2_global_tree", JSON.stringify(treeData)); // Retro-compatibilidade
 
             if (askCloud) {
-                let apiResponse = await apiFetch(`/tree/${currentTreeId}`, 'POST', trees[currentTreeId]);
+                let apiResponse = await apiFetch('/tree', 'POST', trees[currentTreeId]);
                 if (apiResponse) alert("Árvore atual salva na nuvem!");
-                else alert("API indisponível. Árvore salva localmente para testes.");
+                else alert("API indisponível ou Falha. Árvore salva localmente para testes.");
             }
         }
 
