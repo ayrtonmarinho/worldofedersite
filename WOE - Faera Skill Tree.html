@@ -713,11 +713,11 @@
                     ctx.drawImage(img, pos.x - r, pos.y - r, r * 2, r * 2);
                     // Sobreposição escura se não alocado
                     if (!isAlloc) {
-                        ctx.fillStyle = "rgba(15, 23, 42, 0.7)";
+                        ctx.fillStyle = node.type === "root" ? "rgba(15, 23, 42, 0.2)" : "rgba(15, 23, 42, 0.7)";
                         ctx.fill();
                     }
                 } else {
-                    ctx.fillStyle = isAlloc ? colors.fill : "#0f172a";
+                    ctx.fillStyle = isAlloc ? colors.fill : (node.type === "root" ? "#1e293b" : "#0f172a");
                     ctx.fill();
                 }
                 ctx.restore();
@@ -727,9 +727,15 @@
                 pathFn(ctx, pos.x, pos.y, r);
                 if (isAlloc) {
                     ctx.strokeStyle = colors.stroke;
-                    ctx.lineWidth = 3 * camera.zoom;
+                    ctx.lineWidth = (node.type === "root" ? 5 : 3) * camera.zoom;
                     ctx.shadowColor = colors.shadow;
-                    ctx.shadowBlur = 15;
+                    ctx.shadowBlur = node.type === "root" ? 25 : 15;
+                } else if (node.type === "root") {
+                    // Highlight contínuo para nodos de classe (raízes)
+                    ctx.strokeStyle = colors.stroke; 
+                    ctx.lineWidth = 2 * camera.zoom;
+                    ctx.shadowColor = colors.shadow;
+                    ctx.shadowBlur = 10;
                 } else {
                     ctx.strokeStyle = canAlloc ? "#94a3b8" : "#334155";
                     ctx.lineWidth = (canAlloc ? 2 : 1) * camera.zoom;
