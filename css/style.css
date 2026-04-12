@@ -1,318 +1,273 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@300;400;600&display=swap');
+
 :root {
-  --color-light-50: #f8fafc;
-
-  --color-dark-50: #797984;
-  --color-dark-100: #312d37;
-  --color-dark-900: #000;
-}
-#main {
-  text-align: center;
-  width: 80%;
-  margin: auto;
-  height: 80%;
-  min-height: 840px;
-}
-
-.loginbox {
-  font-size: 12pt;
-  font-weight: bold;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-}
-
-#login_button {
-  width: 60%;
-  background-color: #000;
-  color: #ffffff;
-  font-weight: bolder;
-  border-radius: 4px;
+  /* Fundações da Paleta: Medieval Moderno */
+  --bg-color: #121213;
+  --bg-gradient: linear-gradient(135deg, #101011 0%, #1e1e24 100%);
+  --panel-bg: rgba(30, 30, 36, 0.6);
+  --panel-border: rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  
+  --text-primary: #e6e0d4; /* Tom puxado para pergaminho no escuro */
+  --text-secondary: #9a9488;
+  
+  --accent-gold: #cfaa56;
+  --accent-gold-hover: #e8c678;
+  --accent-crimson: #a62b2b;
+  
+  /* Fontes */
+  --font-heading: 'Cinzel', serif;
+  --font-body: 'Inter', sans-serif;
 }
 
-#login_button:hover {
-  width: 60%;
-  background-color: #ffffff;
-  color: #000000;
-  font-weight: bolder;
-  border-radius: 4px;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-#login_button:active {
-  width: 58%;
-  background-color: #4d4b4b;
-  color: #ffffff;
-  font-weight: bolder;
-  border-radius: 4px;
-}
-
-
-#login_box{
-  border: 1px solid #ffffff;
-  border-radius: 5px;
-  width: 20%;
-  padding-bottom: 60px;
-  margin: auto;
-}
-
-#password{
-  text-align: center;
-}
-
-#username{
-  text-align: center;
-}
-
-#logo {
-  width: 100%;
-}
 body {
-  background-image: linear-gradient(180deg, rgb(255, 255, 255), #717171);
-}
-.dark#body {
-  background-image: linear-gradient(180deg, #131313, #000000);
+  font-family: var(--font-body);
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.dark#login_form {
-  color: white;
-  background-image: linear-gradient(180deg, #131313, #000000);
+.dark#body {
+  background: linear-gradient(135deg, #050505 0%, #111115 100%);
 }
 
 #mode_icon {
-  cursor: pointer;
-  font-size: 20px;
-  padding: 5px;
   position: absolute;
-}
-.dark#mode_icon {
+  top: 25px;
+  right: 30px;
   cursor: pointer;
-  font-size: 20px;
-  background-color: white;
+  font-size: 24px;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+  z-index: 100;
 }
 
-#titulo {
-  text-align: center;
-  color: white;
-  background-color: rgb(88, 88, 88);
-  border-radius: 20px;
+#mode_icon:hover {
+  color: var(--accent-gold);
+  transform: scale(1.1);
 }
 
 #main-box {
-  padding-top: 5%;
-  padding-bottom: 1%;
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
 }
 
-/* CSS */
+#main {
+  text-align: center;
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#logo {
+  max-width: 320px;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  filter: drop-shadow(0 0 15px rgba(207, 170, 86, 0.2));
+  transition: filter 0.5s ease;
+}
+
+#logo:hover {
+  filter: drop-shadow(0 0 25px rgba(207, 170, 86, 0.4));
+}
+
+#titulo h1 {
+  font-family: var(--font-heading);
+  font-size: 2.8rem;
+  letter-spacing: 3px;
+  color: var(--accent-gold);
+  text-shadow: 0 4px 15px rgba(207, 170, 86, 0.15);
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+#main > p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 2.5rem;
+  font-size: 1.05rem;
+  max-width: 80%;
+}
+
+/* Glassmorphism Panel - Login */
+#login_box {
+  background: var(--panel-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.loginbox {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  text-align: left;
+  font-weight: 600;
+  margin-bottom: -0.8rem;
+}
+
+#password, #username {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+#password:focus, #username:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 15px rgba(207, 170, 86, 0.15);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+#login_box a {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  align-self: flex-end;
+}
+
+#login_box a:hover {
+  color: var(--accent-gold);
+}
+
+#login_button {
+  width: 100%;
+  padding: 16px;
+  margin-top: 0.5rem;
+  background: linear-gradient(135deg, #1b1b1e, #2d2a26);
+  border: 1px solid rgba(207, 170, 86, 0.5);
+  color: var(--accent-gold);
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+#login_button:hover {
+  background: var(--accent-gold);
+  color: #111;
+  box-shadow: 0 0 25px rgba(207, 170, 86, 0.3);
+  transform: translateY(-2px);
+}
+
+#login_button:active {
+  transform: translateY(1px);
+}
+
+#warning_login {
+  color: var(--accent-crimson);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+
+/* Modern Medieval Buttons for Hub */
 .button-49,
-.button-49:after {
+.button-50 {
   width: 100%;
-  max-width: 250px;
-
-  height: 76px;
-  line-height: 78px;
-  font-size: 1.125rem;
-  font-family: "Bebas Neue", sans-serif;
-  background: linear-gradient(45deg, transparent 5%, #262526 5%);
-  box-shadow: 10px, 10px, 13px rgba(0, 0, 0, 0.33);
-  border: 0;
-  color: #fff;
-  letter-spacing: 3px;
-  box-shadow: 6px 0px 0px #00e6f6;
-  outline: transparent;
+  max-width: 320px;
+  padding: 20px;
+  margin: 0.5rem 0;
+  background: rgba(20, 20, 24, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid var(--accent-gold);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  cursor: pointer;
   position: relative;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: manipulation;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.button-49:after {
-  --slice-0: inset(50% 50% 50% 50%);
-  --slice-1: inset(80% -6px 0 0);
-  --slice-2: inset(50% -6px 30% 0);
-  --slice-3: inset(10% -6px 85% 0);
-  --slice-4: inset(40% -6px 43% 0);
-  --slice-5: inset(80% -6px 5% 0);
+.button-50 {
+  border-left: 3px solid var(--accent-crimson);
+}
 
-  content: "ALTERNATE TEXT";
-  display: block;
+.button-49::before,
+.button-50::before {
+  content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    45deg,
-    transparent 3%,
-    #00e6f6 3%,
-    #00e6f6 5%,
-    #572481 5%
-  );
-  text-shadow: -3px -3px 0px #f8f005, 3px 3px 0px #00e6f6;
-  clip-path: var(--slice-0);
+  top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(207, 170, 86, 0.15), transparent);
+  transition: all 0.6s ease;
+  z-index: 1;
 }
 
-.button-49:hover:after {
-  animation: 1s glitch;
-  animation-timing-function: steps(2, end);
+.button-50::before {
+  background: linear-gradient(90deg, transparent, rgba(166, 43, 43, 0.2), transparent);
 }
 
-@keyframes glitch {
-  0% {
-    clip-path: var(--slice-1);
-    transform: translate(-20px, -10px);
-  }
-  10% {
-    clip-path: var(--slice-3);
-    transform: translate(10px, 10px);
-  }
-  20% {
-    clip-path: var(--slice-1);
-    transform: translate(-10px, 10px);
-  }
-  30% {
-    clip-path: var(--slice-3);
-    transform: translate(0px, 5px);
-  }
-  40% {
-    clip-path: var(--slice-2);
-    transform: translate(-5px, 0px);
-  }
-  50% {
-    clip-path: var(--slice-3);
-    transform: translate(5px, 0px);
-  }
-  60% {
-    clip-path: var(--slice-4);
-    transform: translate(5px, 10px);
-  }
-  70% {
-    clip-path: var(--slice-2);
-    transform: translate(-10px, 10px);
-  }
-  80% {
-    clip-path: var(--slice-5);
-    transform: translate(20px, -10px);
-  }
-  90% {
-    clip-path: var(--slice-1);
-    transform: translate(-10px, 0px);
-  }
-  100% {
-    clip-path: var(--slice-1);
-    transform: translate(0);
-  }
+.button-49:hover::before,
+.button-50:hover::before {
+  left: 100%;
 }
 
-@media (min-width: 768px) {
-  .button-49,
-  .button-49:after {
-    width: 300px;
-    height: 86px;
-    line-height: 88px;
-  }
+.button-49:hover {
+  transform: translateX(5px);
+  border-color: rgba(207, 170, 86, 0.4);
+  box-shadow: 0 8px 25px rgba(207, 170, 86, 0.15);
+  color: var(--accent-gold-hover);
 }
 
-/*Main Button Story*/
-.button-50,
-.button-50:after {
-  width: 100%;
-  max-width: 250px;
-  height: 76px;
-  line-height: 78px;
-  font-size: 1.125rem;
-  font-family: "Bebas Neue", sans-serif;
-  background: linear-gradient(45deg, transparent 5%, #1c2b18 5%);
-  border: 0;
-  color: #fff;
-  letter-spacing: 3px;
-  box-shadow: 6px 0px 0px #ff0432;
-  outline: transparent;
-  position: relative;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: manipulation;
+.button-50:hover {
+  transform: translateX(5px);
+  border-color: rgba(166, 43, 43, 0.4);
+  box-shadow: 0 8px 25px rgba(166, 43, 43, 0.2);
+  color: #ff8c8c;
 }
 
-.button-50:after {
-  --slice-0: inset(50% 50% 50% 50%);
-  --slice-1: inset(80% -6px 0 0);
-  --slice-2: inset(50% -6px 30% 0);
-  --slice-3: inset(10% -6px 85% 0);
-  --slice-4: inset(40% -6px 43% 0);
-  --slice-5: inset(80% -6px 5% 0);
-
-  content: "AGE Of Chaos";
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    45deg,
-    transparent 3%,
-    #f600d9 3%,
-    #a7b2b3 5%,
-    #ff0432 5%
-  );
-  text-shadow: -3px -3px 0px #f82d05, 3px 3px 0px #00e6f6;
-  clip-path: var(--slice-0);
-}
-
-.button-50:hover:after {
-  animation: 1s glitch;
-  animation-timing-function: steps(2, end);
-}
-
-@keyframes glitch {
-  0% {
-    clip-path: var(--slice-1);
-    transform: translate(-20px, -10px);
-  }
-  10% {
-    clip-path: var(--slice-3);
-    transform: translate(10px, 10px);
-  }
-  20% {
-    clip-path: var(--slice-1);
-    transform: translate(-10px, 10px);
-  }
-  30% {
-    clip-path: var(--slice-3);
-    transform: translate(0px, 5px);
-  }
-  40% {
-    clip-path: var(--slice-2);
-    transform: translate(-5px, 0px);
-  }
-  50% {
-    clip-path: var(--slice-3);
-    transform: translate(5px, 0px);
-  }
-  60% {
-    clip-path: var(--slice-4);
-    transform: translate(5px, 10px);
-  }
-  70% {
-    clip-path: var(--slice-2);
-    transform: translate(-10px, 10px);
-  }
-  80% {
-    clip-path: var(--slice-5);
-    transform: translate(20px, -10px);
-  }
-  90% {
-    clip-path: var(--slice-1);
-    transform: translate(-10px, 0px);
-  }
-  100% {
-    clip-path: var(--slice-1);
-    transform: translate(0);
-  }
-}
-
-@media (min-width: 768px) {
-  .button-50,
-  .button-50:after {
-    width: 300px;
-    height: 86px;
-    line-height: 88px;
-  }
+/* Responsivo Simplificado */
+@media (max-width: 768px) {
+  #titulo h1 { font-size: 2.2rem; }
+  .button-49, .button-50 { max-width: 100%; font-size: 1rem; }
+  #login_box { padding: 1.5rem; }
 }

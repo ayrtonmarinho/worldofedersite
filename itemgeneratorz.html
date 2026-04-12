@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gerador de Itens</title>
+    <link rel="stylesheet" href="css/style.css" />
   <style>
     body {
-        background-color: #333;
+        
         font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
     #main {
@@ -15,13 +16,13 @@
       margin-top: 20px;
       width: 40%;
       height: auto;
-      background-color: #a7b5be;
+      
       border-radius: 3px;
       padding-bottom: 20px;
     }
     #output {
       font-family: Arial, sans-serif;
-      background-color: #ffffff;
+      background: var(--panel-bg); color: var(--text-primary);
       padding: 30px;
       border: 1px solid #aaaaaa;
       width: 300px;
@@ -31,7 +32,7 @@
     }
     .atributo {
       font-weight: bold;
-      color: #333;
+      color: var(--text-primary);
     }
 
     #iconstar {
@@ -50,9 +51,9 @@
         color: #6b6a6a;
         font-weight: bold;
     }
-    h5 {
+    h5 { color: var(--text-secondary) !important; 
         font-style: italic;
-        color: #333;
+        color: var(--text-primary);
         font-weight: 500;
         padding-left: 30px;
         padding-right: 30px;
@@ -61,7 +62,8 @@
   </style>
 </head>
 <body>
-  <div id="main">
+  <div id="main-box"><div id="login_box" style="margin: 40px auto; max-width:800px;">
+  <div id="main" style="width: 100%;">
     <h1>Gerador de Itens</h1>
     <h5>Você pode decidir escalar o item com o level do jogador ou escolher o próprio nível. Quanto maior mais poderoso o item. Use o cap de 20.</h5>
     
@@ -87,7 +89,7 @@
 
     <h2>Item Gerado:</h2>
     <div id="output"></div>
-  </div>
+  </div></div></div>
 
   <script>
     const armas = ["Adaga", "Arco", "Martelo", "Espada", "Chicote", "Espadão", "Machado", "Machadão", "Cajado", "Orbe", "Besta Pequena", "Besta Grande", "Bordão", "Tridente", "Claws", "Rapeira", "Escudo", "Katana", "Estilingue", "Lança", "Soqueira", "Foice", "Swallow", "Haloblade", "Maça", "Chain Blade", "Nunchaku", "Blade Fan", "Twinblades", "Wakizashi"];

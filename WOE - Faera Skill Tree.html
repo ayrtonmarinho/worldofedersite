@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Árvore de Habilidades Avançada (PoE Style)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca para gerar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0f172a;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .tab-btn.active {
+            border-bottom-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+
+<body class="text-gray-200 font-sans flex h-screen">
+
+    <!-- ÁREA DO CANVAS -->
+    <div class="flex-1 relative cursor-grab active:cursor-grabbing bg-cover bg-center" id="canvas-container"
+        style="background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=2048&q=80');">
+        <canvas id="treeCanvas"></canvas>
+
+        <!-- Tooltip -->
+        <div id="tooltip"
+            class="absolute hidden bg-slate-900 border border-slate-700 p-4 rounded shadow-2xl pointer-events-none z-10 transition-opacity duration-150 max-w-xs">
+            <h3 id="tt-name" class="font-bold text-lg mb-1 drop-shadow-md">Nome do Nodo</h3>
+            <p id="tt-type" class="text-xs text-slate-400 uppercase tracking-wider mb-2 font-semibold">Tipo</p>
+            <div id="tt-req" class="text-xs text-red-400 mb-2 hidden">Requisitos: <span id="tt-req-val"></span></div>
+            <p id="tt-desc" class="text-sm text-slate-300 italic mb-2 hidden">Descrição...</p>
+            <div id="tt-stats" class="text-sm text-blue-300 font-medium"></div>
+            <div id="tt-status" class="text-xs mt-3 font-bold border-t border-slate-700 pt-2"></div>
+            <div id="tt-id" class="text-[10px] text-slate-600 mt-1">ID: ...</div>
+        </div>
+
+        <!-- Coordenadas HUD -->
+        <div
+            class="absolute bottom-4 left-4 bg-slate-800/80 px-3 py-1 rounded text-xs text-slate-400 pointer-events-none border border-slate-700">
+            X <span id="world-x" class="text-white">0</span> | Y <span id="world-y" class="text-white">0</span>
+        </div>
+    </div>
+
+    <!-- BARRA LATERAL -->
+    <div class="w-96 glass-panel border-l border-slate-700 flex flex-col h-full shadow-2xl z-20">
+
+        <!-- Abas -->
+        <div class="flex border-b border-slate-700 shrink-0">
+            <button onclick="switchTab('personagem')" id="tab-personagem"
+                class="tab-btn active flex-1 py-3 text-[10px] font-bold uppercase border-b-2 border-transparent hover:text-white transition-colors">Player</button>
+            <button onclick="switchTab('editor')" id="tab-editor"
+                class="tab-btn flex-1 py-3 text-[10px] font-bold uppercase border-b-2 border-transparent hover:text-white transition-colors hidden">Habilidades</button>
+            <button onclick="switchTab('arvores'); renderAdminTreeList();" id="tab-arvores"
+                class="tab-btn flex-1 py-3 text-[10px] font-bold uppercase border-b-2 border-transparent hover:text-white transition-colors hidden">Árvores</button>
+            <button onclick="switchTab('usuarios')" id="tab-usuarios"
+                class="tab-btn flex-1 py-3 text-[10px] font-bold uppercase border-b-2 border-transparent hover:text-white transition-colors hidden">Users</button>
+        </div>
+
+        <!-- ================= PAINEL: PERSONAGEM ================= -->
+        <div id="panel-personagem" class="flex-1 overflow-y-auto p-5 flex flex-col">
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 mb-5">
+                <label class="block text-xs text-slate-400 mb-1 uppercase font-bold">Código do Jogador</label>
+                <div class="flex gap-2">
+                    <input type="text" id="char-code" value="user_001"
+                        class="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                    <button onclick="loadUserFlow()"
+                        class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded transition-colors text-sm font-bold">Carregar</button>
+                </div>
+            </div>
+
+            <div id="player-info" class="hidden flex-col gap-3 mb-5">
+                <h2 class="text-2xl font-black text-amber-500 flex justify-between items-center" id="lbl-char-name">
+                    <span>Nome</span>
+                    <span class="text-sm bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700"
+                        id="lbl-char-level">Nvl 0</span>
+                </h2>
+
+                <div class="flex justify-between bg-slate-900 border border-slate-700 rounded p-3 text-sm">
+                    <div class="text-center flex-1 border-r border-slate-700">
+                        <div class="text-slate-400 text-xs uppercase mb-1">Pontos Restantes</div>
+                        <div class="text-2xl font-bold text-green-400" id="lbl-pts-avail">0</div>
+                    </div>
+                    <div class="text-center flex-1">
+                        <div class="text-slate-400 text-xs uppercase mb-1">Pontos Usados</div>
+                        <div class="text-2xl font-bold text-red-400" id="lbl-pts-used">0</div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="saveUserFlow()"
+                        class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded transition-colors font-bold shadow-lg shadow-emerald-900/50">💾
+                        Salvar</button>
+                    <button onclick="resetUserPoints()"
+                        class="flex-1 bg-red-700 hover:bg-red-600 text-white py-2 rounded transition-colors font-bold shadow-lg shadow-red-900/50">🔄
+                        Resetar</button>
+                </div>
+                <!-- NOVO BOTÃO PDF -->
+                <button onclick="exportToPDF()"
+                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded transition-colors font-bold shadow-lg shadow-indigo-900/50 mt-1">📄
+                    Exportar Ficha (PDF)</button>
+            </div>
+
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-2 mb-3">
+                Resumo de Poderes</h3>
+            <div id="summary-container" class="space-y-4 flex-1">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
+
+        <!-- ================= PAINEL: EDITOR DE NODOS (ADMIN) ================= -->
+        <div id="panel-editor" class="flex-1 overflow-y-auto p-5 flex flex-col hidden">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                <h2 class="text-lg font-black text-fuchsia-500" id="form-title">🛠️ Criar Novo Nodo</h2>
+                <button type="button" onclick="resetNodeForm()"
+                    class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-white font-bold uppercase tracking-wider">Limpar
+                    / Novo</button>
+            </div>
+            <form id="add-node-form" onsubmit="saveNode(event)" class="space-y-3">
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">ID (único)</label>
+                        <input type="text" id="new-id" required
+                            class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Conectar a (IDs sep.
+                            por vírgula)</label>
+                        <input type="text" id="new-parent" value="root_warrior"
+                            class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Título / Nome</label>
+                    <input type="text" id="new-name" required
+                        class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none">
+                </div>
+
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Tipo / Tamanho</label>
+                        <select id="new-type" onchange="toggleFormFields()"
+                            class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white">
+                            <option value="basic">Pequeno (Atributo)</option>
+                            <option value="notable">Médio (Passiva)</option>
+                            <option value="large">Grande (Habilidade Ativa)</option>
+                            <option value="root">Raiz (Nova Classe)</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Atributo/Cor</label>
+                        <select id="new-attr"
+                            class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white">
+                            <option value="none">Branco (Nenhum)</option>
+                            <option value="str">Laranja (Força)</option>
+                            <option value="dex">Amarelo (Destreza)</option>
+                            <option value="con">Vermelho (Constituição)</option>
+                            <option value="int">Azul (Inteligência)</option>
+                            <option value="wis">Verde (Sabedoria)</option>
+                            <option value="cha">Rosa (Carisma)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="ext-desc" class="hidden">
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Descrição detalhada</label>
+                    <textarea id="new-desc" rows="2"
+                        class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none"></textarea>
+                </div>
+
+                <div id="ext-img" class="hidden">
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">URL da Imagem de Fundo
+                        (Opcional)</label>
+                    <input type="text" id="new-img" placeholder="https://..."
+                        class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Status / Efeitos (Separe
+                        por vírgula)</label>
+                    <input type="text" id="new-stat" placeholder="+10 Força, +5 Vida"
+                        class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none">
+                </div>
+
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Mundo X</label>
+                        <input type="number" id="new-x" required
+                            class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Mundo Y</label>
+                        <input type="number" id="new-y" required
+                            class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white">
+                    </div>
+                </div>
+
+                <button type="submit" id="submit-node-btn"
+                    class="w-full bg-fuchsia-600 hover:bg-fuchsia-500 text-white py-2 rounded mt-4 transition-colors font-bold shadow-lg shadow-fuchsia-900/50">Inserir
+                    Nodo</button>
+            </form>
+
+            <hr class="border-slate-700 my-5">
+            <h3 class="text-sm font-black text-red-500 mb-3 uppercase tracking-wider">🗑️ Remover Nodo / Raiz</h3>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="del-node-id" placeholder="ID do Nodo (ex: w_str1)"
+                    class="flex-1 bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-red-500 outline-none">
+                <button onclick="deleteNode()"
+                    class="bg-red-600 hover:bg-red-500 text-white px-4 py-1.5 rounded font-bold text-sm transition-colors shadow-lg shadow-red-900/50">Eliminar</button>
+            </div>
+
+            <button onclick="saveTreeToDynamo()"
+                class="w-full mt-4 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded transition-colors text-xs font-bold border border-slate-500">⬆️
+                Sincronizar Árvore com DB</button>
+        </div>
+
+        <!-- ================= PAINEL: ADMIN ÁRVORES ================= -->
+        <div id="panel-arvores" class="flex-1 overflow-y-auto p-5 flex flex-col hidden">
+            <h2 class="text-lg font-black text-emerald-500 mb-4 border-b border-slate-700 pb-2">🌳 Gerenciador de
+                Árvores</h2>
+
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-600 mb-4">
+                <h3 class="text-sm font-bold text-white mb-2">Criar Nova Árvore</h3>
+                <input type="text" id="new-tree-id" placeholder="ID (único) (ex: arvore_2)"
+                    class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white mb-2 focus:border-emerald-500 outline-none">
+                <input type="text" id="new-tree-name" placeholder="Título (ex: Árvore Evento)"
+                    class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white mb-3 focus:border-emerald-500 outline-none">
+                <div class="flex gap-2">
+                    <button onclick="adminCreateTree(false)"
+                        class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-900/50 py-2 rounded font-bold text-xs transition-colors">Nova
+                        Vazia</button>
+                    <button onclick="adminCreateTree(true)"
+                        class="flex-1 bg-blue-700 hover:bg-blue-600 text-white shadow-lg shadow-blue-900/50 py-2 rounded font-bold text-xs transition-colors">Clonar
+                        Atual</button>
+                </div>
+            </div>
+
+            <button onclick="syncAllTrees()"
+                class="w-full mb-4 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded transition-colors text-xs font-bold border border-slate-500">⬆️
+                Sincronizar Tudo com DB</button>
+
+            <h3
+                class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-2 mb-3 mt-4">
+                Árvores Salvas no DB</h3>
+            <div id="admin-tree-list" class="space-y-2 text-sm">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
+
+        <!-- ================= PAINEL: ADMIN USUÁRIOS ================= -->
+        <div id="panel-usuarios" class="flex-1 overflow-y-auto p-5 flex flex-col hidden">
+            <h2 class="text-lg font-black text-rose-500 mb-4 border-b border-slate-700 pb-2">👥 Controle de Usuários
+            </h2>
+
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-600 mb-4">
+                <h3 class="text-sm font-bold text-white mb-2">Criar Novo Jogador</h3>
+                <input type="text" id="new-user-code" placeholder="Código Único (ex: mago123)"
+                    class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white mb-2">
+                <input type="text" id="new-user-name" placeholder="Nome de Exibição"
+                    class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white mb-2">
+                <input type="number" id="new-user-pts" placeholder="Pontos Iniciais (ex: 5)"
+                    class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white mb-3">
+                <button onclick="adminCreateUser()"
+                    class="w-full bg-rose-600 hover:bg-rose-500 text-white py-2 rounded font-bold text-sm">Criar &
+                    Sincronizar DB</button>
+            </div>
+
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-600 mb-4">
+                <h3 class="text-sm font-bold text-white mb-2">Dar/Remover Pontos</h3>
+                <input type="text" id="edit-user-code" placeholder="Código do Jogador"
+                    class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white mb-2">
+                <div class="flex gap-2">
+                    <input type="number" id="edit-user-pts" placeholder="Qtd (+ ou -)"
+                        class="flex-1 bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white">
+                    <button onclick="adminModifyPoints()"
+                        class="bg-indigo-600 hover:bg-indigo-500 px-3 rounded font-bold text-white text-sm">Aplicar</button>
+                </div>
+            </div>
+
+            <h3
+                class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-2 mb-3 mt-6">
+                Usuários Locais</h3>
+            <div id="admin-user-list" class="space-y-2 text-sm">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTÃO SECRETO ADMIN -->
+    <button onclick="checkAdminAuth('editor')"
+        class="fixed bottom-2 right-2 w-8 h-8 flex items-center justify-center bg-slate-800/50 hover:bg-slate-700 rounded-full opacity-0 hover:opacity-100 transition-opacity z-50 group">
+        <span class="text-[10px] text-slate-500 group-hover:text-slate-300">⚙️</span>
+    </button>
+
+    <!-- MODAL DE LOGIN ADMIN -->
+    <div id="admin-modal"
+        class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-600 shadow-2xl w-80">
+            <h2 class="text-xl font-bold text-white mb-4">Acesso Administrativo</h2>
+            <input type="password" id="admin-pwd" placeholder="Senha"
+                class="w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white mb-4 focus:border-fuchsia-500 outline-none">
+            <div class="flex gap-2">
+                <button onclick="closeAdminModal()"
+                    class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 rounded font-bold">Cancelar</button>
+                <button onclick="loginAdmin()"
+                    class="flex-1 bg-fuchsia-600 hover:bg-fuchsia-500 text-white py-2 rounded font-bold">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= CONFIGURAÇÕES E API MOCK =================
+        const API_GATEWAY_URL = "https://ttphw8j5bh.execute-api.sa-east-1.amazonaws.com/prod"; // Placeholder
+        let isAdmin = false;
+        let intendedTab = null;
+        let currentUser = null; // Objeto do jogador logado atualmente
+        let imageCache = {};
+
+        const ATTR_COLORS = {
+            "none": { fill: "#1e293b", stroke: "#e2e8f0", shadow: "#ffffff" }, // Branco
+            "str": { fill: "#431407", stroke: "#f97316", shadow: "#ea580c" }, // Laranja
+            "dex": { fill: "#422006", stroke: "#eab308", shadow: "#ca8a04" }, // Amarelo
+            "con": { fill: "#450a0a", stroke: "#f87171", shadow: "#ef4444" }, // Vermelho Suave
+            "int": { fill: "#172554", stroke: "#3b82f6", shadow: "#2563eb" }, // Azul
+            "wis": { fill: "#052e16", stroke: "#22c55e", shadow: "#16a34a" }, // Verde
+            "cha": { fill: "#4a044e", stroke: "#d946ef", shadow: "#c026d3" }  // Rosa/Roxo
+        };
+
+        // --- DADOS DA ÁRVORE (ESTRUTURA) ---
+        let treeData = { nodes: {}, edges: [] };
+        let currentTreeId = "default";
+
+        function getLocalTrees() {
+            let t = localStorage.getItem("poe2_trees_db");
+            return t ? JSON.parse(t) : {};
+        }
+
+        function saveLocalTrees(db) {
+            localStorage.setItem("poe2_trees_db", JSON.stringify(db));
+        }
+
+        function getActiveTreeId() {
+            return localStorage.getItem("poe2_active_tree_id") || "default";
+        }
+
+        function saveActiveTreeId(id) {
+            localStorage.setItem("poe2_active_tree_id", id);
+        }
+
+        // Inicialização do sistema de Árvores buscando Sempre do Banco as árvores
+        async function initTreeSystem() {
+            let trees = getLocalTrees();
+            let activeId = getActiveTreeId();
+
+            // Puxa do banco a ÁRVORE ATIVA para os jogadores carregarem sem overwritar local
+            let activeFromApi = await apiFetch('/tree', 'GET');
+            if (activeFromApi && activeFromApi.tree_id) {
+                trees[activeFromApi.tree_id] = { id: activeFromApi.tree_id, name: activeFromApi.name || activeFromApi.tree_id, data: activeFromApi.data };
+                saveLocalTrees(trees);
+                saveActiveTreeId(activeFromApi.tree_id);
+                activeId = activeFromApi.tree_id;
+            }
+
+            // Fallback: Migração da árvore antiga `poe2_global_tree` caso seja primeiro acesso ao novo sistema
+            let oldGlobalTree = localStorage.getItem("poe2_global_tree");
+            if (oldGlobalTree && Object.keys(trees).length === 0) {
+                trees["default"] = { id: "default", name: "Árvore Principal", data: JSON.parse(oldGlobalTree) };
+                saveLocalTrees(trees);
+            }
+
+            // Fallback: Default tree hardcoded caso não exista nenhuma
+            if (Object.keys(trees).length === 0) {
+                let defaultData = {
+                    nodes: {
+                        "root_warrior": { id: "root_warrior", x: 0, y: 0, name: "Guerreiro (Classe)", type: "root", attribute: "str", stats: ["+20 Força Base"], desc: "Início do caminho bélico.", imgUrl: "https://images.unsplash.com/photo-1589409514187-c21d14bf0d13?auto=format&fit=crop&q=80&w=100&h=100" },
+                        "w_str1": { id: "w_str1", x: -80, y: -100, name: "Força Menor", type: "basic", attribute: "str", stats: ["+10 Força"] },
+                        "w_str2": { id: "w_str2", x: 80, y: -100, name: "Pele Grossa", type: "basic", attribute: "con", stats: ["+10 Constituição"] },
+                        "w_notable1": { id: "w_notable1", x: 0, y: -200, name: "Vitalidade do Urso", type: "notable", attribute: "con", stats: ["+15 Constituição", "+5% Vida Max"], desc: "Aumenta drasticamente a sobrevivência.", imgUrl: "" },
+                        "w_keystone1": { id: "w_keystone1", x: 0, y: -350, name: "Fúria Sanguinária", type: "large", attribute: "str", stats: [], desc: "Habilidade Ativa: Consome vida para aumentar o dano físico em 50% por 10s.", imgUrl: "" },
+
+                        "root_mage": { id: "root_mage", x: 500, y: 0, name: "Mago (Classe)", type: "root", attribute: "int", stats: ["+20 Inteligência Base"], desc: "Início do caminho arcano.", imgUrl: "https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?auto=format&fit=crop&q=80&w=100&h=100" },
+                        "m_int1": { id: "m_int1", x: 500, y: 120, name: "Mente Focada", type: "basic", attribute: "int", stats: ["+10 Inteligência"] }
+                    },
+                    edges: [
+                        { source: "root_warrior", target: "w_str1" },
+                        { source: "root_warrior", target: "w_str2" },
+                        { source: "w_str1", target: "w_notable1" },
+                        { source: "w_str2", target: "w_notable1" },
+                        { source: "w_notable1", target: "w_keystone1" },
+                        { source: "root_mage", target: "m_int1" }
+                    ]
+                };
+                trees["default"] = { id: "default", name: "Árvore Principal", data: defaultData };
+                saveLocalTrees(trees);
+            }
+
+            // Garante que a activeId existe nas trees para evitar quebras se deletarem do servidor
+            if (!trees[activeId]) {
+                activeId = Object.keys(trees)[0];
+                if (activeId) saveActiveTreeId(activeId);
+            }
+
+            currentTreeId = activeId;
+            treeData = trees[activeId].data;
+        }
+
+        // ================= SISTEMA DE USUÁRIOS E DB MOCK =================
+
+        function getLocalUsers() {
+            let u = localStorage.getItem("poe2_users_db");
+            return u ? JSON.parse(u) : {};
+        }
+
+        function saveLocalUsers(db) {
+            localStorage.setItem("poe2_users_db", JSON.stringify(db));
+        }
+
+        // Cria um mock user padrão para o primeiro acesso
+        function initDefaultUser() {
+            let db = getLocalUsers();
+            if (!db["user_001"]) {
+                db["user_001"] = {
+                    code: "user_001",
+                    name: "Herói Teste",
+                    totalPoints: 5,
+                    allocatedNodes: ["root_warrior", "w_str1"],
+                    level: 2
+                };
+                saveLocalUsers(db);
+            }
+        }
+
+        // --- INTEGRAÇÃO (API FETCH) ---
+        // Ponte executiva com o AWS API Gateway + DynamoDB
+        async function apiFetch(endpoint, method, data = null) {
+            try {
+                let headers = { 'Content-Type': 'application/json' };
+                // Se a aba de admin foi aberta com sucesso, injeta na header
+                if (isAdmin) {
+                    let pwdInput = document.getElementById('admin-pwd').value;
+                    headers['Authorization'] = pwdInput || 'admin';
+                }
+
+                const res = await fetch(API_GATEWAY_URL + endpoint, {
+                    method: method,
+                    headers: headers,
+                    body: data ? JSON.stringify(data) : null
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP Request failed with status ${res.status}`);
+                }
+
+                return await res.json();
+
+            } catch (err) {
+                console.warn("API Respondeu com erro ou Offline. Fallback p/ Local:", err.message);
+                return null; // Aciona os Mocks Fallback Locais
+            }
+        }
+
+        async function loadUserFlow() {
+            let code = document.getElementById("char-code").value.trim();
+            if (!code) return alert("Digite um código de jogador.");
+
+            // Tenta API Gateway
+            let apiData = await apiFetch(`/user/${code}`, 'GET');
+
+            let db = getLocalUsers();
+            if (apiData) {
+                currentUser = apiData;
+                db[code] = apiData; // Sincroniza cache local
+                saveLocalUsers(db);
+            } else if (db[code]) {
+                currentUser = db[code];
+            } else {
+                return alert("Usuário não encontrado no DB.");
+            }
+
+            // Atualiza UI
+            document.getElementById("player-info").classList.remove("hidden");
+            document.getElementById("lbl-char-name").innerHTML = `<span>${currentUser.name}</span> <span id="lbl-char-level" class="text-sm bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700">Nvl ${currentUser.level}</span>`;
+
+            updatePointsUI();
+            updateSummaryUI();
+            alert(`Personagem ${currentUser.name} carregado!`);
+        }
+
+        async function saveUserFlow() {
+            if (!currentUser) return;
+
+            currentUser.level = currentUser.allocatedNodes.length; // Nível = qtd de nodos
+
+            let askCloud = confirm("Deseja sincronizar este save com o DynamoDB (Nuvem)?");
+
+            // Salva Local
+            let db = getLocalUsers();
+            db[currentUser.code] = currentUser;
+            saveLocalUsers(db);
+
+            if (askCloud) {
+                let apiResponse = await apiFetch('/user', 'POST', currentUser);
+                if (apiResponse) alert("Salvo no DynamoDB com sucesso!");
+                else alert("Falha ao contatar DynamoDB. Salvo apenas localmente.");
+            } else {
+                alert("Salvo localmente.");
+            }
+            updatePointsUI();
+        }
+
+        function resetUserPoints() {
+            if (!currentUser) return;
+            if (currentUser.allocatedNodes.length === 0) {
+                alert("Você não tem pontos alocados para resetar.");
+                return;
+            }
+            if (confirm("Tem certeza que deseja resetar TODOS os seus pontos? Isso removerá sua classe atual e todas as habilidades adquiridas.\n\nVocê poderá gastar todos os seus pontos novamente.")) {
+                currentUser.allocatedNodes = [];
+                currentUser.level = 0;
+
+                // Salvar reset localmente logo após confirmar
+                let db = getLocalUsers();
+                db[currentUser.code] = currentUser;
+                saveLocalUsers(db);
+
+                updatePointsUI();
+                updateSummaryUI();
+                alert("Árvore resetada com sucesso! Você pode escolher uma nova classe agora.");
+            }
+        }
+
+        async function saveTreeToDynamo() {
+            let askCloud = confirm("Sincronizar a estrutura da Árvore Atual com o banco de dados?");
+
+            let trees = getLocalTrees();
+            if (!trees[currentTreeId]) {
+                trees[currentTreeId] = { id: currentTreeId, name: "Árvore Atual", data: treeData };
+            } else {
+                trees[currentTreeId].data = treeData;
+            }
+            saveLocalTrees(trees);
+
+            localStorage.setItem("poe2_global_tree", JSON.stringify(treeData)); // Retro-compatibilidade
+
+            if (askCloud) {
+                let apiResponse = await apiFetch(`/tree/${currentTreeId}`, 'POST', trees[currentTreeId]);
+                if (apiResponse) alert("Árvore atual salva na nuvem!");
+                else alert("API indisponível. Árvore salva localmente para testes.");
+            }
+        }
+
+        // ================= ENGINE DO CANVAS =================
+        let canvas = document.getElementById("treeCanvas");
+        let ctx = canvas.getContext("2d");
+        let camera = { x: 0, y: 0, zoom: 1 };
+        let isDragging = false, lastMouse = { x: 0, y: 0 }, hoveredNode = null;
+
+        function resizeCanvas() {
+            let container = document.getElementById("canvas-container");
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+        function screenToWorld(sx, sy) {
+            return {
+                x: (sx - canvas.width / 2) / camera.zoom - camera.x,
+                y: (sy - canvas.height / 2) / camera.zoom - camera.y
+            };
+        }
+
+        function worldToScreen(wx, wy) {
+            return {
+                x: (wx + camera.x) * camera.zoom + canvas.width / 2,
+                y: (wy + camera.y) * camera.zoom + canvas.height / 2
+            };
+        }
+
+        function getCachedImage(url) {
+            if (!url) return null;
+            if (imageCache[url]) return imageCache[url];
+            const img = new Image();
+            img.src = url;
+            imageCache[url] = img;
+            return img;
+        }
+
+        // Formas Geométricas
+        function drawCirclePath(ctx, x, y, r) {
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+        }
+
+        function drawDiamondPath(ctx, x, y, r) {
+            ctx.beginPath();
+            ctx.moveTo(x, y - r);
+            ctx.lineTo(x + r, y);
+            ctx.lineTo(x, y + r);
+            ctx.lineTo(x - r, y);
+            ctx.closePath();
+        }
+
+        function drawPentagonPath(ctx, x, y, r) {
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                let angle = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+                let px = x + r * Math.cos(angle);
+                let py = y + r * Math.sin(angle);
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+        }
+
+        function drawHexagonPath(ctx, x, y, r) {
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                let angle = (i * 2 * Math.PI) / 6;
+                let px = x + r * Math.cos(angle);
+                let py = y + r * Math.sin(angle);
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+        }
+
+        function drawLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Fundo (Grelha subtil adaptada ao espaço)
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.04)"; ctx.lineWidth = 1;
+            let gs = 100 * camera.zoom;
+            let ox = ((camera.x * camera.zoom + canvas.width / 2) % gs);
+            let oy = ((camera.y * camera.zoom + canvas.height / 2) % gs);
+            for (let x = ox; x < canvas.width; x += gs) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+            for (let y = oy; y < canvas.height; y += gs) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+
+            // Arestas
+            let allocatedSet = currentUser ? new Set(currentUser.allocatedNodes) : new Set();
+            for (let edge of treeData.edges) {
+                let n1 = treeData.nodes[edge.source];
+                let n2 = treeData.nodes[edge.target];
+                if (!n1 || !n2) continue;
+
+                let p1 = worldToScreen(n1.x, n1.y);
+                let p2 = worldToScreen(n2.x, n2.y);
+                let isAllocEdge = allocatedSet.has(n1.id) && allocatedSet.has(n2.id);
+
+                ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+                ctx.lineWidth = 3 * camera.zoom;
+                ctx.strokeStyle = isAllocEdge ? "#fbbf24" : "#334155";
+                if (isAllocEdge) { ctx.shadowColor = "#f59e0b"; ctx.shadowBlur = 10; }
+                ctx.stroke(); ctx.shadowBlur = 0;
+            }
+
+            // Nodos
+            for (let key in treeData.nodes) {
+                let node = treeData.nodes[key];
+                let pos = worldToScreen(node.x, node.y);
+                let isAlloc = allocatedSet.has(node.id);
+                let isHov = hoveredNode === node;
+                let canAlloc = canAllocate(node.id, allocatedSet);
+
+                let baseRadius = node.type === "root" ? 28 : node.type === "large" ? 24 : node.type === "notable" ? 18 : 12;
+                let r = baseRadius * camera.zoom;
+                let colors = ATTR_COLORS[node.attribute] || ATTR_COLORS["none"];
+
+                let pathFn = drawCirclePath;
+                if (node.type === "notable") pathFn = drawDiamondPath;
+                if (node.type === "large") pathFn = drawPentagonPath;
+                if (node.type === "root") pathFn = drawHexagonPath;
+
+                // Preenchimento / Imagem
+                ctx.save();
+                pathFn(ctx, pos.x, pos.y, r);
+                ctx.clip();
+                let img = getCachedImage(node.imgUrl);
+                if (img && img.complete && img.naturalWidth > 0) {
+                    ctx.drawImage(img, pos.x - r, pos.y - r, r * 2, r * 2);
+                    // Sobreposição escura se não alocado
+                    if (!isAlloc) {
+                        ctx.fillStyle = "rgba(15, 23, 42, 0.7)";
+                        ctx.fill();
+                    }
+                } else {
+                    ctx.fillStyle = isAlloc ? colors.fill : "#0f172a";
+                    ctx.fill();
+                }
+                ctx.restore();
+
+                // Borda
+                ctx.save();
+                pathFn(ctx, pos.x, pos.y, r);
+                if (isAlloc) {
+                    ctx.strokeStyle = colors.stroke;
+                    ctx.lineWidth = 3 * camera.zoom;
+                    ctx.shadowColor = colors.shadow;
+                    ctx.shadowBlur = 15;
+                } else {
+                    ctx.strokeStyle = canAlloc ? "#94a3b8" : "#334155";
+                    ctx.lineWidth = (canAlloc ? 2 : 1) * camera.zoom;
+                }
+                if (isHov) {
+                    ctx.strokeStyle = "#ffffff";
+                    ctx.lineWidth = 4 * camera.zoom;
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            requestAnimationFrame(drawLoop);
+        }
+
+        // ================= INPUTS E REGRAS DE JOGO =================
+        function setupInput() {
+            canvas.addEventListener('mousedown', (e) => {
+                if (hoveredNode) {
+                    // Facilita a vida do admin preenchendo IDs ao clicar no nodo
+                    if (isAdmin && !document.getElementById('panel-editor').classList.contains('hidden')) {
+                        // Modo de Edição
+                        document.getElementById('form-title').textContent = "✏️ Editar Nodo";
+                        let idInput = document.getElementById('new-id');
+                        idInput.value = hoveredNode.id;
+                        idInput.readOnly = true;
+                        idInput.classList.add('opacity-50', 'cursor-not-allowed');
+
+                        document.getElementById('new-name').value = hoveredNode.name;
+                        document.getElementById('new-type').value = hoveredNode.type;
+                        document.getElementById('new-attr').value = hoveredNode.attribute || 'none';
+                        document.getElementById('new-desc').value = hoveredNode.desc || '';
+                        document.getElementById('new-img').value = hoveredNode.imgUrl || '';
+                        document.getElementById('new-stat').value = hoveredNode.stats.join(', ');
+                        document.getElementById('new-x').value = hoveredNode.x;
+                        document.getElementById('new-y').value = hoveredNode.y;
+
+                        let parents = treeData.edges.filter(edge => edge.target === hoveredNode.id).map(edge => edge.source);
+                        document.getElementById('new-parent').value = parents.join(', ');
+
+                        document.getElementById('submit-node-btn').textContent = "Guardar Alterações";
+                        toggleFormFields();
+
+                        document.getElementById('del-node-id').value = hoveredNode.id;
+                    }
+                    toggleAllocation(hoveredNode.id);
+                    return;
+                }
+                isDragging = true;
+                lastMouse = { x: e.clientX, y: e.clientY };
+            });
+            window.addEventListener('mouseup', () => isDragging = false);
+            canvas.addEventListener('mousemove', (e) => {
+                let mx = e.clientX - canvas.getBoundingClientRect().left;
+                let my = e.clientY - canvas.getBoundingClientRect().top;
+
+                if (isDragging) {
+                    camera.x += (mx - lastMouse.x) / camera.zoom;
+                    camera.y += (my - lastMouse.y) / camera.zoom;
+                    lastMouse = { x: mx, y: my };
+                }
+
+                let wp = screenToWorld(mx, my);
+                document.getElementById('world-x').textContent = Math.round(wp.x);
+                document.getElementById('world-y').textContent = Math.round(wp.y);
+
+                hoveredNode = null;
+                for (let key in treeData.nodes) {
+                    let n = treeData.nodes[key];
+                    let r = n.type === "root" ? 28 : n.type === "large" ? 24 : n.type === "notable" ? 18 : 12;
+                    let dx = wp.x - n.x, dy = wp.y - n.y;
+                    if (dx * dx + dy * dy <= r * r) { hoveredNode = n; break; }
+                }
+                updateTooltip(e.clientX, e.clientY);
+            });
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                let rect = canvas.getBoundingClientRect();
+                let mx = e.clientX - rect.left, my = e.clientY - rect.top;
+                let wb = screenToWorld(mx, my);
+                camera.zoom *= (e.deltaY > 0 ? 0.9 : 1.1);
+                camera.zoom = Math.max(0.2, Math.min(camera.zoom, 3));
+                let wa = screenToWorld(mx, my);
+                camera.x += (wa.x - wb.x); camera.y += (wa.y - wb.y);
+            }, { passive: false });
+        }
+
+        function getNeighbors(nodeId) {
+            let ns = [];
+            for (let e of treeData.edges) {
+                if (e.source === nodeId) ns.push(e.target);
+                if (e.target === nodeId) ns.push(e.source);
+            }
+            return ns;
+        }
+
+        function canAllocate(nodeId, allocSet) {
+            if (!currentUser) return false;
+            if (allocSet.has(nodeId)) return false;
+
+            let isTargetRoot = treeData.nodes[nodeId].type === 'root';
+
+            // Se for tentar alocar um root, verifica se já existe alguma classe (root) escolhida na árvore deste usuário.
+            if (isTargetRoot) {
+                for (let id of allocSet) {
+                    if (treeData.nodes[id] && treeData.nodes[id].type === 'root') {
+                        return false; // Bloqueia! Já tem uma classe.
+                    }
+                }
+                // Se chegou aqui, não tem classe nenhuma. Pode pegar se tiver pontos.
+                return currentUser.totalPoints > allocSet.size;
+            }
+
+            // Para os outros nodos, precisa estar conectado a algo já alocado
+            let ns = getNeighbors(nodeId);
+            for (let n of ns) {
+                if (allocSet.has(n)) return currentUser.totalPoints > allocSet.size;
+            }
+            return false;
+        }
+
+        function canDeallocate(nodeId, allocSet) {
+            if (!allocSet.has(nodeId)) return false;
+            let temp = new Set(allocSet);
+            temp.delete(nodeId);
+
+            // Coleta todas as raízes atualmente alocadas
+            let roots = Array.from(temp).filter(id => treeData.nodes[id].type === 'root');
+            if (roots.length === 0 && temp.size > 0) return false; // Não pode remover última raiz se sobrar nodos
+            if (temp.size === 0) return true; // Pode esvaziar a árvore toda
+
+            // Verifica conectividade de todos os nodos restantes para QUALQUER raiz alocada
+            let visited = new Set(roots);
+            let queue = [...roots];
+
+            while (queue.length > 0) {
+                let curr = queue.shift();
+                for (let n of getNeighbors(curr)) {
+                    if (temp.has(n) && !visited.has(n)) {
+                        visited.add(n);
+                        queue.push(n);
+                    }
+                }
+            }
+            return visited.size === temp.size;
+        }
+
+        function toggleAllocation(nodeId) {
+            if (!currentUser) return alert("Carregue um personagem primeiro.");
+            let allocSet = new Set(currentUser.allocatedNodes);
+
+            if (!allocSet.has(nodeId)) {
+                let nodeType = treeData.nodes[nodeId].type;
+                let hasRoot = Array.from(allocSet).some(id => treeData.nodes[id] && treeData.nodes[id].type === 'root');
+
+                if (nodeType === 'root' && hasRoot) {
+                    alert("Você já escolheu uma classe! Para mudar de classe, é necessário resetar todos os seus pontos no painel ao lado.");
+                    return;
+                }
+
+                if (canAllocate(nodeId, allocSet)) {
+                    currentUser.allocatedNodes.push(nodeId);
+                    updatePointsUI();
+                    updateSummaryUI();
+                } else if (currentUser.totalPoints <= allocSet.size) {
+                    alert("Sem pontos de atributo disponíveis.");
+                }
+            } else {
+                if (canDeallocate(nodeId, allocSet)) {
+                    currentUser.allocatedNodes = currentUser.allocatedNodes.filter(id => id !== nodeId);
+                    updatePointsUI();
+                    updateSummaryUI();
+                } else {
+                    alert("Remover este nodo quebraria o caminho de outros até a classe raiz.");
+                }
+            }
+        }
+
+        // ================= UI E ATUALIZAÇÕES =================
+        function updatePointsUI() {
+            if (!currentUser) return;
+            // GARANTE QUE O NÍVEL SEJA ATUALIZADO IMEDIATAMENTE NA ALOCAÇÃO/DESALOCAÇÃO
+            currentUser.level = currentUser.allocatedNodes.length;
+
+            let used = currentUser.allocatedNodes.length;
+            let avail = currentUser.totalPoints - used;
+            document.getElementById('lbl-pts-used').textContent = used;
+            document.getElementById('lbl-pts-avail').textContent = avail;
+            document.getElementById('lbl-char-level').textContent = `Nvl ${currentUser.level}`;
+        }
+
+        function updateSummaryUI() {
+            if (!currentUser) return;
+            let basics = {}, passives = [], actives = [];
+
+            for (let id of currentUser.allocatedNodes) {
+                let n = treeData.nodes[id];
+                if (n.type === 'basic' || n.type === 'root') {
+                    n.stats.forEach(s => { basics[s] = (basics[s] || 0) + 1; });
+                } else if (n.type === 'notable') {
+                    passives.push(n); // Guardamos o nodo inteiro para usar a descrição
+                } else if (n.type === 'large') {
+                    actives.push(n); // Guardamos o nodo inteiro para usar a descrição
+                }
+            }
+
+            let html = '';
+            if (Object.keys(basics).length > 0) {
+                html += `<div class="bg-slate-800 p-3 rounded border border-slate-700">
+                    <h4 class="text-xs font-bold text-slate-400 mb-2">Atributos Básicos</h4>`;
+                for (let k in basics) html += `<div class="text-sm text-blue-300">• ${basics[k] > 1 ? k + ' (x' + basics[k] + ')' : k}</div>`;
+                html += `</div>`;
+            }
+            if (passives.length > 0) {
+                html += `<div class="bg-slate-800 p-3 rounded border border-slate-700">
+                    <h4 class="text-xs font-bold text-fuchsia-400 mb-2">Passivas Notáveis</h4>`;
+                passives.forEach(p => {
+                    let statsText = p.stats && p.stats.length > 0 ? `<div class="text-[10px] text-fuchsia-400/80 ml-3">↳ ${p.stats.join(', ')}</div>` : '';
+                    html += `<div class="text-sm text-fuchsia-200 cursor-help mb-2" title="${p.desc || 'Sem descrição.'}">• ${p.name}${statsText}</div>`;
+                });
+                html += `</div>`;
+            }
+            if (actives.length > 0) {
+                html += `<div class="bg-slate-800 p-3 rounded border border-slate-700">
+                    <h4 class="text-xs font-bold text-amber-400 mb-2">Habilidades Ativas (Keystones)</h4>`;
+                actives.forEach(a => html += `<div class="text-sm text-amber-200 font-bold cursor-help" title="${a.desc || 'Sem descrição.'}">⭐ ${a.name}</div>`);
+                html += `</div>`;
+            }
+            if (html === '') html = '<div class="text-slate-500 text-sm">Nenhum ponto alocado.</div>';
+            document.getElementById('summary-container').innerHTML = html;
+        }
+
+        function exportToPDF() {
+            if (!currentUser || currentUser.allocatedNodes.length === 0) {
+                return alert("Você precisa alocar pelo menos um ponto ou escolher uma classe antes de exportar a ficha.");
+            }
+
+            // Identificar a raiz/classe atual
+            let rootNode = null;
+            let passives = [];
+            let actives = [];
+            let basics = {};
+
+            for (let id of currentUser.allocatedNodes) {
+                let n = treeData.nodes[id];
+                if (!n) continue;
+
+                if (n.type === 'root') {
+                    rootNode = n;
+                }
+                if (n.type === 'basic' || n.type === 'root') {
+                    n.stats.forEach(s => { basics[s] = (basics[s] || 0) + 1; });
+                } else if (n.type === 'notable') {
+                    passives.push(n);
+                } else if (n.type === 'large') {
+                    actives.push(n);
+                }
+            }
+
+            // Construir o HTML do PDF
+            let printDiv = document.createElement('div');
+            printDiv.style.padding = "40px";
+            printDiv.style.fontFamily = "sans-serif";
+            printDiv.style.color = "#1e293b";
+
+            let html = `
+                <div style="text-align: center; border-bottom: 2px solid #cbd5e1; padding-bottom: 20px; margin-bottom: 20px;">
+                    <h1 style="margin: 0; color: #0f172a;">Ficha de Habilidades</h1>
+                    <h2 style="margin: 5px 0 0 0; color: #3b82f6;">${currentUser.name} <span style="font-size: 16px; color: #64748b;">(Nível ${currentUser.level})</span></h2>
+                </div>
+            `;
+
+            if (rootNode) {
+                html += `
+                    <div style="background-color: #f8fafc; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 30px; border-radius: 4px;">
+                        <h3 style="margin: 0 0 5px 0; color: #b45309;">Classe: ${rootNode.name}</h3>
+                        <p style="margin: 0; font-style: italic; color: #475569; font-size: 14px;">${rootNode.desc || 'Sem descrição.'}</p>
+                    </div>
+                `;
+            }
+
+            html += `<h3 style="color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">💪 Atributos Básicos</h3><ul style="line-height: 1.6; font-size: 14px;">`;
+            for (let k in basics) {
+                html += `<li>${basics[k] > 1 ? k + ' <strong>(x' + basics[k] + ')</strong>' : k}</li>`;
+            }
+            html += `</ul>`;
+
+            if (passives.length > 0) {
+                html += `<h3 style="color: #9333ea; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 30px;">🌀 Passivas Notáveis</h3><ul style="line-height: 1.6; font-size: 14px;">`;
+                passives.forEach(p => {
+                    let statsText = p.stats && p.stats.length > 0 ? `<br><span style="color: #7c3aed; font-size: 12px; margin-left: 10px;">↳ Efeitos: ${p.stats.join(', ')}</span>` : '';
+                    html += `<li style="margin-bottom: 12px;"><strong>${p.name}:</strong> ${p.desc || ''}${statsText}</li>`;
+                });
+                html += `</ul>`;
+            }
+
+            if (actives.length > 0) {
+                html += `<h3 style="color: #ea580c; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 30px;">🔥 Habilidades Ativas</h3><ul style="line-height: 1.6; font-size: 14px;">`;
+                actives.forEach(a => {
+                    html += `<li style="margin-bottom: 8px;"><strong>${a.name}:</strong> ${a.desc || ''}</li>`;
+                });
+                html += `</ul>`;
+            }
+
+            printDiv.innerHTML = html;
+
+            // Configuração e geração do PDF
+            let opt = {
+                margin: 10,
+                filename: `Ficha_${currentUser.name.replace(/\s+/g, '_')}_Nvl${currentUser.level}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(printDiv).save();
+        }
+
+        function updateTooltip(mx, my) {
+            let tt = document.getElementById("tooltip");
+            if (!hoveredNode) { tt.classList.add("hidden"); return; }
+
+            let n = hoveredNode;
+            document.getElementById("tt-name").textContent = n.name;
+
+            let tmap = { basic: "Nodo Pequeno", notable: "Passiva Notável", large: "Habilidade Ativa", root: "Ponto de Partida (Classe)" };
+            document.getElementById("tt-type").textContent = tmap[n.type];
+            document.getElementById("tt-type").className = `text-xs uppercase tracking-wider mb-2 font-black ${n.type === 'root' ? 'text-rose-400' : n.type === 'large' ? 'text-amber-400' : n.type === 'notable' ? 'text-fuchsia-400' : 'text-slate-400'
+                }`;
+
+            let desc = document.getElementById("tt-desc");
+            if (n.desc) { desc.textContent = n.desc; desc.classList.remove("hidden"); }
+            else { desc.classList.add("hidden"); }
+
+            document.getElementById("tt-stats").innerHTML = n.stats.map(s => `<div>+ ${s}</div>`).join("");
+            document.getElementById("tt-id").textContent = "ID: " + n.id;
+
+            let st = document.getElementById("tt-status");
+            let allocSet = currentUser ? new Set(currentUser.allocatedNodes) : new Set();
+            let hasRoot = Array.from(allocSet).some(id => treeData.nodes[id] && treeData.nodes[id].type === 'root');
+
+            if (allocSet.has(n.id)) {
+                st.textContent = "ALOCADO"; st.className = "text-xs mt-3 font-bold border-t border-slate-700 pt-2 text-green-400";
+            } else if (canAllocate(n.id, allocSet)) {
+                st.textContent = "Clique para alocar"; st.className = "text-xs mt-3 font-bold border-t border-slate-700 pt-2 text-amber-400 cursor-pointer";
+            } else {
+                if (n.type === 'root' && hasRoot) {
+                    st.textContent = "Classe já escolhida (Resete para trocar)";
+                } else {
+                    st.textContent = "Não conectado ou Sem pontos";
+                }
+                st.className = "text-xs mt-3 font-bold border-t border-slate-700 pt-2 text-red-500";
+            }
+
+            tt.classList.remove("hidden");
+            let tw = tt.offsetWidth, th = tt.offsetHeight;
+            let px = mx + 20, py = my + 20;
+            if (px + tw > window.innerWidth) px = mx - tw - 20;
+            if (py + th > window.innerHeight) py = my - th - 20;
+            tt.style.left = px + "px"; tt.style.top = py + "px";
+        }
+
+        // ================= ADMIN FUNCTIONS =================
+        function checkAdminAuth(tab) {
+            if (isAdmin) { switchTab(tab); return; }
+            intendedTab = tab;
+            document.getElementById('admin-modal').classList.remove('hidden');
+        }
+
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        function loginAdmin() {
+            if (document.getElementById('admin-pwd').value === 'skillarte') {
+                isAdmin = true;
+                closeAdminModal();
+
+                // Mostra as abas escondidas
+                document.getElementById('tab-editor').classList.remove('hidden');
+                document.getElementById('tab-usuarios').classList.remove('hidden');
+                document.getElementById('tab-arvores').classList.remove('hidden');
+
+                switchTab(intendedTab || 'editor');
+                if (intendedTab === 'usuarios') renderAdminUserList();
+                if (intendedTab === 'arvores') renderAdminTreeList();
+            } else {
+                alert("Senha incorreta.");
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            let activeBtn = document.getElementById('tab-' + tabName);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            ['personagem', 'editor', 'arvores', 'usuarios'].forEach(p => {
+                let pnl = document.getElementById('panel-' + p);
+                if (pnl) pnl.classList.add('hidden');
+            });
+            let panel = document.getElementById('panel-' + tabName);
+            if (panel) panel.classList.remove('hidden');
+        }
+
+        function toggleFormFields() {
+            let t = document.getElementById('new-type').value;
+            let d = document.getElementById('ext-desc');
+            let i = document.getElementById('ext-img');
+            if (t === 'basic') { d.classList.add('hidden'); i.classList.add('hidden'); }
+            else { d.classList.remove('hidden'); i.classList.remove('hidden'); }
+        }
+
+        function resetNodeForm() {
+            document.getElementById('form-title').textContent = "🛠️ Criar Novo Nodo";
+            let idInput = document.getElementById('new-id');
+            idInput.value = '';
+            idInput.readOnly = false;
+            idInput.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-desc').value = '';
+            document.getElementById('new-img').value = '';
+            document.getElementById('new-stat').value = '';
+            document.getElementById('submit-node-btn').textContent = "Inserir Nodo";
+        }
+
+        function saveNode(e) {
+            e.preventDefault();
+            let id = document.getElementById('new-id').value.trim();
+            let isEdit = document.getElementById('new-id').readOnly;
+
+            if (!isEdit && treeData.nodes[id]) return alert("ID já existe! Para editar, clique no nodo desejado na árvore.");
+
+            let n = {
+                id: id,
+                name: document.getElementById('new-name').value.trim(),
+                x: parseFloat(document.getElementById('new-x').value),
+                y: parseFloat(document.getElementById('new-y').value),
+                type: document.getElementById('new-type').value,
+                attribute: document.getElementById('new-attr').value,
+                stats: document.getElementById('new-stat').value.split(',').map(s => s.trim()).filter(s => s),
+                desc: document.getElementById('new-desc').value.trim(),
+                imgUrl: document.getElementById('new-img').value.trim()
+            };
+
+            let parentStr = document.getElementById('new-parent').value;
+            let parents = parentStr.split(',').map(s => s.trim()).filter(s => s);
+
+            if (n.type !== 'root') {
+                if (parents.length === 0) return alert("Especifique pelo menos um pai para nodos não-raiz!");
+                for (let p of parents) {
+                    if (!treeData.nodes[p] && p !== id) return alert(`ID do pai '${p}' não encontrado!`);
+                }
+
+                // Se for edição, removemos as arestas antigas onde este nodo era o alvo
+                if (isEdit) {
+                    treeData.edges = treeData.edges.filter(e => e.target !== id);
+                }
+
+                for (let p of parents) {
+                    if (p !== id) treeData.edges.push({ source: p, target: id });
+                }
+            } else if (isEdit) {
+                // Se o nodo foi atualizado para uma raiz (root), removemos as conexões antigas (pais)
+                treeData.edges = treeData.edges.filter(e => e.target !== id);
+            }
+
+            treeData.nodes[id] = n;
+
+            if (!isEdit) {
+                document.getElementById('new-id').value = '';
+                document.getElementById('new-parent').value = id;
+                alert("Nodo criado com sucesso!");
+            } else {
+                alert("Alterações guardadas com sucesso!");
+                updateSummaryUI(); // Reflete em tempo real caso o jogador já tenha o nodo alocado
+            }
+        }
+
+        function deleteNode() {
+            let id = document.getElementById('del-node-id').value.trim();
+            if (!id) return alert("Por favor, introduza o ID do nodo.");
+            if (!treeData.nodes[id]) return alert("Nodo não encontrado na árvore.");
+
+            if (!confirm(`Tem a certeza que deseja ELIMINAR o nodo '${treeData.nodes[id].name}' (${id})? Todas as ligações associadas também serão apagadas.`)) return;
+
+            // 1. Remover arestas (conexões) ligadas a este nodo
+            treeData.edges = treeData.edges.filter(e => e.source !== id && e.target !== id);
+
+            // 2. Remover o nodo da estrutura principal
+            delete treeData.nodes[id];
+
+            // 3. Remover o nodo das alocações dos utilizadores (Base de Dados Local)
+            let db = getLocalUsers();
+            for (let code in db) {
+                if (db[code].allocatedNodes.includes(id)) {
+                    db[code].allocatedNodes = db[code].allocatedNodes.filter(nId => nId !== id);
+                    db[code].level = db[code].allocatedNodes.length;
+                }
+            }
+            saveLocalUsers(db);
+
+            // 4. Atualizar o currentUser ativo se for afetado
+            if (currentUser && currentUser.allocatedNodes.includes(id)) {
+                currentUser.allocatedNodes = currentUser.allocatedNodes.filter(nId => nId !== id);
+                currentUser.level = currentUser.allocatedNodes.length;
+                updatePointsUI();
+                updateSummaryUI();
+            }
+
+            document.getElementById('del-node-id').value = '';
+            alert("Nodo eliminado com sucesso!");
+        }
+
+        // --- Admin de Usuários ---
+        async function adminCreateUser() {
+            let code = document.getElementById('new-user-code').value.trim();
+            let name = document.getElementById('new-user-name').value.trim();
+            let pts = parseInt(document.getElementById('new-user-pts').value);
+            if (!code || !name || isNaN(pts)) return alert("Preencha todos os campos corretamente.");
+
+            let u = { code: code, name: name, totalPoints: pts, allocatedNodes: [], level: 0 };
+            let db = getLocalUsers();
+            db[code] = u;
+            saveLocalUsers(db);
+
+            let apiRes = await apiFetch('/user', 'POST', u);
+            alert(apiRes ? "Usuário criado na Nuvem e Local!" : "Usuário criado Localmente (API Indisponível)");
+            renderAdminUserList();
+        }
+
+        async function adminModifyPoints() {
+            let code = document.getElementById('edit-user-code').value.trim();
+            let pts = parseInt(document.getElementById('edit-user-pts').value);
+            if (!code || isNaN(pts)) return alert("Dados inválidos.");
+
+            let userToEdit = null;
+            let apiUser = await apiFetch(`/user/${code}`, 'GET');
+
+            let db = getLocalUsers();
+            if (apiUser) {
+                userToEdit = apiUser;
+            } else if (db[code]) {
+                userToEdit = db[code];
+            } else {
+                return alert("Usuário não encontrado.");
+            }
+
+            userToEdit.totalPoints += pts;
+            if (userToEdit.totalPoints < userToEdit.allocatedNodes.length) {
+                userToEdit.totalPoints = userToEdit.allocatedNodes.length;
+            }
+
+            let apiUpdate = await apiFetch('/user', 'POST', userToEdit);
+
+            db[code] = userToEdit;
+            saveLocalUsers(db);
+
+            if (currentUser && currentUser.code === code) {
+                currentUser.totalPoints = userToEdit.totalPoints;
+                updatePointsUI();
+            }
+
+            if (apiUpdate) alert(`Pontos atualizados na Nuvem! (Novo: ${userToEdit.totalPoints})`);
+            else alert(`Pontos atualizados Localmente. (Novo: ${userToEdit.totalPoints})`);
+
+            renderAdminUserList();
+        }
+
+        async function renderAdminUserList() {
+            let userList = [];
+            let apiUsers = await apiFetch('/users', 'GET');
+
+            if (apiUsers && Array.isArray(apiUsers)) {
+                userList = apiUsers;
+            } else {
+                let db = getLocalUsers();
+                for (let k in db) { userList.push(db[k]); }
+            }
+
+            let html = '';
+            for (let u of userList) {
+                html += `<div class="bg-slate-900 p-2 rounded border border-slate-700 flex justify-between items-center">
+                    <div><strong class="text-white">${u.name}</strong> <span class="text-slate-500 text-xs">(${u.code})</span></div>
+                    <div class="text-right">
+                        <div class="text-xs text-green-400">Pts: ${u.totalPoints}</div>
+                        <div class="text-xs text-blue-400">Nvl: ${u.level}</div>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('admin-user-list').innerHTML = html;
+        }
+
+        // ================= ADMIN ÁRVORES =================
+        async function renderAdminTreeList() {
+            let apiManage = await apiFetch('/manage/trees', 'GET');
+            let trees = getLocalTrees();
+
+            if (apiManage && apiManage.trees) {
+                for (let t of apiManage.trees) {
+                    if (!trees[t.id]) trees[t.id] = { id: t.id, name: t.name, data: { nodes: {}, edges: [] } };
+                }
+                saveLocalTrees(trees);
+                if (apiManage.active) saveActiveTreeId(apiManage.active);
+            }
+
+            let activeId = getActiveTreeId();
+            let html = '';
+            for (let k in trees) {
+                let t = trees[k];
+                let isActive = k === activeId;
+                let activeBadge = isActive ? `<span class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase">Ativa</span>` : '';
+                html += `<div class="bg-slate-900 p-3 rounded border ${isActive ? 'border-emerald-500' : 'border-slate-700'} flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <strong class="text-white">${t.name}</strong> 
+                            <span class="text-slate-500 text-xs">(${t.id})</span>
+                        </div>
+                        ${activeBadge}
+                    </div>
+                    <div class="flex gap-2">
+                        ${!isActive ? `<button onclick="adminSetActiveTree('${t.id}')" class="flex-1 bg-slate-700 hover:bg-slate-600 text-[10px] py-1.5 rounded text-white font-bold uppercase transition-colors">Ativar</button>` : ''}
+                        <button onclick="adminDeleteTree('${t.id}')" class="flex-1 bg-red-900/50 hover:bg-red-800/80 text-[10px] py-1.5 rounded text-red-300 font-bold uppercase transition-colors" ${isActive ? 'disabled style="opacity:0.3"' : ''}>Excluir</button>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('admin-tree-list').innerHTML = html;
+        }
+
+        async function syncAllTrees() {
+            let trees = getLocalTrees();
+            for (let key in trees) {
+                await apiFetch(`/tree`, 'POST', trees[key]);
+            }
+            alert("Todas as árvores sincronizadas com o banco de dados (Nuvem)!");
+        }
+
+        async function adminCreateTree(clone) {
+            let id = document.getElementById('new-tree-id').value.trim();
+            let name = document.getElementById('new-tree-name').value.trim();
+            if (!id || !name) return alert("Preencha o ID e o Nome da nova árvore.");
+
+            let trees = getLocalTrees();
+            if (trees[id]) return alert("Já existe uma árvore com este ID.");
+
+            let newData = clone ? JSON.parse(JSON.stringify(treeData)) : { nodes: {}, edges: [] };
+
+            trees[id] = { tree_id: id, name: name, data: newData };
+            saveLocalTrees(trees);
+
+            await apiFetch(`/tree`, 'POST', trees[id]);
+            alert("Árvore " + name + " criada com sucesso!");
+
+            document.getElementById('new-tree-id').value = '';
+            document.getElementById('new-tree-name').value = '';
+            renderAdminTreeList();
+        }
+
+        async function adminSetActiveTree(id) {
+            let trees = getLocalTrees();
+            if (!trees[id]) return alert("Árvore não encontrada.");
+            if (!confirm(`Deseja ativar a árvore ${trees[id].name || id}? O canvas será atualizado.`)) return;
+
+            // Faz o request pra garantir as configs da árvore completa se n tiver
+            let tData = await apiFetch(`/tree/${id}`, 'GET');
+            if (tData && tData.data) {
+                trees[id] = { id: tData.tree_id, name: tData.name, data: tData.data };
+                saveLocalTrees(trees);
+            }
+
+            saveActiveTreeId(id);
+            currentTreeId = id;
+            treeData = trees[id].data;
+
+            await apiFetch('/manage/trees/active', 'POST', { active_tree_id: id });
+            renderAdminTreeList();
+
+            if (currentUser) {
+                let validNodes = currentUser.allocatedNodes.filter(nId => treeData.nodes[nId]);
+                if (validNodes.length !== currentUser.allocatedNodes.length) {
+                    alert("Atenção: Alguns pontos alocados anteriormente não existem nesta árvore e foram temporariamente ignorados da visualização.");
+                }
+                updatePointsUI();
+                updateSummaryUI();
+            }
+        }
+
+        async function adminDeleteTree(id) {
+            if (id === getActiveTreeId()) return alert("Você não pode excluir a árvore ativa. Ative outra primeiro.");
+            if (!confirm(`CUIDADO! Tem certeza que deseja apagar DEFINITIVAMENTE a árvore "${id}"?`)) return;
+
+            let trees = getLocalTrees();
+            delete trees[id];
+            saveLocalTrees(trees);
+
+            await apiFetch(`/tree/${id}`, 'DELETE');
+            renderAdminTreeList();
+        }
+
+        // ================= INIT =================
+        async function init() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            await initTreeSystem();
+            initDefaultUser();
+            setupInput();
+            requestAnimationFrame(drawLoop);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
