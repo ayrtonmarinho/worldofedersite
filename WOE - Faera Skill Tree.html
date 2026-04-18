@@ -55,6 +55,19 @@
         style="background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=2048&q=80');">
         <canvas id="treeCanvas"></canvas>
 
+        <!-- Barra de Busca Avançada -->
+        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 w-80 max-w-[90%]">
+            <div class="relative">
+                <input type="text" id="search-nodes" placeholder="Buscar habilidades, atributos..." oninput="handleSearchInput()" onkeydown="handleSearchKey(event)"
+                    class="w-full bg-slate-900/95 border border-slate-600 rounded-full px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500 shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md transition-colors">
+                <button id="clear-search" onclick="clearSearch()" class="absolute right-4 top-2.5 text-slate-400 hover:text-white hidden">✖</button>
+            </div>
+            <!-- Sugestões de Busca -->
+            <div id="search-dropdown" class="absolute w-full mt-2 bg-slate-900/95 backdrop-blur border border-slate-700 rounded-lg shadow-2xl max-h-60 overflow-y-auto hidden z-40">
+                <!-- preenchido via js -->
+            </div>
+        </div>
+
         <!-- Tooltip -->
         <div id="tooltip"
             class="absolute hidden bg-slate-900 border border-slate-700 p-4 rounded shadow-2xl pointer-events-none z-10 transition-opacity duration-150 max-w-xs">
@@ -686,6 +699,8 @@
             for (let x = ox; x < canvas.width; x += gs) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
             for (let y = oy; y < canvas.height; y += gs) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
 
+            let hasActiveSearch = window.searchedNodes && window.searchedNodes.size > 0;
+
             // Arestas
             let allocatedSet = currentUser ? new Set(currentUser.allocatedNodes) : new Set();
             for (let edge of treeData.edges) {
@@ -697,12 +712,15 @@
                 let p2 = worldToScreen(n2.x, n2.y);
                 let isAllocEdge = allocatedSet.has(n1.id) && allocatedSet.has(n2.id);
 
+                ctx.globalAlpha = hasActiveSearch ? (window.searchedNodes.has(n1.id) || window.searchedNodes.has(n2.id) ? 0.6 : 0.1) : 1.0;
+
                 ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
                 ctx.lineWidth = 3 * camera.zoom;
                 ctx.strokeStyle = isAllocEdge ? "#fbbf24" : "#334155";
                 if (isAllocEdge) { ctx.shadowColor = "#f59e0b"; ctx.shadowBlur = 10; }
                 ctx.stroke(); ctx.shadowBlur = 0;
             }
+            ctx.globalAlpha = 1.0;
 
             // Nodos
             for (let key in treeData.nodes) {
@@ -711,6 +729,9 @@
                 let isAlloc = allocatedSet.has(node.id);
                 let isHov = hoveredNode === node;
                 let canAlloc = canAllocate(node.id, allocatedSet);
+                let isSearched = hasActiveSearch && window.searchedNodes.has(node.id);
+
+                ctx.globalAlpha = (hasActiveSearch && !isSearched) ? 0.2 : 1.0;
 
                 let baseRadius = node.type === "root" ? 28 : node.type === "large" ? 24 : node.type === "notable" ? 18 : 12;
                 let r = baseRadius * camera.zoom;
@@ -761,9 +782,17 @@
                     ctx.strokeStyle = "#ffffff";
                     ctx.lineWidth = 4 * camera.zoom;
                 }
+                if (isSearched) {
+                    ctx.strokeStyle = "#38bdf8";
+                    ctx.lineWidth = 6 * camera.zoom;
+                    ctx.shadowColor = "#0ea5e9";
+                    ctx.shadowBlur = 20;
+                }
                 ctx.stroke();
                 ctx.restore();
             }
+
+            ctx.globalAlpha = 1.0;
 
             requestAnimationFrame(drawLoop);
         }
@@ -771,6 +800,9 @@
         // ================= INPUTS E REGRAS DE JOGO =================
         function setupInput() {
             canvas.addEventListener('mousedown', (e) => {
+                let dropdown = document.getElementById('search-dropdown');
+                if (dropdown) dropdown.classList.add('hidden');
+
                 if (hoveredNode) {
                     // Facilita a vida do admin preenchendo IDs ao clicar no nodo
                     if (isAdmin && !document.getElementById('panel-editor').classList.contains('hidden')) {
@@ -1113,6 +1145,92 @@
             if (px + tw > window.innerWidth) px = mx - tw - 20;
             if (py + th > window.innerHeight) py = my - th - 20;
             tt.style.left = px + "px"; tt.style.top = py + "px";
+        }
+
+        // ================= BUSCA E DESTAQUE =================
+        window.searchedNodes = new Set();
+        
+        function handleSearchInput() {
+            let q = document.getElementById('search-nodes').value.toLowerCase().trim();
+            let d = document.getElementById('search-dropdown');
+            let clearBtn = document.getElementById('clear-search');
+            
+            if (q.length === 0) {
+                d.classList.add('hidden');
+                clearBtn.classList.add('hidden');
+                window.searchedNodes.clear();
+                return;
+            }
+            clearBtn.classList.remove('hidden');
+
+            let matches = [];
+            for (let key in treeData.nodes) {
+                let n = treeData.nodes[key];
+                let textToSearch = [
+                     n.name, 
+                     n.desc || '', 
+                     n.stats ? n.stats.join(' ') : '',
+                     n.attribute,
+                     n.type
+                ].join(' ').toLowerCase();
+
+                if (textToSearch.includes(q)) {
+                    matches.push(n);
+                }
+            }
+
+            window.searchedNodes = new Set(matches.map(m => m.id));
+
+            if (matches.length > 0) {
+                let html = '';
+                matches.slice(0, 15).forEach(m => {
+                    let icon = m.type === 'root' ? '👑' : m.type === 'large' ? '⭐' : m.type === 'notable' ? '🌀' : '🔹';
+                    html += `<div onclick="selectSearchNode('${m.id}')" class="px-4 py-2 hover:bg-slate-700 cursor-pointer text-sm text-slate-200 border-b border-slate-700/50 last:border-0 transition-colors flex items-center gap-2">
+                        <span class="text-lg">${icon}</span>
+                        <div class="flex flex-col ml-1">
+                            <span class="font-bold text-sky-300 drop-shadow-md bg-slate-800/50 px-1 rounded truncate max-w-[210px] sm:max-w-xs">${m.name}</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5 max-h-[30px] overflow-hidden leading-tight">${m.desc || (m.stats ? m.stats.join(', ') : 'Sem detalhes')}</span>
+                        </div>
+                    </div>`;
+                });
+                d.innerHTML = html;
+                d.classList.remove('hidden');
+            } else {
+                d.innerHTML = `<div class="px-4 py-3 text-sm text-slate-500 text-center italic">Nenhum talento ou poder encontrado...</div>`;
+                d.classList.remove('hidden');
+            }
+        }
+
+        function handleSearchKey(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('search-dropdown').classList.add('hidden');
+            } else if (e.key === 'Escape') {
+                clearSearch();
+            }
+        }
+
+        function clearSearch() {
+            let input = document.getElementById('search-nodes');
+            if (input) input.value = '';
+            let dropdown = document.getElementById('search-dropdown');
+            if (dropdown) dropdown.classList.add('hidden');
+            let clearBtn = document.getElementById('clear-search');
+            if (clearBtn) clearBtn.classList.add('hidden');
+            window.searchedNodes.clear();
+        }
+
+        function selectSearchNode(id) {
+            document.getElementById('search-nodes').value = treeData.nodes[id].name;
+            document.getElementById('search-dropdown').classList.add('hidden');
+            window.searchedNodes.clear();
+            window.searchedNodes.add(id);
+
+            let n = treeData.nodes[id];
+            if(n) {
+                camera.x = -n.x;
+                camera.y = -n.y;
+                if (camera.zoom < 0.9) camera.zoom = 1;
+            }
         }
 
         // ================= ADMIN FUNCTIONS =================
