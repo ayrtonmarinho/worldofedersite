@@ -85,7 +85,7 @@
                 class="tab-btn flex-1 py-3 text-[10px] font-bold uppercase border-b-2 border-transparent hover:text-white transition-colors hidden">Habilidades</button>
             <button onclick="switchTab('arvores'); renderAdminTreeList();" id="tab-arvores"
                 class="tab-btn flex-1 py-3 text-[10px] font-bold uppercase border-b-2 border-transparent hover:text-white transition-colors hidden">Árvores</button>
-            <button onclick="switchTab('usuarios')" id="tab-usuarios"
+            <button onclick="switchTab('usuarios'); renderAdminUserList();" id="tab-usuarios"
                 class="tab-btn flex-1 py-3 text-[10px] font-bold uppercase border-b-2 border-transparent hover:text-white transition-colors hidden">Users</button>
         </div>
 
@@ -121,20 +121,27 @@
 
                 <div class="flex gap-2">
                     <button onclick="saveUserFlow()"
-                        class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded transition-colors font-bold shadow-lg shadow-emerald-900/50">💾
+                        class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2 text-xs rounded transition-colors font-bold shadow-lg shadow-emerald-900/50">💾
                         Salvar</button>
+                    <button id="btn-sync" onclick="syncCurrentUser()"
+                        class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 text-xs rounded transition-colors font-bold shadow-lg shadow-blue-900/50">🔄
+                        Sync</button>
                     <button onclick="resetUserPoints()"
-                        class="flex-1 bg-red-700 hover:bg-red-600 text-white py-2 rounded transition-colors font-bold shadow-lg shadow-red-900/50">🔄
+                        class="flex-1 bg-red-700 hover:bg-red-600 text-white py-2 text-xs rounded transition-colors font-bold shadow-lg shadow-red-900/50">🗑️
                         Resetar</button>
                 </div>
                 <!-- NOVO BOTÃO PDF -->
                 <button onclick="exportToPDF()"
-                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded transition-colors font-bold shadow-lg shadow-indigo-900/50 mt-1">📄
+                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 text-sm rounded transition-colors font-bold shadow-lg shadow-indigo-900/50 mt-2">📄
                     Exportar Ficha (PDF)</button>
             </div>
 
             <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-2 mb-3">
                 Resumo de Poderes</h3>
+            <button onclick="focusMyClass()"
+                class="w-full bg-cyan-700 hover:bg-cyan-600 text-white py-1.5 rounded transition-colors text-xs font-bold mb-3 shadow-lg shadow-cyan-900/50">
+                🎯 Focar na Minha Classe
+            </button>
             <div id="summary-container" class="space-y-4 flex-1">
                 <!-- Preenchido via JS -->
             </div>
@@ -307,6 +314,16 @@
                         class="flex-1 bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white">
                     <button onclick="adminModifyPoints()"
                         class="bg-indigo-600 hover:bg-indigo-500 px-3 rounded font-bold text-white text-sm">Aplicar</button>
+                </div>
+            </div>
+
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-600 mb-4">
+                <h3 class="text-sm font-bold text-white mb-2">Excluir Jogador</h3>
+                <div class="flex gap-2">
+                    <input type="text" id="del-user-code" placeholder="Código do Jogador"
+                        class="flex-1 bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white">
+                    <button onclick="adminDeleteUser()"
+                        class="bg-red-600 hover:bg-red-500 px-3 rounded font-bold text-white text-sm shadow-lg shadow-red-900/50">Excluir</button>
                 </div>
             </div>
 
@@ -732,7 +749,7 @@
                     ctx.shadowBlur = node.type === "root" ? 25 : 15;
                 } else if (node.type === "root") {
                     // Highlight contínuo para nodos de classe (raízes)
-                    ctx.strokeStyle = colors.stroke; 
+                    ctx.strokeStyle = colors.stroke;
                     ctx.lineWidth = 2 * camera.zoom;
                     ctx.shadowColor = colors.shadow;
                     ctx.shadowBlur = 10;
@@ -1120,8 +1137,10 @@
                 document.getElementById('tab-arvores').classList.remove('hidden');
 
                 switchTab(intendedTab || 'editor');
-                if (intendedTab === 'usuarios') renderAdminUserList();
-                if (intendedTab === 'arvores') renderAdminTreeList();
+
+                // Pré-carrega as listas logo ao logar, garantindo dados instantâneos do banco de dados na aba
+                renderAdminUserList();
+                renderAdminTreeList();
             } else {
                 alert("Senha incorreta.");
             }
@@ -1433,6 +1452,81 @@
 
             await apiFetch(`/tree/${id}`, 'DELETE');
             renderAdminTreeList();
+        }
+
+        // ================= SINCRONIZAÇÃO E NOVAS FUNCIONALIDADES =================
+        async function syncCurrentUser() {
+            if (!currentUser) return alert("Nenhum jogador carregado.");
+
+            let btn = document.getElementById('btn-sync');
+            if (btn) btn.textContent = "Syncing...";
+
+            let apiData = await apiFetch(`/user/${currentUser.code}`, 'GET');
+            let db = getLocalUsers();
+            let newData = apiData || db[currentUser.code];
+
+            if (newData) {
+                let changed = false;
+                if (newData.totalPoints !== currentUser.totalPoints || newData.level !== currentUser.level) {
+                    currentUser.totalPoints = newData.totalPoints;
+                    currentUser.level = newData.level;
+                    changed = true;
+                }
+                if (JSON.stringify(newData.allocatedNodes) !== JSON.stringify(currentUser.allocatedNodes)) {
+                    currentUser.allocatedNodes = newData.allocatedNodes;
+                    changed = true;
+                }
+
+                if (changed) {
+                    db[currentUser.code] = currentUser;
+                    saveLocalUsers(db);
+                    updatePointsUI();
+                    updateSummaryUI();
+                    alert("Dados do personagem atualizados com sucesso!");
+                } else {
+                    alert("Seus dados já estão atualizados.");
+                }
+            } else {
+                alert("Falha ao buscar dados do usuário.");
+            }
+
+            if (btn) btn.innerHTML = "🔄 Sync";
+        }
+
+        function focusMyClass() {
+            if (!currentUser || currentUser.allocatedNodes.length === 0) return alert("Você ainda não escolheu uma classe. Aloque ou selecione um jogador primeiro.");
+            let rootNodeId = currentUser.allocatedNodes.find(id => treeData.nodes[id] && treeData.nodes[id].type === 'root');
+            if (!rootNodeId) return alert("Nenhuma classe raiz encontrada na sua árvore.");
+
+            let n = treeData.nodes[rootNodeId];
+            camera.x = -n.x;
+            camera.y = -n.y;
+            camera.zoom = 1.2; // Aproxima o zoom para focar melhor!
+        }
+
+        async function adminDeleteUser() {
+            let code = document.getElementById('del-user-code').value.trim();
+            if (!code) return alert("Introduza um código do utilizador...");
+            if (!confirm(`Tem a certeza que deseja EXCLUIR DEFINITIVAMENTE o utilizador '${code}'?`)) return;
+
+            let db = getLocalUsers();
+            if (db[code]) {
+                delete db[code];
+                saveLocalUsers(db);
+            }
+
+            let res = await apiFetch(`/user/${code}`, 'DELETE');
+            if (res) alert("Utilizador excluído da Nuvem (DynamoDB).");
+            else alert("Utilizador excluído Localmente (Nuvem Indisponível).");
+
+            if (currentUser && currentUser.code === code) {
+                currentUser = null;
+                document.getElementById("player-info").classList.add("hidden");
+                document.getElementById('summary-container').innerHTML = '<div class="text-slate-500 text-sm">Nenhum ponto alocado.</div>';
+            }
+
+            document.getElementById('del-user-code').value = '';
+            renderAdminUserList();
         }
 
         // ================= INIT =================
