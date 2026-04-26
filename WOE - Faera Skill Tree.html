@@ -175,11 +175,12 @@
                         <input type="text" id="new-id" required
                             class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none">
                     </div>
-                    <div class="flex-1">
+                    <div class="flex-1 relative">
                         <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Conectar a (IDs sep.
                             por vírgula)</label>
-                        <input type="text" id="new-parent" value="root_warrior"
+                        <input type="text" id="new-parent" value="root_warrior" autocomplete="off" oninput="handleParentAutocomplete()"
                             class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none">
+                        <div id="parent-autocomplete" class="absolute w-full mt-1 bg-slate-800 border border-slate-600 rounded shadow-2xl max-h-40 overflow-y-auto hidden z-50"></div>
                     </div>
                 </div>
 
@@ -198,6 +199,7 @@
                             <option value="notable">Médio (Passiva)</option>
                             <option value="large">Grande (Habilidade Ativa)</option>
                             <option value="root">Raiz (Nova Classe)</option>
+                            <option value="omega">Portal (Conexão sem linha)</option>
                         </select>
                     </div>
                     <div class="flex-1">
@@ -688,6 +690,20 @@
             ctx.closePath();
         }
 
+        function drawStarPath(ctx, x, y, r) {
+            ctx.beginPath();
+            let rot = Math.PI / 2 * 3;
+            let step = Math.PI / 5;
+            ctx.moveTo(x, y - r);
+            for (let i = 0; i < 5; i++) {
+                ctx.lineTo(x + Math.cos(rot) * r, y + Math.sin(rot) * r);
+                rot += step;
+                ctx.lineTo(x + Math.cos(rot) * (r * 0.45), y + Math.sin(rot) * (r * 0.45));
+                rot += step;
+            }
+            ctx.closePath();
+        }
+
         function drawLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -707,6 +723,8 @@
                 let n1 = treeData.nodes[edge.source];
                 let n2 = treeData.nodes[edge.target];
                 if (!n1 || !n2) continue;
+
+                if (n1.type === "omega" && n2.type === "omega") continue; // Omite a linha de Portal para Portal
 
                 let p1 = worldToScreen(n1.x, n1.y);
                 let p2 = worldToScreen(n2.x, n2.y);
@@ -733,7 +751,7 @@
 
                 ctx.globalAlpha = (hasActiveSearch && !isSearched) ? 0.2 : 1.0;
 
-                let baseRadius = node.type === "root" ? 28 : node.type === "large" ? 24 : node.type === "notable" ? 18 : 12;
+                let baseRadius = node.type === "root" ? 28 : node.type === "large" ? 24 : node.type === "notable" ? 18 : node.type === "omega" ? 16 : 12;
                 let r = baseRadius * camera.zoom;
                 let colors = ATTR_COLORS[node.attribute] || ATTR_COLORS["none"];
 
@@ -741,6 +759,7 @@
                 if (node.type === "notable") pathFn = drawDiamondPath;
                 if (node.type === "large") pathFn = drawPentagonPath;
                 if (node.type === "root") pathFn = drawHexagonPath;
+                if (node.type === "omega") pathFn = drawStarPath;
 
                 // Preenchimento / Imagem
                 ctx.save();
@@ -801,7 +820,9 @@
         function setupInput() {
             canvas.addEventListener('mousedown', (e) => {
                 let dropdown = document.getElementById('search-dropdown');
+                let parentDropdown = document.getElementById('parent-autocomplete');
                 if (dropdown) dropdown.classList.add('hidden');
+                if (parentDropdown) parentDropdown.classList.add('hidden');
 
                 if (hoveredNode) {
                     // Facilita a vida do admin preenchendo IDs ao clicar no nodo
@@ -832,6 +853,15 @@
                     }
                     toggleAllocation(hoveredNode.id);
                     return;
+                } else {
+                    // Facilita preenchendo as coordenadas se o Admin clicar no mapa vazio
+                    if (isAdmin && !document.getElementById('panel-editor').classList.contains('hidden')) {
+                        let mx = e.clientX - canvas.getBoundingClientRect().left;
+                        let my = e.clientY - canvas.getBoundingClientRect().top;
+                        let wp = screenToWorld(mx, my);
+                        document.getElementById('new-x').value = Math.round(wp.x);
+                        document.getElementById('new-y').value = Math.round(wp.y);
+                    }
                 }
                 isDragging = true;
                 lastMouse = { x: e.clientX, y: e.clientY };
@@ -982,8 +1012,8 @@
 
             for (let id of currentUser.allocatedNodes) {
                 let n = treeData.nodes[id];
-                if (n.type === 'basic' || n.type === 'root') {
-                    n.stats.forEach(s => { basics[s] = (basics[s] || 0) + 1; });
+                if (n.type === 'basic' || n.type === 'root' || n.type === 'omega') {
+                    if(n.stats) n.stats.forEach(s => { basics[s] = (basics[s] || 0) + 1; });
                 } else if (n.type === 'notable') {
                     passives.push(n); // Guardamos o nodo inteiro para usar a descrição
                 } else if (n.type === 'large') {
@@ -1035,8 +1065,8 @@
                 if (n.type === 'root') {
                     rootNode = n;
                 }
-                if (n.type === 'basic' || n.type === 'root') {
-                    n.stats.forEach(s => { basics[s] = (basics[s] || 0) + 1; });
+                if (n.type === 'basic' || n.type === 'root' || n.type === 'omega') {
+                    if(n.stats) n.stats.forEach(s => { basics[s] = (basics[s] || 0) + 1; });
                 } else if (n.type === 'notable') {
                     passives.push(n);
                 } else if (n.type === 'large') {
@@ -1110,9 +1140,9 @@
             let n = hoveredNode;
             document.getElementById("tt-name").textContent = n.name;
 
-            let tmap = { basic: "Nodo Pequeno", notable: "Passiva Notável", large: "Habilidade Ativa", root: "Ponto de Partida (Classe)" };
+            let tmap = { basic: "Nodo Pequeno", notable: "Passiva Notável", large: "Habilidade Ativa", root: "Ponto de Partida (Classe)", omega: "Portal de Conexão" };
             document.getElementById("tt-type").textContent = tmap[n.type];
-            document.getElementById("tt-type").className = `text-xs uppercase tracking-wider mb-2 font-black ${n.type === 'root' ? 'text-rose-400' : n.type === 'large' ? 'text-amber-400' : n.type === 'notable' ? 'text-fuchsia-400' : 'text-slate-400'
+            document.getElementById("tt-type").className = `text-xs uppercase tracking-wider mb-2 font-black ${n.type === 'root' ? 'text-rose-400' : n.type === 'large' ? 'text-amber-400' : n.type === 'notable' ? 'text-fuchsia-400' : n.type === 'omega' ? 'text-cyan-400' : 'text-slate-400'
                 }`;
 
             let desc = document.getElementById("tt-desc");
@@ -1184,7 +1214,7 @@
             if (matches.length > 0) {
                 let html = '';
                 matches.slice(0, 15).forEach(m => {
-                    let icon = m.type === 'root' ? '👑' : m.type === 'large' ? '⭐' : m.type === 'notable' ? '🌀' : '🔹';
+                    let icon = m.type === 'root' ? '👑' : m.type === 'large' ? '⭐' : m.type === 'notable' ? '🌀' : m.type === 'omega' ? '🌌' : '🔹';
                     html += `<div onclick="selectSearchNode('${m.id}')" class="px-4 py-2 hover:bg-slate-700 cursor-pointer text-sm text-slate-200 border-b border-slate-700/50 last:border-0 transition-colors flex items-center gap-2">
                         <span class="text-lg">${icon}</span>
                         <div class="flex flex-col ml-1">
@@ -1231,6 +1261,39 @@
                 camera.y = -n.y;
                 if (camera.zoom < 0.9) camera.zoom = 1;
             }
+        }
+
+        function handleParentAutocomplete() {
+            let input = document.getElementById('new-parent');
+            let dropdown = document.getElementById('parent-autocomplete');
+            if (!input || !dropdown) return;
+            
+            let parts = input.value.split(',');
+            let lastPart = parts[parts.length - 1].trim().toLowerCase();
+            
+            if (lastPart.length < 1) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            let matches = Object.values(treeData.nodes).filter(n => n.id.toLowerCase().includes(lastPart) || n.name.toLowerCase().includes(lastPart));
+            
+            if (matches.length > 0) {
+                let html = matches.slice(0, 10).map(m => `<div onclick="selectParentAutocomplete('${m.id}')" class="px-2 py-1.5 hover:bg-slate-700 cursor-pointer text-xs text-slate-200 border-b border-slate-700 last:border-0 transition-colors">${m.name} <span class="text-[10px] text-fuchsia-400">(${m.id})</span></div>`).join('');
+                dropdown.innerHTML = html;
+                dropdown.classList.remove('hidden');
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        function selectParentAutocomplete(id) {
+            let input = document.getElementById('new-parent');
+            let parts = input.value.split(',');
+            parts[parts.length - 1] = " " + id;
+            input.value = parts.join(',').trim();
+            document.getElementById('parent-autocomplete').classList.add('hidden');
+            input.focus();
         }
 
         // ================= ADMIN FUNCTIONS =================
