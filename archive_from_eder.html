@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archive From Eder</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Ajustes específicos para manter o design Medieval Moderno com o Tailwind */
+        .tab-btn {
+            font-family: var(--font-heading);
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-gold);
+            border-bottom: 3px solid var(--accent-gold);
+            text-shadow: 0 0 10px rgba(207, 170, 86, 0.5);
+        }
+
+        .search-input {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 15px rgba(207, 170, 86, 0.2);
+            outline: none;
+        }
+
+        .item-card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .item-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+            border-color: rgba(207, 170, 86, 0.3);
+        }
+
+        .tag-pill {
+            background: rgba(207, 170, 86, 0.15);
+            border: 1px solid rgba(207, 170, 86, 0.3);
+            color: var(--accent-gold);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-weight: bold;
+        }
+
+        .tag-pill.blue {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+        }
+
+        .tag-pill.red {
+            background: rgba(248, 113, 113, 0.15);
+            border-color: rgba(248, 113, 113, 0.3);
+            color: #f87171;
+        }
+
+        .card-image-wrapper {
+            position: relative;
+            height: 180px;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 12px 12px 0 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .item-card:hover .card-image {
+            transform: scale(1.05);
+        }
+
+        .item-card.expanded .card-image-wrapper {
+            height: auto;
+        }
+
+        .item-card.expanded .card-image {
+            object-fit: contain;
+            max-height: 70vh;
+        }
+
+        .item-card.expanded:hover .card-image {
+            transform: scale(1);
+        }
+
+        .tag-custom {
+            border-color: var(--tag-color) !important;
+            color: var(--tag-color) !important;
+            background-color: var(--tag-bg, transparent) !important;
+            transition: background-color 0.2s ease, color 0.2s ease, text-shadow 0.2s ease !important;
+            cursor: default;
+        }
+
+        .tag-custom:hover {
+            background-color: var(--tag-bg-hover, var(--tag-color)) !important;
+            color: #fff !important;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-gold);
+        }
+
+        /* Classes de Raridade */
+        .item-card.raridade-comum {
+            border: 2px solid #000000;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .item-card.raridade-raro {
+            border: 2px solid #6A9BE8;
+            background-color: rgba(106, 155, 232, 0.15);
+        }
+
+        .item-card.raridade-exotico {
+            border: 2px solid #B68B0B;
+            background-color: rgba(182, 139, 11, 0.15);
+        }
+
+        .item-card.raridade-lendario {
+            border: 2px solid #9313FF;
+            background-color: rgba(147, 19, 255, 0.15);
+            animation: shimmer-lendario 2s infinite linear;
+        }
+
+        .item-card.raridade-mitico {
+            border: 2px solid #FF69B4;
+            background-color: rgba(255, 105, 180, 0.15);
+            animation: shimmer-mitico 2s infinite linear;
+        }
+
+        .item-card.raridade-eternal {
+            border: 2px solid #16B2D2;
+            background-color: rgba(22, 178, 210, 0.15);
+            animation: shimmer-eternal 2s infinite linear;
+        }
+
+        .item-card.raridade-caotico {
+            border: 2px solid #F94848;
+            background-color: rgba(249, 72, 72, 0.15);
+            animation: shimmer-caotico 2s infinite linear;
+        }
+
+        .item-card.raridade-outro-mundo {
+            border: 2px solid #28B485;
+            background-color: rgba(40, 180, 133, 0.15);
+            animation: shimmer-outro-mundo 2s infinite linear;
+        }
+
+        @keyframes shimmer-lendario {
+            0% {
+                box-shadow: 0 0 5px #9313FF;
+            }
+
+            50% {
+                box-shadow: 0 0 20px #9313FF;
+            }
+
+            100% {
+                box-shadow: 0 0 5px #9313FF;
+            }
+        }
+
+        @keyframes shimmer-mitico {
+            0% {
+                box-shadow: 0 0 5px #FF69B4;
+            }
+
+            50% {
+                box-shadow: 0 0 20px #FF69B4;
+            }
+
+            100% {
+                box-shadow: 0 0 5px #FF69B4;
+            }
+        }
+
+        @keyframes shimmer-eternal {
+            0% {
+                box-shadow: 0 0 5px #16B2D2;
+            }
+
+            50% {
+                box-shadow: 0 0 20px #16B2D2;
+            }
+
+            100% {
+                box-shadow: 0 0 5px #16B2D2;
+            }
+        }
+
+        @keyframes shimmer-caotico {
+            0% {
+                box-shadow: 0 0 5px #F94848;
+            }
+
+            50% {
+                box-shadow: 0 0 20px #F94848;
+            }
+
+            100% {
+                box-shadow: 0 0 5px #F94848;
+            }
+        }
+
+        @keyframes shimmer-outro-mundo {
+            0% {
+                box-shadow: 0 0 5px #28B485;
+            }
+
+            50% {
+                box-shadow: 0 0 20px #28B485;
+            }
+
+            100% {
+                box-shadow: 0 0 5px #28B485;
+            }
+        }
+
+        @keyframes shimmer-master-bg {
+            0% { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+
+        .tag-master-trait {
+            background: linear-gradient(90deg, var(--tag-bg) 25%, #ffffff80 50%, var(--tag-bg) 75%) !important;
+            background-size: 400% 100% !important;
+            animation: shimmer-master-bg 3s infinite linear !important;
+            border-color: #fff !important;
+            color: #fff !important;
+            text-shadow: 0 0 5px rgba(255,255,255,0.5) !important;
+        }
+    </style>
+</head>
+
+<body id="body"
+    style="background-image: url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&q=80&w=1920'); background-size: cover; background-position: center; background-attachment: fixed;"
+    class="min-h-screen flex flex-col text-slate-300">
+
+    <!-- Fundo de Escurecimento Geral -->
+    <div class="fixed inset-0 bg-black/60 z-[-1] pointer-events-none"></div>
+
+    <!-- HEADER -->
+    <header class="w-full bg-black/80 border-b border-white/10 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4 cursor-pointer" onclick="location.href='portasinfinitum.html'">
+                <h1 class="text-3xl font-black tracking-widest text-[#cfaa56]"
+                    style="font-family: var(--font-heading);">
+                    Archive From Eder
+                </h1>
+            </div>
+
+            <!-- SEARCH BAR -->
+            <div class="w-full md:w-96 relative">
+                <input type="text" id="searchInput" placeholder="Buscar... ex: [escola][trovão] magia"
+                    class="search-input w-full rounded-full py-2 px-4 pr-10 text-sm" oninput="handleSearch()">
+                <div class="absolute right-3 top-2 text-slate-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="max-w-6xl mx-auto px-4 flex gap-6 overflow-x-auto">
+            <button class="tab-btn active py-3 px-2 text-sm uppercase tracking-widest font-bold whitespace-nowrap"
+                onclick="switchTab('habilidades', this)">Habilidades</button>
+            <button class="tab-btn py-3 px-2 text-sm uppercase tracking-widest font-bold whitespace-nowrap"
+                onclick="switchTab('itens', this)">Itens</button>
+            <button class="tab-btn py-3 px-2 text-sm uppercase tracking-widest font-bold whitespace-nowrap"
+                onclick="switchTab('personagens', this)">Personagens</button>
+            <button class="tab-btn py-3 px-2 text-sm uppercase tracking-widest font-bold whitespace-nowrap"
+                onclick="switchTab('escolas', this)">Escolas</button>
+            <button class="tab-btn py-3 px-2 text-sm uppercase tracking-widest font-bold whitespace-nowrap"
+                onclick="switchTab('categorias', this)">Categorias</button>
+            <button class="tab-btn py-3 px-2 text-sm uppercase tracking-widest font-bold whitespace-nowrap"
+                onclick="switchTab('lugares', this)">Lugares</button>
+            <button class="tab-btn py-3 px-2 text-sm uppercase tracking-widest font-bold whitespace-nowrap"
+                onclick="switchTab('treinamentos', this)">Treinamentos</button>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-grow max-w-6xl mx-auto w-full p-4 py-8">
+        <!-- Loader / Mensagens -->
+        <div id="loading" class="text-center text-slate-500 py-10 hidden">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#cfaa56] mb-2">
+            </div>
+            <p>Consultando os Registros Akáshicos...</p>
+        </div>
+
+        <!-- Grid de Resultados -->
+        <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards gerados via JS -->
+        </div>
+
+        <div id="noResults" class="text-center py-20 hidden">
+            <p class="text-xl text-slate-500" style="font-family: var(--font-heading);">Nenhum registro encontrado nas
+                páginas deste tomo.</p>
+        </div>
+    </main>
+
+    <!-- BOTÃO ADMIN (Escondido) -->
+    <button onclick="openAdminLogin()"
+        class="fixed bottom-4 right-4 w-10 h-10 flex items-center justify-center bg-black/50 hover:bg-black/80 border border-white/10 rounded-full opacity-20 hover:opacity-100 transition-opacity z-50 group">
+        <span class="text-lg text-slate-500 group-hover:text-[#cfaa56]">⚙️</span>
+    </button>
+
+    <!-- MODAL DE LOGIN ADMIN -->
+    <div id="adminLoginModal"
+        class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden backdrop-blur-sm">
+        <div class="bg-[#1e1e24] p-6 rounded-xl border border-white/10 shadow-2xl w-full max-w-sm">
+            <h2 class="text-xl font-bold text-[#cfaa56] mb-4" style="font-family: var(--font-heading);">Acesso do
+                Cronista</h2>
+            <input type="text" id="adminName" placeholder="Nome do Cronista"
+                class="search-input w-full rounded py-2 px-3 mb-2 text-sm">
+            <input type="password" id="adminPwd" placeholder="Senha do Cronista"
+                class="search-input w-full rounded py-2 px-3 mb-4 text-sm">
+            <div class="flex gap-2">
+                <button onclick="closeModal('adminLoginModal')"
+                    class="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-2 rounded text-sm font-bold transition-colors border border-white/10">Cancelar</button>
+                <button onclick="loginAdmin()"
+                    class="flex-1 bg-[#2d2a26] hover:bg-[#cfaa56] hover:text-black text-[#cfaa56] py-2 rounded text-sm font-bold transition-colors border border-[#cfaa56]/50">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EXCLUSÃO -->
+    <div id="deleteConfirmModal"
+        class="fixed inset-0 bg-black/80 flex items-center justify-center z-[110] hidden backdrop-blur-sm">
+        <div class="bg-[#1e1e24] p-6 rounded-xl border border-red-900/50 shadow-2xl w-full max-w-sm">
+            <h2 class="text-xl font-bold text-red-500 mb-2" style="font-family: var(--font-heading);">Atenção!</h2>
+            <p class="text-sm text-slate-300 mb-4">Você está prestes a apagar <strong id="deleteItemName"
+                    class="text-white"></strong> dos registros. Essa ação é irreversível.</p>
+            <input type="password" id="deletePwd" placeholder="Confirme a Senha do Cronista"
+                class="search-input w-full rounded py-2 px-3 mb-4 text-sm border border-red-900/30 focus:border-red-500/50">
+            <div class="flex gap-2">
+                <button onclick="closeModal('deleteConfirmModal')"
+                    class="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-2 rounded text-sm font-bold transition-colors border border-white/10">Cancelar</button>
+                <button onclick="confirmDelete()"
+                    class="flex-1 bg-red-900/20 hover:bg-red-600 hover:text-white text-red-500 py-2 rounded text-sm font-bold transition-colors border border-red-900/50">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DO CONSOLE ADMIN -->
+    <div id="adminConsoleModal"
+        class="fixed inset-0 bg-black/90 flex flex-col items-center justify-start z-[100] hidden backdrop-blur-md overflow-y-auto p-4 py-10">
+        <div
+            class="bg-[#1e1e24] p-6 rounded-xl border border-[#cfaa56]/30 shadow-[0_0_50px_rgba(207,170,86,0.1)] w-full max-w-2xl relative">
+            <button onclick="closeModal('adminConsoleModal')"
+                class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">✖</button>
+
+            <h2 class="text-2xl font-bold text-[#cfaa56] mb-2" style="font-family: var(--font-heading);">Santuário de
+                Registros (Admin)</h2>
+            <p class="text-xs text-slate-400 mb-6 uppercase tracking-wider">Inserir novo dado no DynamoDB</p>
+
+            <div class="flex gap-2 mb-6 flex-wrap">
+                <button
+                    class="flex-1 py-2 rounded bg-slate-800 text-white text-sm border border-white/10 font-bold hover:bg-slate-700 min-w-[100px]"
+                    onclick="switchAdminForm('habilidades')">Habilidade</button>
+                <button
+                    class="flex-1 py-2 rounded bg-slate-800 text-white text-sm border border-white/10 font-bold hover:bg-slate-700 min-w-[100px]"
+                    onclick="switchAdminForm('itens')">Item</button>
+                <button
+                    class="flex-1 py-2 rounded bg-slate-800 text-white text-sm border border-white/10 font-bold hover:bg-slate-700 min-w-[100px]"
+                    onclick="switchAdminForm('personagens')">Personagem</button>
+                <button
+                    class="flex-1 py-2 rounded bg-slate-800 text-white text-sm border border-white/10 font-bold hover:bg-slate-700 min-w-[100px]"
+                    onclick="switchAdminForm('escolas')">Escola</button>
+                <button
+                    class="flex-1 py-2 rounded bg-slate-800 text-white text-sm border border-white/10 font-bold hover:bg-slate-700 min-w-[100px]"
+                    onclick="switchAdminForm('categorias')">Categoria</button>
+                <button
+                    class="flex-1 py-2 rounded bg-slate-800 text-white text-sm border border-white/10 font-bold hover:bg-slate-700 min-w-[100px]"
+                    onclick="switchAdminForm('lugares')">Lugar</button>
+                <button
+                    class="flex-1 py-2 rounded bg-slate-800 text-white text-sm border border-white/10 font-bold hover:bg-slate-700 min-w-[100px]"
+                    onclick="switchAdminForm('treinamentos')">Treinamento</button>
+            </div>
+
+            <form id="adminForm" class="space-y-4" onsubmit="submitAdminForm(event)">
+                <input type="hidden" id="formType" value="habilidades">
+                <input type="hidden" id="editItemId" value="">
+
+                <!-- Campos Comuns -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Nome</label>
+                        <input type="text" id="inpNome" required class="search-input w-full rounded px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">URL da Imagem</label>
+                        <input type="text" id="inpImagem" placeholder="https://..."
+                            class="search-input w-full rounded px-3 py-2 text-sm">
+                    </div>
+                </div>
+
+                <div class="w-full">
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Descrição</label>
+                    <textarea id="inpDescricao" rows="3" required
+                        class="search-input w-full rounded px-3 py-2 text-sm"></textarea>
+                </div>
+
+                <!-- Específicos de Habilidades -->
+                <div id="fieldsHabilidades" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Tipo (Ex: Ativa,
+                                Passiva)</label>
+                            <input type="text" id="inpTipoHab" class="search-input w-full rounded px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Tipo de
+                                Escola / Treino</label>
+                            <select id="inpTipoEscolaHab" class="search-input w-full rounded px-3 py-2 text-sm"
+                                onchange="toggleRankHab()">
+                                <option value="Elemental">Escola Elemental</option>
+                                <option value="Mundo">Escola do Mundo</option>
+                                <option value="Treinamento">Treinamento</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label id="lblEscolaHab" class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Escola / Treinamento</label>
+                            <select id="inpEscolaHab" class="search-input w-full rounded px-3 py-2 text-sm"></select>
+                        </div>
+                        <div id="rankHabContainer">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Rank da
+                                Habilidade</label>
+                            <select id="inpRankHab" class="search-input w-full rounded px-3 py-2 text-sm">
+                                <option value="I">I</option>
+                                <option value="II">II</option>
+                                <option value="III">III</option>
+                                <option value="IV">IV</option>
+                                <option value="Arconte">Arconte</option>
+                            </select>
+                        </div>
+                        <div id="nivelHabContainer" class="hidden">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Nível / Trait</label>
+                            <select id="inpNivelHab" class="search-input w-full rounded px-3 py-2 text-sm" onchange="toggleMasterTrait()">
+                                <option value="Inicial">Inicial</option>
+                                <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                                <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+                                <option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
+                                <option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option>
+                                <option value="Master Trait">Master Trait</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- MASTER TRAIT TOPICS -->
+                    <div id="masterTraitContainer" class="hidden bg-black/30 p-4 rounded border border-[#cfaa56]/30">
+                        <h3 class="text-[#cfaa56] text-sm font-bold mb-2">Tópicos do Master Trait</h3>
+                        <div id="masterTraitTopicsList" class="space-y-3 mb-3"></div>
+                        <button type="button" onclick="addMasterTraitTopic()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white py-1 px-3 rounded border border-white/10">+ Adicionar Tópico</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Recarga</label>
+                            <input type="text" id="inpRecargaHab" placeholder="Ex: 2 turnos"
+                                class="search-input w-full rounded px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Custo</label>
+                            <input type="text" id="inpCustoHab" placeholder="Ex: 10 MP"
+                                class="search-input w-full rounded px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Ação
+                                (Dano/Cura)</label>
+                            <input type="text" id="inpAcaoHab" placeholder="Ex: 2d6 Fogo"
+                                class="search-input w-full rounded px-3 py-2 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Específicos de Itens -->
+                <div id="fieldsItens" class="space-y-4 hidden">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Obtenção</label>
+                            <input type="text" id="inpObtencaoItem" placeholder="Ex: Drop Boss"
+                                class="search-input w-full rounded px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Capítulo</label>
+                            <input type="text" id="inpCapituloItem" placeholder="Ex: 1 ou N/A"
+                                class="search-input w-full rounded px-3 py-2 text-sm">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Dano</label>
+                            <input type="text" id="inpDanoItem" placeholder="Ex: 1d8 Corte"
+                                class="search-input w-full rounded px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Atributos
+                                Chave</label>
+                            <input type="text" id="inpAttrItem" placeholder="Ex: Força, Destreza"
+                                class="search-input w-full rounded px-3 py-2 text-sm">
+                        </div>
+                    </div>
+                    <div class="w-full">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Bônus / Efeitos</label>
+                        <input type="text" id="inpBonusItem" placeholder="Ex: +2 de Movimento"
+                            class="search-input w-full rounded px-3 py-2 text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="w-full">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Tipo</label>
+                            <select id="inpTipoItem" class="search-input w-full rounded px-3 py-2 text-sm"></select>
+                        </div>
+                        <div class="w-full">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Raridade</label>
+                            <select id="inpRaridadeItem" class="search-input w-full rounded px-3 py-2 text-sm">
+                                <option value="Comum">Comum</option>
+                                <option value="Raro">Raro</option>
+                                <option value="Exótico">Exótico</option>
+                                <option value="Lendário">Lendário</option>
+                                <option value="Mítico">Mítico</option>
+                                <option value="Eternal">Eternal</option>
+                                <option value="Caótico">Caótico</option>
+                                <option value="Outro Mundo">Outro Mundo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Específicos de Personagens -->
+                <div id="fieldsPersonagens" class="space-y-4 hidden">
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="w-full">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Origem
+                                (Lugar)</label>
+                            <select id="inpOrigemChar" class="search-input w-full rounded px-3 py-2 text-sm"></select>
+                        </div>
+                    </div>
+                    <div class="w-full">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Lore (História)</label>
+                        <textarea id="inpLoreChar" rows="4"
+                            class="search-input w-full rounded px-3 py-2 text-sm"></textarea>
+                    </div>
+                </div>
+
+                <!-- Específicos de Lugares -->
+                <div id="fieldsLugares" class="space-y-4 hidden">
+                    <div class="w-full">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Cor do Lugar</label>
+                        <input type="color" id="inpCorLugar" value="#cfaa56"
+                            class="w-full h-10 rounded cursor-pointer border border-white/10 bg-black/50">
+                    </div>
+                </div>
+
+                <!-- Específicos de Escolas -->
+                <div id="fieldsEscolas" class="space-y-4 hidden">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="w-full">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Cor da Escola</label>
+                            <input type="color" id="inpCorEscola" value="#cfaa56"
+                                class="w-full h-10 rounded cursor-pointer border border-white/10 bg-black/50">
+                        </div>
+                        <div class="w-full">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Lugar (Opcional)</label>
+                            <select id="inpLugarEscola" class="search-input w-full rounded px-3 py-2 text-sm"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Específicos de Categorias -->
+                <div id="fieldsCategorias" class="space-y-4 hidden">
+                </div>
+
+                <!-- Específicos de Treinamentos -->
+                <div id="fieldsTreinamentos" class="space-y-4 hidden">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="w-full">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Cor do Treinamento</label>
+                            <input type="color" id="inpCorTreinamento" value="#8b0000"
+                                class="w-full h-10 rounded cursor-pointer border border-white/10 bg-black/50">
+                        </div>
+                        <div class="w-full">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Away</label>
+                            <select id="inpAwayTreinamento" class="search-input w-full rounded px-3 py-2 text-sm">
+                                <option value="">Nenhum</option>
+                                <option value="First away">First away</option>
+                                <option value="2º away">2º away</option>
+                                <option value="3º away">3º away</option>
+                                <option value="4º away">4º away</option>
+                                <option value="5º away">5º away</option>
+                                <option value="6º away">6º away</option>
+                                <option value="7º away">7º away</option>
+                                <option value="8º away">8º away</option>
+                                <option value="9º away">9º away</option>
+                                <option value="10º away">10º away</option>
+                                <option value="11º away">11º away</option>
+                                <option value="12º away">12º away</option>
+                                <option value="13º away">13º away</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" id="btnSubmitAdmin"
+                        class="w-full bg-[#cfaa56] hover:bg-[#e8c678] text-black py-3 rounded font-bold uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(207,170,86,0.3)]">
+                        Registrar no Banco de Dados
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ================= CONFIGURAÇÕES E BANCO MOCK =================
+        const API_GATEWAY_URL = "https://ac53afc98d.execute-api.sa-east-1.amazonaws.com/prod";
+        let currentTab = 'habilidades';
+        let isAdmin = false;
+        let database = {
+            habilidades: [],
+            itens: [],
+            personagens: [],
+            escolas: [],
+            categorias: [],
+            lugares: [],
+            admins: [],
+            treinamentos: []
+        };
+
+        // Mocks Iniciais para quando a API não estiver disponível / estiver vazia
+        const defaultMocks = {
+            habilidades: [
+                { id: "h1", nome: "Relâmpago Arcano", tipo: "Ativa", escola: "Trovão", recarga: "2 Turnos", custo: "15 MP", acao: "3d6 Dano Elétrico", descricao: "Conjura um raio canalizado dos céus contra um alvo.", imagem: "https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?auto=format&fit=crop&q=80&w=400" },
+                { id: "h2", nome: "Pele de Carvalho", tipo: "Passiva", escola: "Natureza", recarga: "N/A", custo: "Passivo", acao: "+2 Defesa", descricao: "Sua pele enrijece, absorvendo impactos físicos leves permanentemente.", imagem: "https://images.unsplash.com/photo-1590502593747-42298799482c?auto=format&fit=crop&q=80&w=400" }
+            ],
+            itens: [
+                { id: "i1", nome: "Lâmina da Voracidade", obtencao: "Drop do Abismo", dano: "2d8 Corte", atributos_chave: "Força", bonus: "Roubo de Vida (10%)", capitulo: "2", descricao: "Uma espada obscura sedenta por vitalidade.", imagem: "https://images.unsplash.com/photo-1585250005727-b50a229a141a?auto=format&fit=crop&q=80&w=400", raridade: "Exótico", tipo: "Arma" },
+                { id: "i2", nome: "Cálice de Ouro Rubro", obtencao: "Missão Principal", dano: "N/A", atributos_chave: "Nenhum", bonus: "+50 HP Max", capitulo: "1", descricao: "Um cálice místico que amplia a energia vital do portador.", imagem: "https://images.unsplash.com/photo-1616086705602-0e8c0e271630?auto=format&fit=crop&q=80&w=400", raridade: "Mítico", tipo: "Acessório" }
+            ],
+            personagens: [
+                { id: "p1", nome: "Eldrin, o Guardião", lore: "O último dos patrulheiros de Faera, que jurou proteger as portas da floresta antiga contra a invasão das sombras.", descricao: "NPC aliado na campanha inicial.", imagem: "https://images.unsplash.com/photo-1614041530933-2868c2d76f8e?auto=format&fit=crop&q=80&w=400", origem: "Faera" },
+                { id: "p2", nome: "Valerius Corvo Negro", lore: "Um mercenário enigmático que cruza o caminho do jogador. Ele possui métodos cruéis, mas uma bússola moral intrigante.", descricao: "Pode ser recrutado no Capítulo 2.", imagem: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&q=80&w=400", origem: "" }
+            ],
+            escolas: [
+                { id: "e1", nome: "Trovão", descricao: "Escola voltada ao controle dos raios e tempestades.", imagem: "https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?auto=format&fit=crop&q=80&w=400", cor: "#ffeb3b" },
+                { id: "e2", nome: "Natureza", descricao: "Magia ligada às plantas, vida e crescimento.", imagem: "https://images.unsplash.com/photo-1590502593747-42298799482c?auto=format&fit=crop&q=80&w=400", cor: "#4caf50" }
+            ],
+            categorias: [
+                { id: "c1", nome: "Arma", descricao: "Equipamentos de combate corpo a corpo ou à distância.", imagem: "https://images.unsplash.com/photo-1585250005727-b50a229a141a?auto=format&fit=crop&q=80&w=400" },
+                { id: "c2", nome: "Acessório", descricao: "Itens mágicos e joias de poder.", imagem: "https://images.unsplash.com/photo-1616086705602-0e8c0e271630?auto=format&fit=crop&q=80&w=400" }
+            ],
+            lugares: [
+                { id: "l1", nome: "Faera", descricao: "A grande floresta mística e lar dos elfos e fadas.", imagem: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=400", cor: "#84cc16" },
+                { id: "l2", nome: "Castelo Infinitum", descricao: "O nexo de todas as dimensões conhecidas.", imagem: "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?auto=format&fit=crop&q=80&w=400", cor: "#9333ea" }
+            ],
+            admins: [
+                { nome: "Cronista_Mestre", senha: "senha123" }
+            ],
+            treinamentos: [
+                { id: "t1", nome: "Lâmina Oculta", descricao: "Treinamento avançado em técnicas de assassinato.", imagem: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=400", cor: "#8b0000" }
+            ]
+        };
+
+        // ================= INTEGRAÇÃO API (DYNAMO DB) =================
+        async function apiFetch(endpoint, method, data = null) {
+            try {
+                let headers = { 'Content-Type': 'application/json' };
+                if (isAdmin) {
+                    let pwdInput = document.getElementById('adminPwd').value;
+                    headers['Authorization'] = pwdInput || 'admin';
+                }
+                const res = await fetch(API_GATEWAY_URL + endpoint, {
+                    method: method,
+                    headers: headers,
+                    body: data ? JSON.stringify(data) : null
+                });
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                return await res.json();
+            } catch (err) {
+                console.warn("API Offline / Falha (Usando Fallback Local):", err.message);
+                return null;
+            }
+        }
+
+        async function loadDatabase() {
+            document.getElementById('loading').classList.remove('hidden');
+
+            // Tenta puxar tudo da raiz da API
+            // Como é um mock, se falhar, carregamos os defaults + localstorage
+            let apiData = await apiFetch('/', 'GET');
+
+            let localDb = localStorage.getItem("woe_archive_db");
+            if (localDb) {
+                database = JSON.parse(localDb);
+                if (!database.escolas) database.escolas = defaultMocks.escolas;
+                if (!database.categorias) database.categorias = defaultMocks.categorias;
+                if (!database.lugares) database.lugares = defaultMocks.lugares;
+                if (!database.admins) database.admins = defaultMocks.admins;
+                if (!database.treinamentos) database.treinamentos = defaultMocks.treinamentos;
+            } else {
+                database = JSON.parse(JSON.stringify(defaultMocks));
+            }
+
+            // Se a API retornar sucesso, fazemos merge ou sobreposição
+            if (apiData && apiData.habilidades) {
+                database = apiData;
+            }
+
+            document.getElementById('loading').classList.add('hidden');
+            renderCards();
+        }
+
+        async function saveToDatabase(type, newItem, isEdit) {
+            // Adiciona no Local (Cache/Fallback)
+            if (!database[type]) database[type] = [];
+
+            if (isEdit) {
+                let index = database[type].findIndex(i => i.id === newItem.id);
+                if (index !== -1) database[type][index] = newItem;
+            } else {
+                database[type].push(newItem);
+            }
+
+            localStorage.setItem("woe_archive_db", JSON.stringify(database));
+
+            // Tenta enviar para a Nuvem
+            let res = await apiFetch('/save', 'POST', { type: type, data: newItem });
+
+            if (res) {
+                alert(`${isEdit ? 'Atualizado' : 'Salvo'} no DynamoDB com sucesso na categoria: ${type}!`);
+            } else {
+                alert(`${isEdit ? 'Atualizado' : 'Salvo'} localmente (API indisponível). Categoria: ${type}`);
+            }
+
+            if (type === currentTab) renderCards();
+        }
+
+        // ================= UI E RENDERIZAÇÃO =================
+        function switchTab(tab, btnElement) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderCards();
+        }
+
+        function renderCards() {
+            const grid = document.getElementById('resultsGrid');
+            const noResults = document.getElementById('noResults');
+            grid.innerHTML = '';
+
+            let items = database[currentTab] || [];
+            let filtered = filterItems(items);
+
+            if (filtered.length === 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+                filtered.forEach(item => {
+                    grid.appendChild(createCardHTML(item, currentTab));
+                });
+            }
+        }
+
+        function createCardHTML(data, type) {
+            const div = document.createElement('div');
+            let extraClass = '';
+            let baseColor = data.cor || "#cfaa56";
+
+            let tagsHtml = '';
+            let detailsHtml = '';
+
+            if (type === 'habilidades') {
+                let schoolColor = "#38bdf8";
+                let tagLabel = "Escola: ";
+                
+                if (data.tipoEscola === 'Treinamento') {
+                    tagLabel = "Treinamento - ";
+                    if (database.treinamentos && data.escola) {
+                        let trainObj = database.treinamentos.find(t => t.nome === data.escola);
+                        if (trainObj && trainObj.cor) schoolColor = trainObj.cor;
+                    }
+                } else {
+                    if (database.escolas && data.escola) {
+                        let schoolObj = database.escolas.find(e => e.nome === data.escola);
+                        if (schoolObj && schoolObj.cor) schoolColor = schoolObj.cor;
+                    }
+                }
+                baseColor = schoolColor;
+                
+                let rankHtml = '';
+                let extraTagClass = '';
+                
+                if (data.tipoEscola === 'Treinamento') {
+                    if (data.nivel) {
+                        if (data.nivel === 'Master Trait') {
+                            rankHtml = ` <span class="text-[10px] font-bold text-black bg-white px-1 py-0.5 rounded ml-1 uppercase">Master Trait</span>`;
+                            extraTagClass = 'tag-master-trait';
+                        } else {
+                            rankHtml = ` <span class="text-[10px] font-bold text-white bg-black/50 px-1 py-0.5 rounded border border-white/20 ml-1">Nível ${data.nivel}</span>`;
+                        }
+                    }
+                } else {
+                    if (data.rank) {
+                        rankHtml = ` <span class="text-[10px] font-bold text-white bg-black/50 px-1 py-0.5 rounded border border-white/20 ml-1">Rank ${data.rank}</span>`;
+                    }
+                }
+
+                let tagTooltip = '';
+                if (data.tipoEscola === 'Treinamento' && database.treinamentos && data.escola) {
+                    let trainObj = database.treinamentos.find(t => t.nome === data.escola);
+                    if (trainObj && trainObj.away) {
+                        tagTooltip = ` title="Away: ${trainObj.away}"`;
+                    }
+                }
+                
+                let lugarSubtext = '';
+                if (data.tipoEscola !== 'Treinamento' && database.escolas && data.escola) {
+                    let schoolObj = database.escolas.find(e => e.nome === data.escola);
+                    if (schoolObj && schoolObj.lugar) {
+                        lugarSubtext = ` <span class="opacity-70 ml-1 font-normal text-[9px]">(Lugar: ${schoolObj.lugar})</span>`;
+                    }
+                }
+
+                tagsHtml = `
+                    <span class="tag-pill">${data.tipo || 'N/A'}</span>
+                    <span class="tag-pill tag-custom flex items-center ${extraTagClass}" style="--tag-color: ${schoolColor}; --tag-bg: ${schoolColor}26; --tag-bg-hover: ${schoolColor}99; border-width: 2px;"${tagTooltip}>${tagLabel}${data.escola || 'N/A'}${lugarSubtext}${rankHtml}</span>
+                `;
+
+                let masterTopicsHtml = '';
+                if (data.nivel === 'Master Trait' && data.masterTopics && data.masterTopics.length > 0) {
+                    masterTopicsHtml = `<div class="mt-4 pt-3 border-t border-white/10 hidden topics-container">
+                        <h4 class="text-[#cfaa56] font-bold mb-2 text-xs uppercase tracking-widest">Master Moves</h4>
+                        <ul class="space-y-2">
+                            ${data.masterTopics.map(t => `<li class="bg-black/30 p-2 rounded text-xs border border-white/5"><strong class="text-[#cfaa56] block mb-1">${t.title}</strong><span class="text-slate-300">${t.desc}</span></li>`).join('')}
+                        </ul>
+                    </div>`;
+                    extraClass = ' cursor-pointer hover:border-[#cfaa56]/50 transition-colors duration-300';
+                    div.setAttribute('onclick', 'this.classList.toggle("expanded"); this.querySelector(".topics-container").classList.toggle("hidden");');
+                }
+
+                detailsHtml = `
+                    <div class="grid grid-cols-2 gap-2 text-xs mb-3 text-slate-400">
+                        <div><strong class="text-slate-300">Recarga:</strong> ${data.recarga || '-'}</div>
+                        <div><strong class="text-slate-300">Custo:</strong> ${data.custo || '-'}</div>
+                    </div>
+                    ${data.acao ? `<div class="text-sm text-red-400 mb-2 font-bold bg-red-900/20 p-2 rounded border border-red-500/20">Ação: ${data.acao}</div>` : ''}
+                    ${masterTopicsHtml}
+                `;
+            }
+            else if (type === 'itens') {
+                let rarityColor = "#ffffff";
+                if (data.raridade === "Comum") rarityColor = "#888888";
+                else if (data.raridade === "Raro") rarityColor = "#6A9BE8";
+                else if (data.raridade === "Exótico") rarityColor = "#B68B0B";
+                else if (data.raridade === "Lendário") rarityColor = "#9313FF";
+                else if (data.raridade === "Mítico") rarityColor = "#FF69B4";
+                else if (data.raridade === "Eternal") rarityColor = "#16B2D2";
+                else if (data.raridade === "Caótico") rarityColor = "#F94848";
+                else if (data.raridade === "Outro Mundo") rarityColor = "#28B485";
+
+                if (data.raridade) {
+                    let rClass = data.raridade.toLowerCase().replace('ó', 'o').replace('í', 'i').replace(' ', '-');
+                    extraClass = ` raridade-${rClass}`;
+                }
+                tagsHtml = `
+                    <span class="tag-pill">${data.tipo || 'Outro'}</span>
+                    <span class="tag-pill">Capítulo: ${data.capitulo || '-'}</span>
+                    <span class="tag-pill tag-custom flex items-center" style="--tag-color: ${rarityColor}; --tag-bg: transparent; --tag-bg-hover: ${rarityColor}99; border-width: 2px;">${data.raridade || 'Comum'}</span>
+                `;
+                baseColor = rarityColor;
+                detailsHtml = `
+                    <div class="grid grid-cols-2 gap-2 text-xs mb-3 text-slate-400">
+                        <div><strong class="text-slate-300">Obtenção:</strong> ${data.obtencao || '-'}</div>
+                        <div><strong class="text-slate-300">Dano:</strong> ${data.dano || '-'}</div>
+                        <div class="col-span-2"><strong class="text-slate-300">Atr. Chave:</strong> ${data.atributos_chave || '-'}</div>
+                    </div>
+                    ${data.bonus ? `<div class="text-sm text-[#cfaa56] mb-2 font-bold bg-[#cfaa56]/10 p-2 rounded border border-[#cfaa56]/20">Efeitos: ${data.bonus}</div>` : ''}
+                `;
+            } else if (type === 'personagens' || type === 'escolas' || type === 'categorias' || type === 'lugares' || type === 'treinamentos') {
+                if (type === 'personagens' && data.origem) {
+                    let lugarColor = "#ffffff";
+                    if (database.lugares) {
+                        let lugarObj = database.lugares.find(l => l.nome === data.origem);
+                        if (lugarObj && lugarObj.cor) lugarColor = lugarObj.cor;
+                    }
+                    baseColor = lugarColor;
+                    tagsHtml = `<span class="tag-pill tag-custom flex items-center" style="--tag-color: ${lugarColor}; --tag-bg: ${lugarColor}1a; --tag-bg-hover: ${lugarColor}99; border-width: 2px;">Origem: ${data.origem}</span>`;
+                }
+                detailsHtml = `
+                    <div class="text-xs text-slate-400 italic mb-3 border-l-2 border-slate-600 pl-2">
+                        "${data.lore || data.descricao || 'Nenhum registro encontrado.'}"
+                    </div>
+                `;
+            }
+
+            let adminBtns = '';
+            if (isAdmin) {
+                adminBtns = `
+                    <div class="absolute top-3 right-3 flex gap-2 z-10">
+                        <button onclick="event.stopPropagation(); editItem('${data.id}', '${type}')" class="text-slate-400 hover:text-white p-1.5 bg-black/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors hover:bg-slate-800 border border-white/20" title="Editar">✏️</button>
+                        <button onclick="event.stopPropagation(); promptDelete('${data.id}', '${type}')" class="text-slate-400 hover:text-red-500 p-1.5 bg-black/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors hover:bg-red-900/50 border border-white/20" title="Excluir">🗑️</button>
+                    </div>
+                `;
+            }
+
+            if (type === 'personagens') {
+                extraClass += ' cursor-pointer';
+            }
+
+            div.className = `item-card flex flex-col h-full${extraClass}`;
+            if (type === 'personagens') {
+                div.setAttribute('onclick', "this.classList.toggle('expanded')");
+            }
+            if (type === 'habilidades' && database.escolas && data.escola) {
+                let schoolObj = database.escolas.find(e => e.nome === data.escola);
+                if (schoolObj && schoolObj.cor) {
+                    div.style.borderColor = schoolObj.cor;
+                    div.style.backgroundColor = schoolObj.cor + "20"; // 12.5% opacity
+                }
+            } else if (type === 'personagens' && database.lugares && data.origem) {
+                let lugarObj = database.lugares.find(l => l.nome === data.origem);
+                if (lugarObj && lugarObj.cor) {
+                    div.style.borderColor = lugarObj.cor;
+                    div.style.backgroundColor = lugarObj.cor + "20";
+                }
+            }
+            let imgHtml = '';
+            if (data.imagem && data.imagem.trim() !== '') {
+                imgHtml = `<img src="${data.imagem}" alt="${data.nome}" class="card-image">`;
+            } else {
+                imgHtml = `<div class="card-image w-full h-full" style="background: radial-gradient(circle at center, ${baseColor}55 0%, #111111 100%);"></div>`;
+            }
+
+            div.innerHTML = `
+                <div class="card-image-wrapper">
+                    ${imgHtml}
+                    <div class="absolute top-3 left-3 flex gap-2 flex-wrap z-10">
+                        ${tagsHtml}
+                    </div>
+                    ${adminBtns}
+                </div>
+                <div class="p-5 flex flex-col flex-grow">
+                    <h3 class="text-xl font-bold text-[#cfaa56] mb-2" style="font-family: var(--font-heading);">${data.nome}</h3>
+                    ${detailsHtml}
+                    <p class="text-sm text-slate-300 leading-relaxed flex-grow">${data.descricao || ''}</p>
+                </div>
+            `;
+            return div;
+        }
+
+        // ================= MECÂNICA DE BUSCA =================
+        function handleSearch() {
+            renderCards();
+        }
+
+        function parseSearchQuery(query) {
+            let tags = [];
+            let text = query;
+            const regex = /\[(.*?)\]/g;
+            let match;
+            while ((match = regex.exec(query)) !== null) {
+                // armazena ex: "escola][trovão" (se o usuário digitar [escola][trovão])
+                // ou simplesmente guarda cada valor. A lógica abaixo separa.
+            }
+
+            // Nova lógica para suportar [chave][valor]
+            const regexChaveValor = /\[(.*?)\]\[(.*?)\]/g;
+            let especialTags = {};
+            while ((match = regexChaveValor.exec(query)) !== null) {
+                especialTags[match[1].toLowerCase()] = match[2].toLowerCase();
+            }
+
+            // Tags simples: [personagem]
+            const regexSimples = /\[(.*?)\]/g;
+            let matchSimples;
+            let tagsSimples = [];
+            while ((matchSimples = regexSimples.exec(query)) !== null) {
+                // evita pegar as partes do chave/valor repetidas
+                if (!query.includes(`[${matchSimples[1]}][`)) {
+                    tagsSimples.push(matchSimples[1].toLowerCase());
+                }
+            }
+
+            text = query.replace(/\[.*?\]/g, '').trim().toLowerCase();
+
+            return { especialTags, tagsSimples, text };
+        }
+
+        function filterItems(items) {
+            const query = document.getElementById('searchInput').value;
+            if (!query) return items;
+
+            const { especialTags, tagsSimples, text } = parseSearchQuery(query);
+
+            return items.filter(item => {
+                let matches = true;
+
+                // Verifica Busca de Texto Livre
+                if (text) {
+                    const searchableText = JSON.stringify(item).toLowerCase();
+                    if (!searchableText.includes(text)) matches = false;
+                }
+
+                // Verifica tags chave-valor ex: [escola][trovão]
+                for (const [key, val] of Object.entries(especialTags)) {
+                    if (key === 'escola' && (!item.escola || item.escola.toLowerCase() !== val)) matches = false;
+                    if (key === 'capitulo' && (!item.capitulo || item.capitulo.toString() !== val)) matches = false;
+                    if (key === 'tipo' && (!item.tipo || item.tipo.toLowerCase() !== val)) matches = false;
+                }
+
+                // Verifica tags simples ex: [personagem] (Força a mostrar só personagens)
+                if (tagsSimples.includes('personagem') && currentTab !== 'personagens') matches = false;
+                if (tagsSimples.includes('item') && currentTab !== 'itens') matches = false;
+                if (tagsSimples.includes('habilidade') && currentTab !== 'habilidades') matches = false;
+
+                return matches;
+            });
+        }
+
+        // ================= ADMIN CONSOLE =================
+        function openAdminConsole() {
+            populateSelects();
+            document.getElementById('adminForm').reset();
+            document.getElementById('editItemId').value = '';
+            document.getElementById('btnSubmitAdmin').textContent = 'Registrar no Banco de Dados';
+            document.getElementById('adminConsoleModal').classList.remove('hidden');
+            switchAdminForm(currentTab);
+            toggleRankHab();
+        }
+
+        function openAdminLogin() {
+            if (isAdmin) {
+                openAdminConsole();
+            } else {
+                document.getElementById('adminLoginModal').classList.remove('hidden');
+            }
+        }
+
+        let itemToDelete = null;
+
+        function promptDelete(id, type) {
+            itemToDelete = { id, type };
+            let item = database[type].find(i => i.id === id);
+            document.getElementById('deleteItemName').innerText = item.nome;
+            document.getElementById('deleteConfirmModal').classList.remove('hidden');
+            document.getElementById('deletePwd').value = '';
+        }
+
+        async function confirmDelete() {
+            let pwd = document.getElementById('deletePwd').value;
+            if (!loggedAdmin) return;
+
+            if (pwd === loggedAdmin.senha && pwd.length > 0) {
+                let type = itemToDelete.type;
+                let id = itemToDelete.id;
+
+                database[type] = database[type].filter(i => i.id !== id);
+                localStorage.setItem("woe_archive_db", JSON.stringify(database));
+
+                // Tenta remover na API
+                try {
+                    await apiFetch('/delete', 'POST', { id: id, type: type });
+                } catch (e) { console.log("Erro na API (Delete):", e); }
+
+                closeModal('deleteConfirmModal');
+                renderCards();
+                itemToDelete = null;
+            } else {
+                alert("Senha do Cronista incorreta.");
+            }
+        }
+
+        function editItem(id, type) {
+            populateSelects();
+            let itemToEdit = database[type].find(i => i.id === id);
+            if (!itemToEdit) return;
+
+            document.getElementById('inpNome').value = itemToEdit.nome || '';
+            document.getElementById('inpImagem').value = itemToEdit.imagem || '';
+            document.getElementById('inpDescricao').value = itemToEdit.descricao || '';
+            document.getElementById('editItemId').value = id;
+
+            if (type === 'habilidades') {
+                document.getElementById('inpTipoHab').value = itemToEdit.tipo || '';
+                if (itemToEdit.tipoEscola) document.getElementById('inpTipoEscolaHab').value = itemToEdit.tipoEscola;
+                
+                // toggleRankHab must be called here to populate escSelect correctly before setting its value
+                toggleRankHab(); 
+                document.getElementById('inpEscolaHab').value = itemToEdit.escola || '';
+
+                if (itemToEdit.rank) document.getElementById('inpRankHab').value = itemToEdit.rank;
+                if (itemToEdit.nivel) document.getElementById('inpNivelHab').value = itemToEdit.nivel;
+
+                document.getElementById('masterTraitTopicsList').innerHTML = ''; // clear old
+                if (itemToEdit.nivel === 'Master Trait' && itemToEdit.masterTopics) {
+                    itemToEdit.masterTopics.forEach(t => addMasterTraitTopic(t.title, t.desc));
+                }
+
+                document.getElementById('inpRecargaHab').value = itemToEdit.recarga || '';
+                document.getElementById('inpCustoHab').value = itemToEdit.custo || '';
+                document.getElementById('inpAcaoHab').value = itemToEdit.acao || '';
+            } else if (type === 'itens') {
+                document.getElementById('inpObtencaoItem').value = itemToEdit.obtencao || '';
+                document.getElementById('inpCapituloItem').value = itemToEdit.capitulo || '';
+                document.getElementById('inpDanoItem').value = itemToEdit.dano || '';
+                document.getElementById('inpAttrItem').value = itemToEdit.atributos_chave || '';
+                document.getElementById('inpBonusItem').value = itemToEdit.bonus || '';
+                if (itemToEdit.raridade) document.getElementById('inpRaridadeItem').value = itemToEdit.raridade;
+                if (itemToEdit.tipo) document.getElementById('inpTipoItem').value = itemToEdit.tipo;
+            } else if (type === 'personagens') {
+                document.getElementById('inpLoreChar').value = itemToEdit.lore || '';
+                if (itemToEdit.origem !== undefined) document.getElementById('inpOrigemChar').value = itemToEdit.origem;
+            } else if (type === 'escolas') {
+                if (itemToEdit.cor) document.getElementById('inpCorEscola').value = itemToEdit.cor;
+                else document.getElementById('inpCorEscola').value = "#cfaa56";
+                document.getElementById('inpLugarEscola').value = itemToEdit.lugar || '';
+            } else if (type === 'lugares') {
+                if (itemToEdit.cor) document.getElementById('inpCorLugar').value = itemToEdit.cor;
+                else document.getElementById('inpCorLugar').value = "#cfaa56";
+            } else if (type === 'treinamentos') {
+                if (itemToEdit.cor) document.getElementById('inpCorTreinamento').value = itemToEdit.cor;
+                else document.getElementById('inpCorTreinamento').value = "#8b0000";
+                document.getElementById('inpAwayTreinamento').value = itemToEdit.away || '';
+            }
+
+            document.getElementById('btnSubmitAdmin').textContent = 'Atualizar no Banco de Dados';
+            document.getElementById('adminConsoleModal').classList.remove('hidden');
+            switchAdminForm(type);
+            if (type !== 'habilidades') toggleRankHab();
+        }
+
+        function toggleRankHab() {
+            let tipo = document.getElementById('inpTipoEscolaHab');
+            let escSelect = document.getElementById('inpEscolaHab');
+            let lbl = document.getElementById('lblEscolaHab');
+            let rankC = document.getElementById('rankHabContainer');
+            let nivelC = document.getElementById('nivelHabContainer');
+            
+            if (tipo && escSelect && lbl && rankC && nivelC) {
+                if (tipo.value === 'Treinamento') {
+                    rankC.classList.add('hidden');
+                    nivelC.classList.remove('hidden');
+                    lbl.innerText = 'Treinamento';
+                    let options = database.treinamentos ? database.treinamentos.map(t => `<option value="${t.nome}">${t.nome}</option>`).join('') : '';
+                    escSelect.innerHTML = options;
+                } else if (tipo.value === 'Elemental') {
+                    rankC.classList.remove('hidden');
+                    nivelC.classList.add('hidden');
+                    lbl.innerText = 'Escola';
+                    let options = database.escolas ? database.escolas.map(e => `<option value="${e.nome}">${e.nome}</option>`).join('') : '';
+                    escSelect.innerHTML = options;
+                } else {
+                    rankC.classList.add('hidden');
+                    nivelC.classList.add('hidden');
+                    lbl.innerText = 'Escola';
+                    let options = database.escolas ? database.escolas.map(e => `<option value="${e.nome}">${e.nome}</option>`).join('') : '';
+                    escSelect.innerHTML = options;
+                }
+            }
+            toggleMasterTrait();
+        }
+
+        function toggleMasterTrait() {
+            let nivel = document.getElementById('inpNivelHab');
+            let container = document.getElementById('masterTraitContainer');
+            let tipo = document.getElementById('inpTipoEscolaHab');
+            if (tipo && tipo.value === 'Treinamento' && nivel && nivel.value === 'Master Trait') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function addMasterTraitTopic(title = '', desc = '') {
+            let list = document.getElementById('masterTraitTopicsList');
+            let div = document.createElement('div');
+            div.className = 'topic-item bg-black/40 p-2 rounded relative border border-white/10';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-400 text-xs font-bold">X</button>
+                <input type="text" placeholder="Título do Tópico" value="${title}" class="topic-title search-input w-full rounded px-2 py-1 text-xs mb-2">
+                <textarea rows="2" placeholder="Descrição do Tópico" class="topic-desc search-input w-full rounded px-2 py-1 text-xs">${desc}</textarea>
+            `;
+            list.appendChild(div);
+        }
+
+        function populateSelects() {
+            let catSelect = document.getElementById('inpTipoItem');
+            if (catSelect) {
+                let options = database.categorias ? database.categorias.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('') : '';
+                catSelect.innerHTML = options + `<option value="Outro">Outro</option>`;
+            }
+            // Let toggleRankHab handle escSelect population based on tipo
+            toggleRankHab();
+            let oriSelect = document.getElementById('inpOrigemChar');
+            let lugarEscolaSelect = document.getElementById('inpLugarEscola');
+            let optionsLugares = database.lugares ? database.lugares.map(l => `<option value="${l.nome}">${l.nome}</option>`).join('') : '';
+            if (oriSelect) {
+                oriSelect.innerHTML = `<option value="">Nenhuma / Desconhecida</option>` + optionsLugares;
+            }
+            if (lugarEscolaSelect) {
+                lugarEscolaSelect.innerHTML = `<option value="">Nenhum Lugar</option>` + optionsLugares;
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        let loggedAdmin = null;
+
+        function loginAdmin() {
+            let name = document.getElementById('adminName').value.trim();
+            let pwd = document.getElementById('adminPwd').value;
+
+            if (name.length > 0 && pwd.length > 0) {
+                let admin = database.admins ? database.admins.find(a => a.nome === name && a.senha === pwd) : null;
+
+                if (admin) {
+                    isAdmin = true;
+                    loggedAdmin = admin;
+                    closeModal('adminLoginModal');
+                    populateSelects();
+                    openAdminConsole();
+                    renderCards();
+                } else {
+                    alert("Credenciais do Cronista incorretas ou administrador não encontrado.");
+                }
+            } else {
+                alert("Preencha o nome e a senha.");
+            }
+        }
+
+        function switchAdminForm(type) {
+            document.getElementById('formType').value = type;
+            document.getElementById('fieldsHabilidades').classList.add('hidden');
+            document.getElementById('fieldsItens').classList.add('hidden');
+            document.getElementById('fieldsPersonagens').classList.add('hidden');
+            document.getElementById('fieldsEscolas').classList.add('hidden');
+            document.getElementById('fieldsCategorias').classList.add('hidden');
+            document.getElementById('fieldsLugares').classList.add('hidden');
+            document.getElementById('fieldsTreinamentos').classList.add('hidden');
+
+            if (type === 'habilidades') document.getElementById('fieldsHabilidades').classList.remove('hidden');
+            if (type === 'itens') document.getElementById('fieldsItens').classList.remove('hidden');
+            if (type === 'personagens') document.getElementById('fieldsPersonagens').classList.remove('hidden');
+            if (type === 'escolas') document.getElementById('fieldsEscolas').classList.remove('hidden');
+            if (type === 'categorias') document.getElementById('fieldsCategorias').classList.remove('hidden');
+            if (type === 'lugares') document.getElementById('fieldsLugares').classList.remove('hidden');
+            if (type === 'treinamentos') document.getElementById('fieldsTreinamentos').classList.remove('hidden');
+        }
+
+        function submitAdminForm(e) {
+            e.preventDefault();
+            const type = document.getElementById('formType').value;
+            let editId = document.getElementById('editItemId').value;
+
+            let newItem = {
+                id: editId ? editId : "id_" + Date.now(),
+                nome: document.getElementById('inpNome').value,
+                imagem: document.getElementById('inpImagem').value,
+                descricao: document.getElementById('inpDescricao').value
+            };
+
+            if (type === 'habilidades') {
+                newItem.tipo = document.getElementById('inpTipoHab').value;
+                newItem.escola = document.getElementById('inpEscolaHab').value;
+                newItem.tipoEscola = document.getElementById('inpTipoEscolaHab').value;
+                newItem.rank = newItem.tipoEscola === 'Elemental' ? document.getElementById('inpRankHab').value : null;
+                newItem.nivel = newItem.tipoEscola === 'Treinamento' ? document.getElementById('inpNivelHab').value : null;
+
+                if (newItem.nivel === 'Master Trait') {
+                    let topics = [];
+                    let titles = document.querySelectorAll('.topic-title');
+                    let descs = document.querySelectorAll('.topic-desc');
+                    for (let i = 0; i < titles.length; i++) {
+                        if (titles[i].value.trim() !== '') {
+                            topics.push({ title: titles[i].value, desc: descs[i].value });
+                        }
+                    }
+                    newItem.masterTopics = topics;
+                }
+
+                newItem.recarga = document.getElementById('inpRecargaHab').value;
+                newItem.custo = document.getElementById('inpCustoHab').value;
+                newItem.acao = document.getElementById('inpAcaoHab').value;
+            } else if (type === 'itens') {
+                newItem.obtencao = document.getElementById('inpObtencaoItem').value;
+                newItem.capitulo = document.getElementById('inpCapituloItem').value;
+                newItem.dano = document.getElementById('inpDanoItem').value;
+                newItem.atributos_chave = document.getElementById('inpAttrItem').value;
+                newItem.bonus = document.getElementById('inpBonusItem').value;
+                newItem.raridade = document.getElementById('inpRaridadeItem').value;
+                newItem.tipo = document.getElementById('inpTipoItem').value;
+            } else if (type === 'personagens') {
+                newItem.lore = document.getElementById('inpLoreChar').value;
+                newItem.origem = document.getElementById('inpOrigemChar').value;
+            } else if (type === 'escolas') {
+                newItem.cor = document.getElementById('inpCorEscola').value;
+                newItem.lugar = document.getElementById('inpLugarEscola').value;
+            } else if (type === 'lugares') {
+                newItem.cor = document.getElementById('inpCorLugar').value;
+            } else if (type === 'treinamentos') {
+                newItem.cor = document.getElementById('inpCorTreinamento').value;
+                newItem.away = document.getElementById('inpAwayTreinamento').value;
+            }
+
+            let isEdit = editId !== "";
+            saveToDatabase(type, newItem, isEdit);
+
+            // Limpa form basico
+            document.getElementById('adminForm').reset();
+            document.getElementById('editItemId').value = '';
+            document.getElementById('btnSubmitAdmin').textContent = 'Registrar no Banco de Dados';
+            switchAdminForm(type);
+            closeModal('adminConsoleModal');
+        }
+
+        // INIT
+        window.onload = loadDatabase;
+
+    </script>
+</body>
+
+</html>
