@@ -97,13 +97,22 @@
             transform: scale(1.05);
         }
 
+        .item-card.expanded {
+            grid-column: 1 / -1;
+            z-index: 20;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 20px rgba(207, 170, 86, 0.3) !important;
+            transform: scale(1.01);
+        }
+
         .item-card.expanded .card-image-wrapper {
             height: auto;
+            background: rgba(0, 0, 0, 0.5);
         }
 
         .item-card.expanded .card-image {
             object-fit: contain;
             max-height: 70vh;
+            width: 100%;
         }
 
         .item-card.expanded:hover .card-image {
@@ -451,9 +460,13 @@
                 <div id="fieldsHabilidades" class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Tipo (Ex: Ativa,
-                                Passiva)</label>
-                            <input type="text" id="inpTipoHab" class="search-input w-full rounded px-3 py-2 text-sm">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Tipo da Habilidade</label>
+                            <select id="inpTipoHab" class="search-input w-full rounded px-3 py-2 text-sm">
+                                <option value="Ativa">Ativa</option>
+                                <option value="Passiva">Passiva</option>
+                                <option value="Talento">Talento</option>
+                                <option value="Ultimate">Ultimate</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Tipo de
@@ -494,11 +507,11 @@
                             </select>
                         </div>
                     </div>
-                    <!-- MASTER TRAIT TOPICS -->
-                    <div id="masterTraitContainer" class="hidden bg-black/30 p-4 rounded border border-[#cfaa56]/30">
-                        <h3 class="text-[#cfaa56] text-sm font-bold mb-2">Tópicos do Master Trait</h3>
-                        <div id="masterTraitTopicsList" class="space-y-3 mb-3"></div>
-                        <button type="button" onclick="addMasterTraitTopic()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white py-1 px-3 rounded border border-white/10">+ Adicionar Tópico</button>
+                    <!-- EFEITOS / TOPICOS DA Habilidade -->
+                    <div id="topicsHabContainer" class="bg-black/30 p-4 rounded border border-[#cfaa56]/30">
+                        <h3 class="text-[#cfaa56] text-sm font-bold mb-2">Tópicos / Sub-efeitos</h3>
+                        <div id="topicsHabList" class="space-y-3 mb-3"></div>
+                        <button type="button" onclick="addHabTopic()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white py-1 px-3 rounded border border-white/10">+ Adicionar Tópico</button>
                     </div>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
@@ -872,16 +885,27 @@
                     <span class="tag-pill tag-custom flex items-center ${extraTagClass}" style="--tag-color: ${schoolColor}; --tag-bg: ${schoolColor}26; --tag-bg-hover: ${schoolColor}99; border-width: 2px;"${tagTooltip}>${tagLabel}${data.escola || 'N/A'}${lugarSubtext}${rankHtml}</span>
                 `;
 
-                let masterTopicsHtml = '';
-                if (data.nivel === 'Master Trait' && data.masterTopics && data.masterTopics.length > 0) {
-                    masterTopicsHtml = `<div class="mt-4 pt-3 border-t border-white/10 hidden topics-container">
-                        <h4 class="text-[#cfaa56] font-bold mb-2 text-xs uppercase tracking-widest">Master Moves</h4>
+                let habTopicsHtml = '';
+                let topicsList = data.habTopics || data.masterTopics || [];
+                let topicsTitle = "Tópicos / Efeitos";
+                if (data.tipoEscola === 'Elemental' || data.tipoEscola === 'Mundo') {
+                    topicsTitle = "Efeitos Adicionais";
+                } else if (data.nivel === 'Master Trait') {
+                    topicsTitle = "Master Moves";
+                }
+
+                if (topicsList.length > 0) {
+                    habTopicsHtml = `<div class="mt-4 pt-3 border-t border-white/10 hidden topics-container">
+                        <h4 class="text-[#cfaa56] font-bold mb-2 text-xs uppercase tracking-widest">${topicsTitle}</h4>
                         <ul class="space-y-2">
-                            ${data.masterTopics.map(t => `<li class="bg-black/30 p-2 rounded text-xs border border-white/5"><strong class="text-[#cfaa56] block mb-1">${t.title}</strong><span class="text-slate-300">${t.desc}</span></li>`).join('')}
+                            ${topicsList.map(t => {
+                                let tagHtml = t.tag && t.tag !== 'Padrão' ? `<span class="bg-slate-800 border border-white/20 px-1.5 py-0.5 rounded text-[9px] uppercase ml-2 text-white shadow-md">${t.tag}</span>` : '';
+                                return `<li class="bg-black/30 p-2 rounded text-xs border border-white/5"><strong class="text-[#cfaa56] flex items-center flex-wrap mb-1">${t.title}${tagHtml}</strong><span class="text-slate-300">${t.desc}</span></li>`;
+                            }).join('')}
                         </ul>
                     </div>`;
-                    extraClass = ' cursor-pointer hover:border-[#cfaa56]/50 transition-colors duration-300';
-                    div.setAttribute('onclick', 'this.classList.toggle("expanded"); this.querySelector(".topics-container").classList.toggle("hidden");');
+                    extraClass += ' cursor-pointer hover:border-[#cfaa56]/50 transition-colors duration-300';
+                    div.setAttribute('onclick', 'this.classList.toggle("expanded"); let tc = this.querySelector(".topics-container"); if(tc) tc.classList.toggle("hidden");');
                 }
 
                 detailsHtml = `
@@ -890,7 +914,8 @@
                         <div><strong class="text-slate-300">Custo:</strong> ${data.custo || '-'}</div>
                     </div>
                     ${data.acao ? `<div class="text-sm text-red-400 mb-2 font-bold bg-red-900/20 p-2 rounded border border-red-500/20">Ação: ${data.acao}</div>` : ''}
-                    ${masterTopicsHtml}
+                    <p class="text-sm text-slate-300 leading-relaxed mt-2 flex-grow">${data.descricao || ''}</p>
+                    ${habTopicsHtml}
                 `;
             }
             else if (type === 'itens') {
@@ -932,6 +957,7 @@
                         <div><strong class="text-slate-300">Dano:</strong> ${data.dano || '-'}</div>
                         <div class="col-span-2"><strong class="text-slate-300">Atr. Chave:</strong> ${data.atributos_chave || '-'}</div>
                     </div>
+                    <p class="text-sm text-slate-300 leading-relaxed mt-2 flex-grow">${data.descricao || ''}</p>
                     ${specialAbilitiesHtml}
                 `;
                 
@@ -951,6 +977,7 @@
                     <div class="text-xs text-slate-400 italic mb-3 border-l-2 border-slate-600 pl-2">
                         "${data.lore || data.descricao || 'Nenhum registro encontrado.'}"
                     </div>
+                    <p class="text-sm text-slate-300 leading-relaxed mt-2 flex-grow">${data.descricao || ''}</p>
                 `;
             }
 
@@ -1003,7 +1030,6 @@
                 <div class="p-5 flex flex-col flex-grow">
                     <h3 class="text-xl font-bold text-[#cfaa56] mb-2" style="font-family: var(--font-heading);">${data.nome}</h3>
                     ${detailsHtml}
-                    <p class="text-sm text-slate-300 leading-relaxed flex-grow">${data.descricao || ''}</p>
                 </div>
             `;
             return div;
@@ -1082,8 +1108,8 @@
         function openAdminConsole() {
             populateSelects();
             document.getElementById('adminForm').reset();
-            let masterTopics = document.getElementById('masterTraitTopicsList');
-            if(masterTopics) masterTopics.innerHTML = '';
+            let habTopics = document.getElementById('topicsHabList');
+            if(habTopics) habTopics.innerHTML = '';
             let saList = document.getElementById('specialAbilityList');
             if(saList) saList.innerHTML = '';
             document.getElementById('editItemId').value = '';
@@ -1156,10 +1182,9 @@
                 if (itemToEdit.rank) document.getElementById('inpRankHab').value = itemToEdit.rank;
                 if (itemToEdit.nivel) document.getElementById('inpNivelHab').value = itemToEdit.nivel;
 
-                document.getElementById('masterTraitTopicsList').innerHTML = ''; // clear old
-                if (itemToEdit.nivel === 'Master Trait' && itemToEdit.masterTopics) {
-                    itemToEdit.masterTopics.forEach(t => addMasterTraitTopic(t.title, t.desc));
-                }
+                document.getElementById('topicsHabList').innerHTML = ''; // clear old
+                let topicsToLoad = itemToEdit.habTopics || itemToEdit.masterTopics || [];
+                topicsToLoad.forEach(t => addHabTopic(t.title, t.desc, t.tag));
 
                 document.getElementById('inpRecargaHab').value = itemToEdit.recarga || '';
                 document.getElementById('inpCustoHab').value = itemToEdit.custo || '';
@@ -1233,24 +1258,25 @@
         }
 
         function toggleMasterTrait() {
-            let nivel = document.getElementById('inpNivelHab');
-            let container = document.getElementById('masterTraitContainer');
-            let tipo = document.getElementById('inpTipoEscolaHab');
-            if (tipo && tipo.value === 'Treinamento' && nivel && nivel.value === 'Master Trait') {
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
-            }
+            // Removido o hidden dinâmico para que TODAS as habilidades possam ter tópicos.
         }
 
-        function addMasterTraitTopic(title = '', desc = '') {
-            let list = document.getElementById('masterTraitTopicsList');
+        function addHabTopic(title = '', desc = '', tag = 'Padrão') {
+            let list = document.getElementById('topicsHabList');
             let div = document.createElement('div');
-            div.className = 'topic-item bg-black/40 p-2 rounded relative border border-white/10';
+            div.className = 'hab-topic-item bg-black/40 p-2 rounded relative border border-white/10';
             div.innerHTML = `
                 <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-400 text-xs font-bold">X</button>
-                <input type="text" placeholder="Título do Tópico" value="${title}" class="topic-title search-input w-full rounded px-2 py-1 text-xs mb-2">
-                <textarea rows="2" placeholder="Descrição do Tópico" class="topic-desc search-input w-full rounded px-2 py-1 text-xs">${desc}</textarea>
+                <div class="flex gap-2 mb-2 pr-6">
+                    <input type="text" placeholder="Título do Tópico" value="${title}" class="hab-topic-title search-input flex-grow rounded px-2 py-1 text-xs">
+                    <select class="hab-topic-tag search-input rounded px-2 py-1 text-xs w-28">
+                        <option value="Padrão" ${tag === 'Padrão' ? 'selected' : ''}>Padrão</option>
+                        <option value="Passivo" ${tag === 'Passivo' ? 'selected' : ''}>Passivo</option>
+                        <option value="Condição" ${tag === 'Condição' ? 'selected' : ''}>Condição</option>
+                        <option value="Reforço" ${tag === 'Reforço' ? 'selected' : ''}>Reforço</option>
+                    </select>
+                </div>
+                <textarea rows="2" placeholder="Descrição do Tópico" class="hab-topic-desc search-input w-full rounded px-2 py-1 text-xs">${desc}</textarea>
             `;
             list.appendChild(div);
         }
@@ -1352,17 +1378,16 @@
                 newItem.rank = newItem.tipoEscola === 'Elemental' ? document.getElementById('inpRankHab').value : null;
                 newItem.nivel = newItem.tipoEscola === 'Treinamento' ? document.getElementById('inpNivelHab').value : null;
 
-                if (newItem.nivel === 'Master Trait') {
-                    let topics = [];
-                    let titles = document.querySelectorAll('.topic-title');
-                    let descs = document.querySelectorAll('.topic-desc');
-                    for (let i = 0; i < titles.length; i++) {
-                        if (titles[i].value.trim() !== '') {
-                            topics.push({ title: titles[i].value, desc: descs[i].value });
-                        }
+                let habTopics = [];
+                let habTitles = document.querySelectorAll('.hab-topic-title');
+                let habTags = document.querySelectorAll('.hab-topic-tag');
+                let habDescs = document.querySelectorAll('.hab-topic-desc');
+                for (let i = 0; i < habTitles.length; i++) {
+                    if (habTitles[i].value.trim() !== '' || habDescs[i].value.trim() !== '') {
+                        habTopics.push({ title: habTitles[i].value, tag: habTags[i].value, desc: habDescs[i].value });
                     }
-                    newItem.masterTopics = topics;
                 }
+                newItem.habTopics = habTopics;
 
                 newItem.recarga = document.getElementById('inpRecargaHab').value;
                 newItem.custo = document.getElementById('inpCustoHab').value;
