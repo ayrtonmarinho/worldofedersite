@@ -660,9 +660,13 @@
                     </div>
                 </div>
 
-                <div class="pt-4">
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="limparCamposAdmin()"
+                        class="w-1/3 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded font-bold uppercase tracking-widest transition-colors border border-white/10 text-xs flex items-center justify-center shadow-md">
+                        Limpar Campos
+                    </button>
                     <button type="submit" id="btnSubmitAdmin"
-                        class="w-full bg-[#cfaa56] hover:bg-[#e8c678] text-black py-3 rounded font-bold uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(207,170,86,0.3)]">
+                        class="w-2/3 bg-[#cfaa56] hover:bg-[#e8c678] text-black py-3 rounded font-bold uppercase tracking-widest transition-colors shadow-[0_0_15px_rgba(207,170,86,0.3)]">
                         Registrar no Banco de Dados
                     </button>
                 </div>
@@ -1105,18 +1109,30 @@
         }
 
         // ================= ADMIN CONSOLE =================
-        function openAdminConsole() {
-            populateSelects();
+        function limparCamposAdmin() {
             document.getElementById('adminForm').reset();
             let habTopics = document.getElementById('topicsHabList');
             if(habTopics) habTopics.innerHTML = '';
             let saList = document.getElementById('specialAbilityList');
             if(saList) saList.innerHTML = '';
             document.getElementById('editItemId').value = '';
-            document.getElementById('btnSubmitAdmin').textContent = 'Registrar no Banco de Dados';
+            
+            let btnSubmit = document.getElementById('btnSubmitAdmin');
+            if(btnSubmit) {
+                btnSubmit.textContent = 'Registrar no Banco de Dados';
+                btnSubmit.classList.remove('bg-green-600', 'text-white');
+                btnSubmit.classList.add('bg-[#cfaa56]', 'text-black');
+            }
+            
+            // Re-aplicar toggles básicos para garantir consistência
+            toggleRankHab();
+        }
+
+        function openAdminConsole() {
+            populateSelects();
+            limparCamposAdmin();
             document.getElementById('adminConsoleModal').classList.remove('hidden');
             switchAdminForm(currentTab);
-            toggleRankHab();
         }
 
         function openAdminLogin() {
@@ -1426,12 +1442,20 @@
             let isEdit = editId !== "";
             saveToDatabase(type, newItem, isEdit);
 
-            // Limpa form basico
-            document.getElementById('adminForm').reset();
-            document.getElementById('editItemId').value = '';
-            document.getElementById('btnSubmitAdmin').textContent = 'Registrar no Banco de Dados';
+            // Limpa form basico para próxima inserção (não fecha o modal mais)
+            limparCamposAdmin();
             switchAdminForm(type);
-            closeModal('adminConsoleModal');
+            
+            let btnSubmit = document.getElementById('btnSubmitAdmin');
+            btnSubmit.textContent = 'Salvo com Sucesso!';
+            btnSubmit.classList.remove('bg-[#cfaa56]', 'text-black');
+            btnSubmit.classList.add('bg-green-600', 'text-white');
+            
+            setTimeout(() => {
+                btnSubmit.textContent = 'Registrar no Banco de Dados';
+                btnSubmit.classList.remove('bg-green-600', 'text-white');
+                btnSubmit.classList.add('bg-[#cfaa56]', 'text-black');
+            }, 2000);
         }
 
         // INIT
