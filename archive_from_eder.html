@@ -545,10 +545,10 @@
                                 class="search-input w-full rounded px-3 py-2 text-sm">
                         </div>
                     </div>
-                    <div class="w-full">
-                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Bônus / Efeitos</label>
-                        <input type="text" id="inpBonusItem" placeholder="Ex: +2 de Movimento"
-                            class="search-input w-full rounded px-3 py-2 text-sm">
+                    <div class="w-full bg-black/30 p-4 rounded border border-[#cfaa56]/30">
+                        <h3 class="text-[#cfaa56] text-sm font-bold mb-2">Efeitos / Special Abilities</h3>
+                        <div id="specialAbilityList" class="space-y-3 mb-3"></div>
+                        <button type="button" onclick="addSpecialAbility()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white py-1 px-3 rounded border border-white/10">+ Adicionar Special Ability</button>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="w-full">
@@ -912,14 +912,29 @@
                     <span class="tag-pill tag-custom flex items-center" style="--tag-color: ${rarityColor}; --tag-bg: transparent; --tag-bg-hover: ${rarityColor}99; border-width: 2px;">${data.raridade || 'Comum'}</span>
                 `;
                 baseColor = rarityColor;
+                let specialAbilitiesHtml = '';
+                let effectsList = data.specialAbilities || (data.bonus ? [{title: 'Efeito', desc: data.bonus}] : []);
+                
+                if (effectsList.length > 0) {
+                    specialAbilitiesHtml = `<div class="mt-4 pt-3 border-t border-white/10 hidden topics-container">
+                        <h4 class="text-[#cfaa56] font-bold mb-2 text-xs uppercase tracking-widest">Special Ability</h4>
+                        <ul class="space-y-2">
+                            ${effectsList.map(sa => `<li class="bg-black/30 p-2 rounded text-xs border border-white/5"><strong class="text-[#cfaa56] block mb-1">${sa.title}</strong><span class="text-slate-300">${sa.desc}</span></li>`).join('')}
+                        </ul>
+                    </div>`;
+                }
+
                 detailsHtml = `
                     <div class="grid grid-cols-2 gap-2 text-xs mb-3 text-slate-400">
                         <div><strong class="text-slate-300">Obtenção:</strong> ${data.obtencao || '-'}</div>
                         <div><strong class="text-slate-300">Dano:</strong> ${data.dano || '-'}</div>
                         <div class="col-span-2"><strong class="text-slate-300">Atr. Chave:</strong> ${data.atributos_chave || '-'}</div>
                     </div>
-                    ${data.bonus ? `<div class="text-sm text-[#cfaa56] mb-2 font-bold bg-[#cfaa56]/10 p-2 rounded border border-[#cfaa56]/20">Efeitos: ${data.bonus}</div>` : ''}
+                    ${specialAbilitiesHtml}
                 `;
+                
+                extraClass += ' cursor-pointer hover:border-[#cfaa56]/50 transition-colors duration-300';
+                div.setAttribute('onclick', 'this.classList.toggle("expanded"); let tc = this.querySelector(".topics-container"); if(tc) tc.classList.toggle("hidden");');
             } else if (type === 'personagens' || type === 'escolas' || type === 'categorias' || type === 'lugares' || type === 'treinamentos') {
                 if (type === 'personagens' && data.origem) {
                     let lugarColor = "#ffffff";
@@ -1065,6 +1080,10 @@
         function openAdminConsole() {
             populateSelects();
             document.getElementById('adminForm').reset();
+            let masterTopics = document.getElementById('masterTraitTopicsList');
+            if(masterTopics) masterTopics.innerHTML = '';
+            let saList = document.getElementById('specialAbilityList');
+            if(saList) saList.innerHTML = '';
             document.getElementById('editItemId').value = '';
             document.getElementById('btnSubmitAdmin').textContent = 'Registrar no Banco de Dados';
             document.getElementById('adminConsoleModal').classList.remove('hidden');
@@ -1148,7 +1167,14 @@
                 document.getElementById('inpCapituloItem').value = itemToEdit.capitulo || '';
                 document.getElementById('inpDanoItem').value = itemToEdit.dano || '';
                 document.getElementById('inpAttrItem').value = itemToEdit.atributos_chave || '';
-                document.getElementById('inpBonusItem').value = itemToEdit.bonus || '';
+                
+                document.getElementById('specialAbilityList').innerHTML = '';
+                if (itemToEdit.specialAbilities && itemToEdit.specialAbilities.length > 0) {
+                    itemToEdit.specialAbilities.forEach(sa => addSpecialAbility(sa.title, sa.desc));
+                } else if (itemToEdit.bonus) {
+                    addSpecialAbility('Efeito', itemToEdit.bonus);
+                }
+
                 if (itemToEdit.raridade) document.getElementById('inpRaridadeItem').value = itemToEdit.raridade;
                 if (itemToEdit.tipo) document.getElementById('inpTipoItem').value = itemToEdit.tipo;
             } else if (type === 'personagens') {
@@ -1223,6 +1249,18 @@
                 <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-400 text-xs font-bold">X</button>
                 <input type="text" placeholder="Título do Tópico" value="${title}" class="topic-title search-input w-full rounded px-2 py-1 text-xs mb-2">
                 <textarea rows="2" placeholder="Descrição do Tópico" class="topic-desc search-input w-full rounded px-2 py-1 text-xs">${desc}</textarea>
+            `;
+            list.appendChild(div);
+        }
+
+        function addSpecialAbility(title = '', desc = '') {
+            let list = document.getElementById('specialAbilityList');
+            let div = document.createElement('div');
+            div.className = 'sa-item bg-black/40 p-2 rounded relative border border-white/10';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-400 text-xs font-bold">X</button>
+                <input type="text" placeholder="Título (Ex: Special Ability)" value="${title}" class="sa-title search-input w-full rounded px-2 py-1 text-xs mb-2">
+                <textarea rows="2" placeholder="Descrição da habilidade ou bônus" class="sa-desc search-input w-full rounded px-2 py-1 text-xs">${desc}</textarea>
             `;
             list.appendChild(div);
         }
@@ -1332,7 +1370,17 @@
                 newItem.capitulo = document.getElementById('inpCapituloItem').value;
                 newItem.dano = document.getElementById('inpDanoItem').value;
                 newItem.atributos_chave = document.getElementById('inpAttrItem').value;
-                newItem.bonus = document.getElementById('inpBonusItem').value;
+                
+                let abilities = [];
+                let saTitles = document.querySelectorAll('.sa-title');
+                let saDescs = document.querySelectorAll('.sa-desc');
+                for (let i = 0; i < saTitles.length; i++) {
+                    if (saTitles[i].value.trim() !== '' || saDescs[i].value.trim() !== '') {
+                        abilities.push({ title: saTitles[i].value, desc: saDescs[i].value });
+                    }
+                }
+                newItem.specialAbilities = abilities;
+
                 newItem.raridade = document.getElementById('inpRaridadeItem').value;
                 newItem.tipo = document.getElementById('inpTipoItem').value;
             } else if (type === 'personagens') {
