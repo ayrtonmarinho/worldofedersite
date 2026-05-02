@@ -287,6 +287,12 @@
     style="background-image: url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&q=80&w=1920'); background-size: cover; background-position: center; background-attachment: fixed;"
     class="min-h-screen flex flex-col text-slate-300">
 
+    <!-- MODAL DE IMAGEM AMPLIADA -->
+    <div id="imageModal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[120] hidden backdrop-blur-md" onclick="closeModal('imageModal')">
+        <img id="imageModalContent" class="max-w-[90vw] max-h-[90vh] object-contain border border-[#cfaa56]/30 shadow-2xl rounded" src="" onclick="event.stopPropagation()">
+        <button onclick="closeModal('imageModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-3xl font-bold">&times;</button>
+    </div>
+
     <!-- Fundo de Escurecimento Geral -->
     <div class="fixed inset-0 bg-black/60 z-[-1] pointer-events-none"></div>
 
@@ -331,6 +337,8 @@
                 onclick="switchTab('lugares', this)">Lugares</button>
             <button class="tab-btn py-3 px-2 text-sm uppercase tracking-widest font-bold whitespace-nowrap"
                 onclick="switchTab('treinamentos', this)">Treinamentos</button>
+            <button id="tabAdminsBtn" class="tab-btn py-3 px-2 text-sm uppercase tracking-widest font-bold whitespace-nowrap hidden"
+                onclick="switchTab('admins', this)" style="color: #cfaa56;">Cronistas</button>
         </div>
     </header>
 
@@ -431,6 +439,9 @@
                 <button
                     class="flex-1 py-2 rounded bg-slate-800 text-white text-sm border border-white/10 font-bold hover:bg-slate-700 min-w-[100px]"
                     onclick="switchAdminForm('treinamentos')">Treinamento</button>
+                <button
+                    class="flex-1 py-2 rounded bg-amber-900/50 text-[#cfaa56] text-sm border border-[#cfaa56]/30 font-bold hover:bg-amber-900/80 min-w-[100px]"
+                    onclick="switchAdminForm('admins')">Cronistas</button>
             </div>
 
             <form id="adminForm" class="space-y-4" onsubmit="submitAdminForm(event)">
@@ -600,6 +611,11 @@
                         <textarea id="inpLoreChar" rows="4"
                             class="search-input w-full rounded px-3 py-2 text-sm"></textarea>
                     </div>
+                    <div class="w-full bg-black/30 p-4 rounded border border-[#cfaa56]/30">
+                        <h3 class="text-[#cfaa56] text-sm font-bold mb-2">Capítulos</h3>
+                        <div id="capitulosCharList" class="space-y-3 mb-3"></div>
+                        <button type="button" onclick="addCharCapitulo()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white py-1 px-3 rounded border border-white/10">+ Adicionar Capítulo</button>
+                    </div>
                 </div>
 
                 <!-- Específicos de Lugares -->
@@ -660,6 +676,43 @@
                     </div>
                 </div>
 
+                <!-- Específicos de Admins (Cronistas) -->
+                <div id="fieldsAdmins" class="space-y-4 hidden">
+                    <div class="bg-red-900/20 border border-red-500/30 rounded p-3 mb-2">
+                        <p class="text-xs text-red-400 font-bold uppercase">⚠ Área restrita — Somente Cronistas Mestres (Nível 1)</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Senha do Cronista</label>
+                            <input type="text" id="inpSenhaAdmin" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="Senha">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Nível de Acesso</label>
+                            <select id="inpAccessLevel" class="search-input w-full rounded px-3 py-2 text-sm" onchange="toggleAdminFields()">
+                                <option value="1">1 — Acesso Total</option>
+                                <option value="2">2 — Abas Restritas</option>
+                                <option value="3">3 — Registros Específicos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="adminTabsAllowedContainer" class="hidden bg-black/30 p-4 rounded border border-[#cfaa56]/30">
+                        <h3 class="text-[#cfaa56] text-sm font-bold mb-2">Abas Permitidas (Level 2)</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" value="habilidades" class="adminTabCheck"> Habilidades</label>
+                            <label class="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" value="itens" class="adminTabCheck"> Itens</label>
+                            <label class="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" value="personagens" class="adminTabCheck"> Personagens</label>
+                            <label class="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" value="escolas" class="adminTabCheck"> Escolas</label>
+                            <label class="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" value="categorias" class="adminTabCheck"> Categorias</label>
+                            <label class="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" value="lugares" class="adminTabCheck"> Lugares</label>
+                            <label class="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" value="treinamentos" class="adminTabCheck"> Treinamentos</label>
+                        </div>
+                    </div>
+                    <div id="adminRecordsAllowedContainer" class="hidden bg-black/30 p-4 rounded border border-[#cfaa56]/30">
+                        <h3 class="text-[#cfaa56] text-sm font-bold mb-2">IDs de Registros Permitidos (Level 3)</h3>
+                        <textarea id="inpRecordsAllowed" rows="3" placeholder="Insira os IDs separados por vírgula. Ex: h1, i2, p3" class="search-input w-full rounded px-3 py-2 text-xs"></textarea>
+                    </div>
+                </div>
+
                 <div class="pt-4 flex gap-3">
                     <button type="button" onclick="limparCamposAdmin()"
                         class="w-1/3 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded font-bold uppercase tracking-widest transition-colors border border-white/10 text-xs flex items-center justify-center shadow-md">
@@ -717,7 +770,9 @@
                 { id: "l2", nome: "Castelo Infinitum", descricao: "O nexo de todas as dimensões conhecidas.", imagem: "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?auto=format&fit=crop&q=80&w=400", cor: "#9333ea" }
             ],
             admins: [
-                { nome: "Cronista_Mestre", senha: "senha123" }
+                { nome: "Cronista_Mestre", senha: btoa("senha123"), access_level: 1 },
+                { nome: "Cronista_Limitado", senha: btoa("senha123"), access_level: 2, tabs_allowed: ["habilidades", "itens"] },
+                { nome: "Cronista_Especifico", senha: btoa("senha123"), access_level: 3, records_allowed: ["h1", "i2"] }
             ],
             treinamentos: [
                 { id: "t1", nome: "Lâmina Oculta", descricao: "Treinamento avançado em técnicas de assassinato.", imagem: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=400", cor: "#8b0000" }
@@ -778,7 +833,12 @@
             if (!database[type]) database[type] = [];
 
             if (isEdit) {
-                let index = database[type].findIndex(i => i.id === newItem.id);
+                let index;
+                if (type === 'admins') {
+                    index = database[type].findIndex(i => i.nome === newItem.nome);
+                } else {
+                    index = database[type].findIndex(i => i.id === newItem.id);
+                }
                 if (index !== -1) database[type][index] = newItem;
             } else {
                 database[type].push(newItem);
@@ -786,8 +846,13 @@
 
             localStorage.setItem("woe_archive_db", JSON.stringify(database));
 
-            // Tenta enviar para a Nuvem
-            let res = await apiFetch('/save', 'POST', { type: type, data: newItem });
+            // Tenta enviar para a Nuvem (com credenciais do admin para validação no backend)
+            let savePayload = { type: type, data: newItem };
+            if (loggedAdmin) {
+                savePayload.admin_nome = loggedAdmin.nome;
+                savePayload.admin_senha = loggedAdmin.senha;
+            }
+            let res = await apiFetch('/save', 'POST', savePayload);
 
             if (res) {
                 alert(`${isEdit ? 'Atualizado' : 'Salvo'} no DynamoDB com sucesso na categoria: ${type}!`);
@@ -977,31 +1042,100 @@
                     baseColor = lugarColor;
                     tagsHtml = `<span class="tag-pill tag-custom flex items-center" style="--tag-color: ${lugarColor}; --tag-bg: ${lugarColor}1a; --tag-bg-hover: ${lugarColor}99; border-width: 2px;">Origem: ${data.origem}</span>`;
                 }
+
+                let capitulosHtml = '';
+                if (type === 'personagens' && data.capitulos && data.capitulos.length > 0) {
+                    capitulosHtml = `<div class="mt-4 pt-3 border-t border-white/10 hidden topics-container">
+                        <h4 class="text-[#cfaa56] font-bold mb-2 text-xs uppercase tracking-widest">Capítulos</h4>
+                        <ul class="space-y-4">
+                            ${data.capitulos.map(cap => {
+                                let imgHtml = '';
+                                if (cap.image && cap.image.trim() !== '') {
+                                    imgHtml = `<img src="${cap.image}" class="mt-2 w-full max-h-48 object-cover rounded border border-white/10 cursor-pointer hover:border-[#cfaa56]/50 transition-colors" onclick="event.stopPropagation(); openImageModal('${cap.image}')">`;
+                                }
+                                return `<li class="bg-black/30 p-3 rounded text-xs border border-white/5"><strong class="text-[#cfaa56] block mb-1 text-sm">${cap.title}</strong><span class="text-slate-300 leading-relaxed block whitespace-pre-wrap">${cap.desc}</span>${imgHtml}</li>`;
+                            }).join('')}
+                        </ul>
+                    </div>`;
+                }
+
                 detailsHtml = `
                     <div class="text-xs text-slate-400 italic mb-3 border-l-2 border-slate-600 pl-2">
                         "${data.lore || data.descricao || 'Nenhum registro encontrado.'}"
                     </div>
                     <p class="text-sm text-slate-300 leading-relaxed mt-2 flex-grow">${data.descricao || ''}</p>
+                    ${capitulosHtml}
+                `;
+            } else if (type === 'admins') {
+                baseColor = '#cfaa56';
+                let levelLabel = 'Acesso Total';
+                let levelColor = '#4ade80';
+                if (data.access_level === 2) { levelLabel = 'Abas Restritas'; levelColor = '#facc15'; }
+                if (data.access_level === 3) { levelLabel = 'Registros Específicos'; levelColor = '#f87171'; }
+                
+                tagsHtml = `<span class="tag-pill tag-custom" style="--tag-color: ${levelColor}; --tag-bg: ${levelColor}26; --tag-bg-hover: ${levelColor}99; border-width: 2px;">Level ${data.access_level || 1} — ${levelLabel}</span>`;
+                
+                let extraInfo = '';
+                if (data.access_level === 2 && data.tabs_allowed) {
+                    extraInfo = `<div class="text-xs text-slate-400 mt-2"><strong class="text-slate-300">Abas:</strong> ${data.tabs_allowed.join(', ')}</div>`;
+                } else if (data.access_level === 3 && data.records_allowed) {
+                    extraInfo = `<div class="text-xs text-slate-400 mt-2"><strong class="text-slate-300">Registros:</strong> ${data.records_allowed.join(', ')}</div>`;
+                }
+                
+                detailsHtml = `
+                    <div class="text-xs text-slate-400 mb-2"><strong class="text-slate-300">Senha:</strong> ${'\u2022'.repeat(data.senha ? data.senha.length : 0)}</div>
+                    ${extraInfo}
                 `;
             }
 
             let adminBtns = '';
-            if (isAdmin) {
-                adminBtns = `
-                    <div class="absolute top-3 right-3 flex gap-2 z-10">
-                        <button onclick="event.stopPropagation(); editItem('${data.id}', '${type}')" class="text-slate-400 hover:text-white p-1.5 bg-black/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors hover:bg-slate-800 border border-white/20" title="Editar">✏️</button>
-                        <button onclick="event.stopPropagation(); promptDelete('${data.id}', '${type}')" class="text-slate-400 hover:text-red-500 p-1.5 bg-black/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors hover:bg-red-900/50 border border-white/20" title="Excluir">🗑️</button>
-                    </div>
-                `;
+            if (isAdmin && loggedAdmin) {
+                let canEdit = false;
+                let canDelete = false;
+
+                if (loggedAdmin.access_level === 1 || !loggedAdmin.access_level) {
+                    canEdit = true;
+                    canDelete = true;
+                } else if (loggedAdmin.access_level === 2) {
+                    if (loggedAdmin.tabs_allowed && loggedAdmin.tabs_allowed.includes(type)) {
+                        canEdit = true;
+                        canDelete = true;
+                    }
+                } else if (loggedAdmin.access_level === 3) {
+                    if (loggedAdmin.records_allowed && loggedAdmin.records_allowed.includes(data.id)) {
+                        canEdit = true;
+                    }
+                }
+
+                // Para admin cards, usar 'nome' como identificador
+                let itemKey = (type === 'admins') ? data.nome : data.id;
+
+                if (canEdit || canDelete) {
+                    adminBtns = '<div class="absolute top-3 right-3 flex gap-2 z-10">';
+                    if (canEdit) {
+                        adminBtns += `<button onclick="event.stopPropagation(); editItem('${itemKey}', '${type}')" class="text-slate-400 hover:text-white p-1.5 bg-black/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors hover:bg-slate-800 border border-white/20" title="Editar">✏️</button>`;
+                    }
+                    if (canDelete) {
+                        adminBtns += `<button onclick="event.stopPropagation(); promptDelete('${itemKey}', '${type}')" class="text-slate-400 hover:text-red-500 p-1.5 bg-black/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors hover:bg-red-900/50 border border-white/20" title="Excluir">🗑️</button>`;
+                    }
+                    adminBtns += '</div>';
+                }
             }
 
             if (type === 'personagens') {
                 extraClass += ' cursor-pointer';
+                if (data.capitulos && data.capitulos.length > 0) {
+                    extraClass += ' hover:border-[#cfaa56]/50 transition-colors duration-300';
+                }
             }
 
             div.className = `item-card flex flex-col h-full${extraClass}`;
             if (type === 'personagens') {
-                div.setAttribute('onclick', "this.classList.toggle('expanded')");
+                if (data.capitulos && data.capitulos.length > 0) {
+                    div.setAttribute('onclick', 'this.classList.toggle("expanded"); let tc = this.querySelector(".topics-container"); if(tc) tc.classList.toggle("hidden");');
+                } else {
+                    div.setAttribute('onclick', "this.classList.toggle('expanded')");
+                }
             }
             if (type === 'habilidades' && database.escolas && data.escola) {
                 let schoolObj = database.escolas.find(e => e.nome === data.escola);
@@ -1033,6 +1167,8 @@
                 </div>
                 <div class="p-5 flex flex-col flex-grow">
                     <h3 class="text-xl font-bold text-[#cfaa56] mb-2" style="font-family: var(--font-heading);">${data.nome}</h3>
+                    ${isAdmin ? `<span class="text-[10px] text-slate-500 font-mono -mt-1 mb-2 select-all" title="ID do registro">ID: ${data.id || data.nome}</span>` : ''}
+                    ${isAdmin && (data.created_by || data.updated_by) ? `<div class="text-[10px] text-slate-600 mb-2 border-l-2 border-slate-700 pl-2 space-y-0.5">${data.created_by ? `<div>📝 Criado por <strong class="text-slate-400">${data.created_by}</strong> em ${data.created_at || '?'}</div>` : ''}${data.updated_by ? `<div>✏️ Editado por <strong class="text-slate-400">${data.updated_by}</strong> em ${data.updated_at || '?'}</div>` : ''}</div>` : ''}
                     ${detailsHtml}
                 </div>
             `;
@@ -1109,12 +1245,69 @@
         }
 
         // ================= ADMIN CONSOLE =================
+        function openImageModal(imgSrc) {
+            document.getElementById('imageModalContent').src = imgSrc;
+            document.getElementById('imageModal').classList.remove('hidden');
+        }
+
+        function addCharCapitulo(title = '', desc = '', image = '') {
+            let list = document.getElementById('capitulosCharList');
+            let div = document.createElement('div');
+            div.className = 'char-capitulo-item bg-black/40 p-2 rounded relative border border-white/10 flex flex-col gap-2';
+            div.innerHTML = `
+                <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-400 text-xs font-bold">X</button>
+                <input type="text" placeholder="Título (Ex: Capítulo 1)" value="${title}" class="char-capitulo-title search-input w-full rounded px-2 py-1 text-xs pr-6">
+                <textarea rows="2" placeholder="Lore do Capítulo" class="char-capitulo-desc search-input w-full rounded px-2 py-1 text-xs">${desc}</textarea>
+                <input type="text" placeholder="URL da Imagem (Opcional)" value="${image}" class="char-capitulo-image search-input w-full rounded px-2 py-1 text-xs">
+            `;
+            list.appendChild(div);
+        }
+
+        function updateAdminTabsVisibility() {
+            let tabsBtns = document.querySelectorAll('#adminConsoleModal button[onclick^="switchAdminForm"]');
+            tabsBtns.forEach(btn => {
+                let match = btn.getAttribute('onclick').match(/'([^']+)'/);
+                if (match) {
+                    let tabType = match[1];
+                    // Aba Cronistas só é visível para Level 1
+                    if (tabType === 'admins') {
+                        btn.style.display = (loggedAdmin.access_level === 1 || !loggedAdmin.access_level) ? 'block' : 'none';
+                    } else if (loggedAdmin.access_level === 2 && loggedAdmin.tabs_allowed && !loggedAdmin.tabs_allowed.includes(tabType)) {
+                        btn.style.display = 'none';
+                    } else if (loggedAdmin.access_level === 3) {
+                        btn.style.display = 'none';
+                    } else {
+                        btn.style.display = 'block';
+                    }
+                }
+            });
+            
+            let btnLimpar = document.querySelector('button[onclick="limparCamposAdmin()"]');
+            if (loggedAdmin.access_level === 3) {
+                if (btnLimpar) btnLimpar.style.display = 'none';
+            } else {
+                if (btnLimpar) btnLimpar.style.display = 'flex';
+            }
+        }
+
+        function toggleAdminFields() {
+            let level = document.getElementById('inpAccessLevel').value;
+            let tabsC = document.getElementById('adminTabsAllowedContainer');
+            let recsC = document.getElementById('adminRecordsAllowedContainer');
+            tabsC.classList.add('hidden');
+            recsC.classList.add('hidden');
+            if (level === '2') tabsC.classList.remove('hidden');
+            if (level === '3') recsC.classList.remove('hidden');
+        }
+
         function limparCamposAdmin() {
             document.getElementById('adminForm').reset();
             let habTopics = document.getElementById('topicsHabList');
             if(habTopics) habTopics.innerHTML = '';
             let saList = document.getElementById('specialAbilityList');
             if(saList) saList.innerHTML = '';
+            let charCapitulos = document.getElementById('capitulosCharList');
+            if(charCapitulos) charCapitulos.innerHTML = '';
             document.getElementById('editItemId').value = '';
             
             let btnSubmit = document.getElementById('btnSubmitAdmin');
@@ -1131,12 +1324,23 @@
         function openAdminConsole() {
             populateSelects();
             limparCamposAdmin();
+            updateAdminTabsVisibility();
+            
+            let startTab = currentTab;
+            if (loggedAdmin.access_level === 2 && loggedAdmin.tabs_allowed && !loggedAdmin.tabs_allowed.includes(startTab)) {
+                startTab = loggedAdmin.tabs_allowed[0] || 'habilidades';
+            }
+
             document.getElementById('adminConsoleModal').classList.remove('hidden');
-            switchAdminForm(currentTab);
+            switchAdminForm(startTab);
         }
 
         function openAdminLogin() {
             if (isAdmin) {
+                if (loggedAdmin.access_level === 3) {
+                    alert("O seu nível de acesso não permite a criação de novos registros. Você só pode editar os registros permitidos diretamente nos cards.");
+                    return;
+                }
                 openAdminConsole();
             } else {
                 document.getElementById('adminLoginModal').classList.remove('hidden');
@@ -1147,8 +1351,8 @@
 
         function promptDelete(id, type) {
             itemToDelete = { id, type };
-            let item = database[type].find(i => i.id === id);
-            document.getElementById('deleteItemName').innerText = item.nome;
+            let item = (type === 'admins') ? database[type].find(i => i.nome === id) : database[type].find(i => i.id === id);
+            document.getElementById('deleteItemName').innerText = item ? item.nome : id;
             document.getElementById('deleteConfirmModal').classList.remove('hidden');
             document.getElementById('deletePwd').value = '';
         }
@@ -1157,16 +1361,30 @@
             let pwd = document.getElementById('deletePwd').value;
             if (!loggedAdmin) return;
 
-            if (pwd === loggedAdmin.senha && pwd.length > 0) {
+            if (btoa(pwd) === loggedAdmin.senha && pwd.length > 0) {
                 let type = itemToDelete.type;
                 let id = itemToDelete.id;
 
-                database[type] = database[type].filter(i => i.id !== id);
+                if (type === 'admins') {
+                    database[type] = database[type].filter(i => i.nome !== id);
+                } else {
+                    database[type] = database[type].filter(i => i.id !== id);
+                }
                 localStorage.setItem("woe_archive_db", JSON.stringify(database));
 
-                // Tenta remover na API
+                // Tenta remover na API (com credenciais do admin para validação no backend)
                 try {
-                    await apiFetch('/delete', 'POST', { id: id, type: type });
+                    let deletePayload = { type: type };
+                    if (type === 'admins') {
+                        deletePayload.nome = id;
+                    } else {
+                        deletePayload.id = id;
+                    }
+                    if (loggedAdmin) {
+                        deletePayload.admin_nome = loggedAdmin.nome;
+                        deletePayload.admin_senha = loggedAdmin.senha;
+                    }
+                    await apiFetch('/delete', 'POST', deletePayload);
                 } catch (e) { console.log("Erro na API (Delete):", e); }
 
                 closeModal('deleteConfirmModal');
@@ -1179,13 +1397,18 @@
 
         function editItem(id, type) {
             populateSelects();
-            let itemToEdit = database[type].find(i => i.id === id);
+            let itemToEdit;
+            if (type === 'admins') {
+                itemToEdit = database[type].find(i => i.nome === id);
+            } else {
+                itemToEdit = database[type].find(i => i.id === id);
+            }
             if (!itemToEdit) return;
 
             document.getElementById('inpNome').value = itemToEdit.nome || '';
             document.getElementById('inpImagem').value = itemToEdit.imagem || '';
             document.getElementById('inpDescricao').value = itemToEdit.descricao || '';
-            document.getElementById('editItemId').value = id;
+            document.getElementById('editItemId').value = (type === 'admins') ? itemToEdit.nome : id;
 
             if (type === 'habilidades') {
                 document.getElementById('inpTipoHab').value = itemToEdit.tipo || '';
@@ -1223,6 +1446,10 @@
             } else if (type === 'personagens') {
                 document.getElementById('inpLoreChar').value = itemToEdit.lore || '';
                 if (itemToEdit.origem !== undefined) document.getElementById('inpOrigemChar').value = itemToEdit.origem;
+                document.getElementById('capitulosCharList').innerHTML = '';
+                if (itemToEdit.capitulos && itemToEdit.capitulos.length > 0) {
+                    itemToEdit.capitulos.forEach(cap => addCharCapitulo(cap.title, cap.desc, cap.image));
+                }
             } else if (type === 'escolas') {
                 if (itemToEdit.cor) document.getElementById('inpCorEscola').value = itemToEdit.cor;
                 else document.getElementById('inpCorEscola').value = "#cfaa56";
@@ -1234,8 +1461,22 @@
                 if (itemToEdit.cor) document.getElementById('inpCorTreinamento').value = itemToEdit.cor;
                 else document.getElementById('inpCorTreinamento').value = "#8b0000";
                 document.getElementById('inpAwayTreinamento').value = itemToEdit.away || '';
+            } else if (type === 'admins') {
+                document.getElementById('inpSenhaAdmin').value = itemToEdit.senha ? atob(itemToEdit.senha) : '';
+                document.getElementById('inpAccessLevel').value = String(itemToEdit.access_level || 1);
+                toggleAdminFields();
+                
+                if (itemToEdit.access_level === 2 && itemToEdit.tabs_allowed) {
+                    document.querySelectorAll('.adminTabCheck').forEach(cb => {
+                        cb.checked = itemToEdit.tabs_allowed.includes(cb.value);
+                    });
+                }
+                if (itemToEdit.access_level === 3 && itemToEdit.records_allowed) {
+                    document.getElementById('inpRecordsAllowed').value = itemToEdit.records_allowed.join(', ');
+                }
             }
 
+            updateAdminTabsVisibility();
             document.getElementById('btnSubmitAdmin').textContent = 'Atualizar no Banco de Dados';
             document.getElementById('adminConsoleModal').classList.remove('hidden');
             switchAdminForm(type);
@@ -1339,14 +1580,26 @@
             let pwd = document.getElementById('adminPwd').value;
 
             if (name.length > 0 && pwd.length > 0) {
-                let admin = database.admins ? database.admins.find(a => a.nome === name && a.senha === pwd) : null;
+                let admin = database.admins ? database.admins.find(a => a.nome === name && a.senha === btoa(pwd)) : null;
 
                 if (admin) {
                     isAdmin = true;
                     loggedAdmin = admin;
+                    if (!loggedAdmin.access_level) loggedAdmin.access_level = 1;
                     closeModal('adminLoginModal');
                     populateSelects();
-                    openAdminConsole();
+                    
+                    // Mostrar aba Cronistas no header para Level 1
+                    let adminTabBtn = document.getElementById('tabAdminsBtn');
+                    if (adminTabBtn) {
+                        adminTabBtn.classList.toggle('hidden', loggedAdmin.access_level !== 1);
+                    }
+                    
+                    if (loggedAdmin.access_level !== 3) {
+                        openAdminConsole();
+                    } else {
+                        alert(`Bem-vindo, ${loggedAdmin.nome}! O seu nível de acesso é de edição restrita. Você pode editar os registros permitidos diretamente nos cards.`);
+                    }
                     renderCards();
                 } else {
                     alert("Credenciais do Cronista incorretas ou administrador não encontrado.");
@@ -1365,6 +1618,7 @@
             document.getElementById('fieldsCategorias').classList.add('hidden');
             document.getElementById('fieldsLugares').classList.add('hidden');
             document.getElementById('fieldsTreinamentos').classList.add('hidden');
+            document.getElementById('fieldsAdmins').classList.add('hidden');
 
             if (type === 'habilidades') document.getElementById('fieldsHabilidades').classList.remove('hidden');
             if (type === 'itens') document.getElementById('fieldsItens').classList.remove('hidden');
@@ -1373,12 +1627,43 @@
             if (type === 'categorias') document.getElementById('fieldsCategorias').classList.remove('hidden');
             if (type === 'lugares') document.getElementById('fieldsLugares').classList.remove('hidden');
             if (type === 'treinamentos') document.getElementById('fieldsTreinamentos').classList.remove('hidden');
+            if (type === 'admins') document.getElementById('fieldsAdmins').classList.remove('hidden');
+
+            // Para admins, esconder campos comuns desnecessários (Imagem, Descrição)
+            let commonImagem = document.getElementById('inpImagem').closest('.grid');
+            let commonDesc = document.getElementById('inpDescricao').closest('.w-full');
+            let descField = document.getElementById('inpDescricao');
+            if (type === 'admins') {
+                if (commonImagem) commonImagem.querySelector('#inpImagem').parentElement.style.display = 'none';
+                if (commonDesc) commonDesc.style.display = 'none';
+                if (descField) descField.removeAttribute('required');
+            } else {
+                if (commonImagem) commonImagem.querySelector('#inpImagem').parentElement.style.display = 'block';
+                if (commonDesc) commonDesc.style.display = 'block';
+                if (descField) descField.setAttribute('required', '');
+            }
         }
 
         function submitAdminForm(e) {
             e.preventDefault();
             const type = document.getElementById('formType').value;
             let editId = document.getElementById('editItemId').value;
+
+            if (loggedAdmin.access_level === 2 && loggedAdmin.tabs_allowed && !loggedAdmin.tabs_allowed.includes(type)) {
+                alert("Você não tem permissão para salvar registros nesta aba.");
+                return;
+            }
+
+            if (loggedAdmin.access_level === 3) {
+                if (!editId) {
+                    alert("Você não tem permissão para adicionar novos registros.");
+                    return;
+                }
+                if (loggedAdmin.records_allowed && !loggedAdmin.records_allowed.includes(editId)) {
+                    alert("Você não tem permissão para editar este registro.");
+                    return;
+                }
+            }
 
             let newItem = {
                 id: editId ? editId : "id_" + Date.now(),
@@ -1429,6 +1714,17 @@
             } else if (type === 'personagens') {
                 newItem.lore = document.getElementById('inpLoreChar').value;
                 newItem.origem = document.getElementById('inpOrigemChar').value;
+                
+                let capitulos = [];
+                let capTitles = document.querySelectorAll('.char-capitulo-title');
+                let capDescs = document.querySelectorAll('.char-capitulo-desc');
+                let capImages = document.querySelectorAll('.char-capitulo-image');
+                for (let i = 0; i < capTitles.length; i++) {
+                    if (capTitles[i].value.trim() !== '' || capDescs[i].value.trim() !== '') {
+                        capitulos.push({ title: capTitles[i].value, desc: capDescs[i].value, image: capImages[i].value });
+                    }
+                }
+                newItem.capitulos = capitulos;
             } else if (type === 'escolas') {
                 newItem.cor = document.getElementById('inpCorEscola').value;
                 newItem.lugar = document.getElementById('inpLugarEscola').value;
@@ -1437,15 +1733,50 @@
             } else if (type === 'treinamentos') {
                 newItem.cor = document.getElementById('inpCorTreinamento').value;
                 newItem.away = document.getElementById('inpAwayTreinamento').value;
+            } else if (type === 'admins') {
+                // Admin usa 'nome' como chave primária, não 'id'
+                delete newItem.id;
+                newItem.nome = document.getElementById('inpNome').value;
+                newItem.senha = btoa(document.getElementById('inpSenhaAdmin').value);
+                newItem.access_level = parseInt(document.getElementById('inpAccessLevel').value);
+                delete newItem.imagem;
+                delete newItem.descricao;
+                
+                if (newItem.access_level === 2) {
+                    let tabs = [];
+                    document.querySelectorAll('.adminTabCheck:checked').forEach(cb => tabs.push(cb.value));
+                    newItem.tabs_allowed = tabs;
+                } else if (newItem.access_level === 3) {
+                    let recsRaw = document.getElementById('inpRecordsAllowed').value;
+                    newItem.records_allowed = recsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                }
             }
 
             let isEdit = editId !== "";
+
+            // Campos de auditoria
+            let now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            if (isEdit) {
+                // Preservar dados de criação do registro original
+                let originalItem;
+                if (type === 'admins') {
+                    originalItem = database[type].find(i => i.nome === newItem.nome);
+                } else {
+                    originalItem = database[type].find(i => i.id === newItem.id);
+                }
+                if (originalItem) {
+                    newItem.created_by = originalItem.created_by || null;
+                    newItem.created_at = originalItem.created_at || null;
+                }
+                newItem.updated_by = loggedAdmin.nome;
+                newItem.updated_at = now;
+            } else {
+                newItem.created_by = loggedAdmin.nome;
+                newItem.created_at = now;
+            }
+
             saveToDatabase(type, newItem, isEdit);
 
-            // Limpa form basico para próxima inserção (não fecha o modal mais)
-            limparCamposAdmin();
-            switchAdminForm(type);
-            
             let btnSubmit = document.getElementById('btnSubmitAdmin');
             btnSubmit.textContent = 'Salvo com Sucesso!';
             btnSubmit.classList.remove('bg-[#cfaa56]', 'text-black');
@@ -1455,7 +1786,14 @@
                 btnSubmit.textContent = 'Registrar no Banco de Dados';
                 btnSubmit.classList.remove('bg-green-600', 'text-white');
                 btnSubmit.classList.add('bg-[#cfaa56]', 'text-black');
-            }, 2000);
+                
+                if (loggedAdmin.access_level === 3) {
+                    closeModal('adminConsoleModal');
+                } else {
+                    limparCamposAdmin();
+                    switchAdminForm(type);
+                }
+            }, 1500);
         }
 
         // INIT

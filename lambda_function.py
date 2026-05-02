@@ -1,7 +1,17 @@
 import json
 import boto3
 import os
+from decimal import Decimal
 from botocore.exceptions import ClientError
+
+# Encoder customizado para lidar com o tipo Decimal retornado pelo DynamoDB
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            if obj % 1 == 0:
+                return int(obj)
+            return float(obj)
+        return super().default(obj)
 
 # Inicializa o recurso do DynamoDB
 dynamodb = boto3.resource('dynamodb')
@@ -23,6 +33,26 @@ def get_table(type_key):
     if not table_name:
         raise ValueError(f"Tipo desconhecido: {type_key}")
     return dynamodb.Table(table_name)
+
+def validate_admin(admin_nome, admin_senha):
+    """
+    Busca o administrador na tabela 'admins' do DynamoDB e valida as credenciais.
+    Retorna o registro do admin se válido, ou None se inválido.
+    """
+    if not admin_nome or not admin_senha:
+        return None
+    
+    try:
+        admins_table = dynamodb.Table('admins')
+        response = admins_table.get_item(Key={'nome': admin_nome})
+        admin = response.get('Item')
+        
+        if admin and admin.get('senha') == admin_senha:
+            return admin
+        return None
+    except Exception as e:
+        print(f"Erro ao validar admin: {str(e)}")
+        return None
 
 def lambda_handler(event, context):
     """
@@ -76,7 +106,7 @@ def lambda_handler(event, context):
             return {
                 'statusCode': 200,
                 'headers': headers,
-                'body': json.dumps(database_format)
+                'body': json.dumps(database_format, cls=DecimalEncoder)
             }
             
         elif http_method == 'POST':
@@ -86,6 +116,8 @@ def lambda_handler(event, context):
             if '/save' in path:
                 item_type = body.get('type')
                 item_data = body.get('data')
+                admin_nome = body.get('admin_nome')
+                admin_senha = body.get('admin_senha')
                 
                 if not item_type or not item_data:
                     return {
@@ -93,6 +125,52 @@ def lambda_handler(event, context):
                         'headers': headers,
                         'body': json.dumps({'error': 'Faltando "type" ou "data" no corpo da requisição'})
                     }
+                
+                # ===== VALIDAÇÃO DE ADMIN =====
+                admin = validate_admin(admin_nome, admin_senha)
+                if not admin:
+                    return {
+                        'statusCode': 403,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Credenciais de administrador inválidas ou não fornecidas.'})
+                    }
+                
+                access_level = admin.get('access_level', 1)
+                # Converte para int caso venha como Decimal do DynamoDB
+                if hasattr(access_level, '__int__'):
+                    access_level = int(access_level)
+                
+                # Somente Level 1 pode gerenciar cronistas (admins)
+                if item_type == 'admins' and access_level != 1:
+                    return {
+                        'statusCode': 403,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Somente cronistas de nível 1 podem gerenciar administradores.'})
+                    }
+                
+                # Level 2: Só pode operar nas abas permitidas
+                if access_level == 2:
+                    tabs_allowed = admin.get('tabs_allowed', [])
+                    if item_type not in tabs_allowed:
+                        return {
+                            'statusCode': 403,
+                            'headers': headers,
+                            'body': json.dumps({'error': f'Seu nível de acesso não permite operações na aba "{item_type}".'})
+                        }
+                
+                # Level 3: Só pode EDITAR registros específicos (não pode criar novos)
+                if access_level == 3:
+                    records_allowed = admin.get('records_allowed', [])
+                    item_id = item_data.get('id', '')
+                    
+                    # Verifica se o registro já existe (edição) ou é novo (criação)
+                    if item_id not in records_allowed:
+                        return {
+                            'statusCode': 403,
+                            'headers': headers,
+                            'body': json.dumps({'error': 'Seu nível de acesso não permite criar registros ou editar este registro.'})
+                        }
+                # ===== FIM DA VALIDAÇÃO =====
                 
                 try:
                     table = get_table(item_type)
@@ -111,6 +189,8 @@ def lambda_handler(event, context):
                 item_id = body.get('id')
                 item_nome = body.get('nome')
                 item_type = body.get('type')
+                admin_nome = body.get('admin_nome')
+                admin_senha = body.get('admin_senha')
                 
                 if not item_type:
                     return {
@@ -118,6 +198,46 @@ def lambda_handler(event, context):
                         'headers': headers,
                         'body': json.dumps({'error': 'Faltando "type" para exclusão'})
                     }
+                
+                # ===== VALIDAÇÃO DE ADMIN =====
+                admin = validate_admin(admin_nome, admin_senha)
+                if not admin:
+                    return {
+                        'statusCode': 403,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Credenciais de administrador inválidas ou não fornecidas.'})
+                    }
+                
+                access_level = admin.get('access_level', 1)
+                if hasattr(access_level, '__int__'):
+                    access_level = int(access_level)
+                
+                # Somente Level 1 pode gerenciar cronistas (admins)
+                if item_type == 'admins' and access_level != 1:
+                    return {
+                        'statusCode': 403,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Somente cronistas de nível 1 podem gerenciar administradores.'})
+                    }
+                
+                # Level 2: Só pode deletar nas abas permitidas
+                if access_level == 2:
+                    tabs_allowed = admin.get('tabs_allowed', [])
+                    if item_type not in tabs_allowed:
+                        return {
+                            'statusCode': 403,
+                            'headers': headers,
+                            'body': json.dumps({'error': f'Seu nível de acesso não permite exclusões na aba "{item_type}".'})
+                        }
+                
+                # Level 3: NÃO pode deletar nada
+                if access_level == 3:
+                    return {
+                        'statusCode': 403,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'Seu nível de acesso não permite excluir registros.'})
+                    }
+                # ===== FIM DA VALIDAÇÃO =====
                     
                 try:
                     table = get_table(item_type)
