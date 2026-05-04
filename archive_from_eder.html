@@ -280,6 +280,101 @@
             color: #fff !important;
             text-shadow: 0 0 5px rgba(255,255,255,0.5) !important;
         }
+
+        /* Autocomplete de registros para Level 3 */
+        .records-tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 6px;
+            min-height: 38px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            cursor: text;
+        }
+        .records-tags-container:focus-within {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 15px rgba(207,170,86,0.2);
+        }
+        .record-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(207,170,86,0.15);
+            border: 1px solid rgba(207,170,86,0.4);
+            color: #cfaa56;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 99px;
+            white-space: nowrap;
+            animation: fadeInTag 0.2s ease;
+        }
+        @keyframes fadeInTag {
+            from { opacity: 0; transform: scale(0.85); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .record-tag .tag-remove {
+            cursor: pointer;
+            color: #f87171;
+            font-weight: bold;
+            font-size: 13px;
+            line-height: 1;
+            margin-left: 2px;
+        }
+        .record-tag .tag-remove:hover { color: #fca5a5; }
+        .records-search-input {
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 12px;
+            flex: 1;
+            min-width: 120px;
+            padding: 2px 4px;
+        }
+        .records-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #1a1a22;
+            border: 1px solid rgba(207,170,86,0.3);
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            z-index: 10;
+            display: none;
+        }
+        .records-dropdown.visible { display: block; }
+        .records-dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s;
+        }
+        .records-dropdown-item:hover {
+            background: rgba(207,170,86,0.15);
+            color: #fff;
+        }
+        .records-dropdown-item .dd-id {
+            font-family: monospace;
+            color: #cfaa56;
+            font-weight: bold;
+            min-width: 40px;
+        }
+        .records-dropdown-item .dd-type {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 
@@ -709,7 +804,13 @@
                     </div>
                     <div id="adminRecordsAllowedContainer" class="hidden bg-black/30 p-4 rounded border border-[#cfaa56]/30">
                         <h3 class="text-[#cfaa56] text-sm font-bold mb-2">IDs de Registros Permitidos (Level 3)</h3>
-                        <textarea id="inpRecordsAllowed" rows="3" placeholder="Insira os IDs separados por vírgula. Ex: h1, i2, p3" class="search-input w-full rounded px-3 py-2 text-xs"></textarea>
+                        <div class="relative">
+                            <div id="recordsTagsBox" class="records-tags-container" onclick="document.getElementById('recordsSearchInput').focus()">
+                                <input type="text" id="recordsSearchInput" class="records-search-input" placeholder="Buscar registros por ID ou nome..." autocomplete="off" oninput="filterRecordsDropdown()" onfocus="filterRecordsDropdown()">
+                            </div>
+                            <div id="recordsDropdown" class="records-dropdown"></div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1">Clique para adicionar. Os registros selecionados aparecerão como tags acima.</p>
                     </div>
                 </div>
 
@@ -1300,6 +1401,106 @@
             if (level === '3') recsC.classList.remove('hidden');
         }
 
+        // ===== AUTOCOMPLETE DE REGISTROS (Level 3) =====
+        function getAllRecordsForAutocomplete() {
+            let records = [];
+            let types = ['habilidades', 'itens', 'personagens', 'escolas', 'categorias', 'lugares', 'treinamentos'];
+            let typeLabels = { habilidades: 'Habilidade', itens: 'Item', personagens: 'Personagem', escolas: 'Escola', categorias: 'Categoria', lugares: 'Lugar', treinamentos: 'Treinamento' };
+            types.forEach(t => {
+                if (database[t]) {
+                    database[t].forEach(item => {
+                        records.push({ id: item.id, nome: item.nome, type: t, typeLabel: typeLabels[t] || t });
+                    });
+                }
+            });
+            return records;
+        }
+
+        function getRecordTagIds() {
+            let tags = document.querySelectorAll('#recordsTagsBox .record-tag');
+            return Array.from(tags).map(tag => tag.dataset.id).filter(id => id);
+        }
+
+        function addRecordTag(id) {
+            let box = document.getElementById('recordsTagsBox');
+            let input = document.getElementById('recordsSearchInput');
+            // Não duplicar
+            if (getRecordTagIds().includes(id)) return;
+            // Buscar nome do registro
+            let allRecs = getAllRecordsForAutocomplete();
+            let rec = allRecs.find(r => r.id === id);
+            let label = rec ? `${id} — ${rec.nome}` : id;
+
+            let tag = document.createElement('span');
+            tag.className = 'record-tag';
+            tag.dataset.id = id;
+            tag.innerHTML = `${label} <span class="tag-remove" onclick="removeRecordTag(this, event)">&times;</span>`;
+            box.insertBefore(tag, input);
+        }
+
+        function removeRecordTag(el, e) {
+            if (e) e.stopPropagation();
+            el.parentElement.remove();
+        }
+
+        function clearRecordTags() {
+            let box = document.getElementById('recordsTagsBox');
+            box.querySelectorAll('.record-tag').forEach(t => t.remove());
+        }
+
+        function filterRecordsDropdown() {
+            let input = document.getElementById('recordsSearchInput');
+            let dropdown = document.getElementById('recordsDropdown');
+            let query = input.value.toLowerCase().trim();
+            let allRecs = getAllRecordsForAutocomplete();
+            let selected = getRecordTagIds();
+
+            // Filtrar: não mostrar já selecionados
+            let filtered = allRecs.filter(r => !selected.includes(r.id));
+            if (query.length > 0) {
+                filtered = filtered.filter(r =>
+                    r.id.toLowerCase().includes(query) ||
+                    r.nome.toLowerCase().includes(query) ||
+                    r.typeLabel.toLowerCase().includes(query)
+                );
+            }
+
+            if (filtered.length === 0) {
+                dropdown.classList.remove('visible');
+                dropdown.innerHTML = '';
+                return;
+            }
+
+            // Limitar a 20 resultados
+            filtered = filtered.slice(0, 20);
+
+            dropdown.innerHTML = filtered.map(r => `
+                <div class="records-dropdown-item" onclick="selectRecordFromDropdown('${r.id}')">
+                    <span class="dd-id">${r.id}</span>
+                    <span style="flex:1">${r.nome}</span>
+                    <span class="dd-type">${r.typeLabel}</span>
+                </div>
+            `).join('');
+            dropdown.classList.add('visible');
+        }
+
+        function selectRecordFromDropdown(id) {
+            addRecordTag(id);
+            let input = document.getElementById('recordsSearchInput');
+            input.value = '';
+            document.getElementById('recordsDropdown').classList.remove('visible');
+            input.focus();
+        }
+
+        // Fechar dropdown ao clicar fora
+        document.addEventListener('click', function(e) {
+            let dropdown = document.getElementById('recordsDropdown');
+            let container = document.getElementById('adminRecordsAllowedContainer');
+            if (dropdown && container && !container.contains(e.target)) {
+                dropdown.classList.remove('visible');
+            }
+        });
+
         function limparCamposAdmin() {
             document.getElementById('adminForm').reset();
             let habTopics = document.getElementById('topicsHabList');
@@ -1308,6 +1509,7 @@
             if(saList) saList.innerHTML = '';
             let charCapitulos = document.getElementById('capitulosCharList');
             if(charCapitulos) charCapitulos.innerHTML = '';
+            clearRecordTags();
             document.getElementById('editItemId').value = '';
             
             let btnSubmit = document.getElementById('btnSubmitAdmin');
@@ -1472,7 +1674,8 @@
                     });
                 }
                 if (itemToEdit.access_level === 3 && itemToEdit.records_allowed) {
-                    document.getElementById('inpRecordsAllowed').value = itemToEdit.records_allowed.join(', ');
+                    clearRecordTags();
+                    itemToEdit.records_allowed.forEach(rid => addRecordTag(rid));
                 }
             }
 
@@ -1611,6 +1814,19 @@
 
         function switchAdminForm(type) {
             document.getElementById('formType').value = type;
+
+            // Destacar aba selecionada
+            let tabBtns = document.querySelectorAll('#adminConsoleModal .flex.gap-2.mb-6 button[onclick^="switchAdminForm"]');
+            tabBtns.forEach(btn => {
+                let match = btn.getAttribute('onclick').match(/'([^']+)'/);
+                if (match && match[1] === type) {
+                    btn.className = 'flex-1 py-2 rounded bg-[#cfaa56] text-black text-sm border border-[#cfaa56] font-bold min-w-[100px] shadow-[0_0_10px_rgba(207,170,86,0.3)]';
+                } else if (match && match[1] === 'admins') {
+                    btn.className = 'flex-1 py-2 rounded bg-amber-900/50 text-[#cfaa56] text-sm border border-[#cfaa56]/30 font-bold hover:bg-amber-900/80 min-w-[100px]';
+                } else {
+                    btn.className = 'flex-1 py-2 rounded bg-slate-800 text-white text-sm border border-white/10 font-bold hover:bg-slate-700 min-w-[100px]';
+                }
+            });
             document.getElementById('fieldsHabilidades').classList.add('hidden');
             document.getElementById('fieldsItens').classList.add('hidden');
             document.getElementById('fieldsPersonagens').classList.add('hidden');
@@ -1747,8 +1963,7 @@
                     document.querySelectorAll('.adminTabCheck:checked').forEach(cb => tabs.push(cb.value));
                     newItem.tabs_allowed = tabs;
                 } else if (newItem.access_level === 3) {
-                    let recsRaw = document.getElementById('inpRecordsAllowed').value;
-                    newItem.records_allowed = recsRaw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                    newItem.records_allowed = getRecordTagIds();
                 }
             }
 
