@@ -375,6 +375,321 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+        /* ===== MESA FEATURE STYLES ===== */
+        #mesaSelectModal .mesa-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        .mesa-option {
+            background: rgba(30, 30, 36, 0.95);
+            border: 2px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .mesa-option::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(207,170,86,0.08) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .mesa-option:hover {
+            border-color: rgba(207,170,86,0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5), 0 0 15px rgba(207,170,86,0.1);
+        }
+        .mesa-option:hover::before { opacity: 1; }
+        .mesa-option.all-option {
+            border-color: rgba(207,170,86,0.3);
+            background: linear-gradient(135deg, rgba(207,170,86,0.08), rgba(30,30,36,0.95));
+        }
+        .mesa-option .mesa-title {
+            font-family: var(--font-heading);
+            color: #cfaa56;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .mesa-option .mesa-mestre {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .mesa-option .mesa-players-count {
+            font-size: 0.65rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* Mesa Indicator (Header top-right) */
+        #mesaIndicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(207,170,86,0.1);
+            border: 1px solid rgba(207,170,86,0.3);
+            border-radius: 99px;
+            padding: 4px 14px 4px 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        #mesaIndicator:hover {
+            background: rgba(207,170,86,0.2);
+            border-color: rgba(207,170,86,0.6);
+            box-shadow: 0 0 12px rgba(207,170,86,0.15);
+        }
+        #mesaIndicator .mesa-icon { font-size: 14px; }
+        #mesaIndicator .mesa-label {
+            font-size: 11px;
+            color: #cfaa56;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: var(--font-heading);
+        }
+        #mesaIndicator .mesa-change-icon {
+            font-size: 10px;
+            color: #888;
+            transition: color 0.2s;
+        }
+        #mesaIndicator:hover .mesa-change-icon { color: #cfaa56; }
+
+        /* Player View Toggle */
+        #playerViewToggle {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            background: rgba(56,189,248,0.1);
+            border: 1px solid rgba(56,189,248,0.3);
+            border-radius: 99px;
+            padding: 4px 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #38bdf8;
+            white-space: nowrap;
+        }
+        #playerViewToggle:hover {
+            background: rgba(56,189,248,0.2);
+            border-color: rgba(56,189,248,0.5);
+        }
+        #playerViewToggle.active {
+            background: rgba(56,189,248,0.25);
+            border-color: #38bdf8;
+            box-shadow: 0 0 10px rgba(56,189,248,0.2);
+        }
+
+        /* Exclusive Checkbox */
+        .exclusive-container {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: rgba(207,170,86,0.08);
+            border: 1px solid rgba(207,170,86,0.2);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-top: 4px;
+            animation: fadeInTag 0.3s ease;
+        }
+        .exclusive-container label {
+            font-size: 11px;
+            color: #cfaa56;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .exclusive-container .exclusive-info {
+            font-size: 10px;
+            color: #888;
+            margin-left: auto;
+        }
+
+        /* Mesa Exclusion Tags */
+        .mesa-exclusion-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 6px;
+            min-height: 38px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            cursor: text;
+        }
+        .mesa-exclusion-container:focus-within {
+            border-color: rgba(248,113,113,0.5);
+            box-shadow: 0 0 15px rgba(248,113,113,0.1);
+        }
+        .mesa-excl-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(248,113,113,0.15);
+            border: 1px solid rgba(248,113,113,0.4);
+            color: #f87171;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 99px;
+            white-space: nowrap;
+            animation: fadeInTag 0.2s ease;
+        }
+        .mesa-excl-tag .tag-remove {
+            cursor: pointer;
+            color: #f87171;
+            font-weight: bold;
+            font-size: 13px;
+            line-height: 1;
+            margin-left: 2px;
+        }
+
+        /* Mesa Player Item in Admin Form */
+        .mesa-player-item {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 12px;
+            position: relative;
+            animation: fadeInTag 0.2s ease;
+        }
+        .mesa-player-char-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(132,204,22,0.15);
+            border: 1px solid rgba(132,204,22,0.4);
+            color: #84cc16;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 99px;
+            white-space: nowrap;
+            animation: fadeInTag 0.2s ease;
+        }
+        .mesa-player-chars-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 4px;
+            min-height: 30px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 6px;
+            margin-top: 6px;
+            cursor: text;
+        }
+
+        /* Delete Mesa Confirm */
+        .delete-mesa-confirm-input {
+            font-family: var(--font-heading);
+            text-align: center;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* ===== SECTIONS DROPDOWN (dentro do header) ===== */
+        #sectionsMenuBtn {
+            font-family: var(--font-heading);
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 6px;
+            transition: color 0.2s ease, background 0.2s ease;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        #sectionsMenuBtn:hover {
+            color: var(--accent-gold);
+            background: rgba(207,170,86,0.08);
+        }
+
+        #sectionsDropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: #111117;
+            border-bottom: 1px solid rgba(207,170,86,0.12);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+            z-index: 39;
+            animation: sectionDropFadeIn 0.15s ease;
+        }
+        @keyframes sectionDropFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 3px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.05);
+            color: var(--text-secondary);
+            font-family: var(--font-heading);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            width: 100%;
+            line-height: 1.4;
+        }
+        .section-nav-item:hover {
+            background: rgba(207,170,86,0.08);
+            border-color: rgba(207,170,86,0.25);
+            color: var(--accent-gold);
+        }
+        .section-nav-item.wip {
+            opacity: 0.5;
+            cursor: default;
+        }
+        .section-nav-item.wip:hover {
+            background: rgba(255,255,255,0.03);
+            border-color: rgba(255,255,255,0.08);
+            color: var(--text-secondary);
+        }
+        .wip-badge {
+            display: block;
+            font-size: 9px;
+            font-family: sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #4a5568;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-weight: 400;
+        }
+        #sectionsChevron {
+            transition: transform 0.2s ease;
+        }
     </style>
 </head>
 
@@ -388,30 +703,120 @@
         <button onclick="closeModal('imageModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-3xl font-bold">&times;</button>
     </div>
 
+    <!-- MODAL DE SELEÇÃO DE MESA (Popup Inicial) -->
+    <div id="mesaSelectModal"
+        class="fixed inset-0 bg-black/90 flex items-center justify-center z-[130] hidden backdrop-blur-md">
+        <div class="bg-[#1e1e24] p-8 rounded-xl border border-[#cfaa56]/30 shadow-[0_0_50px_rgba(207,170,86,0.15)] w-full max-w-2xl relative">
+            <h2 class="text-2xl font-bold text-[#cfaa56] mb-1 text-center" style="font-family: var(--font-heading);">Escolha sua Mesa</h2>
+            <p class="text-xs text-slate-400 mb-4 text-center uppercase tracking-wider">Selecione uma mesa de jogo ou visualize todos os registros</p>
+            <div class="mb-4 relative">
+                <input type="text" id="mesaSelectSearchInput" placeholder="Filtrar mesas..." oninput="filterMesaSelectGrid()"
+                    class="search-input w-full rounded-full py-2 px-4 pr-10 text-sm">
+                <div class="absolute right-3 top-2 text-slate-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+            </div>
+            <div id="mesaSelectGrid" class="mesa-grid">
+                <!-- Gerado via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EXCLUSÃO DE MESA (Confirmo) -->
+    <div id="deleteMesaConfirmModal"
+        class="fixed inset-0 bg-black/80 flex items-center justify-center z-[115] hidden backdrop-blur-sm">
+        <div class="bg-[#1e1e24] p-6 rounded-xl border border-red-900/50 shadow-2xl w-full max-w-sm">
+            <h2 class="text-xl font-bold text-red-500 mb-2" style="font-family: var(--font-heading);">Deletar Mesa</h2>
+            <p class="text-sm text-slate-300 mb-2">Você está prestes a deletar a mesa <strong id="deleteMesaName" class="text-white"></strong>.</p>
+            <p class="text-xs text-red-400 mb-4">Todos os registros exclusivos desta mesa perderão a exclusividade e voltarão a ser visíveis para todos. Digite <strong class="text-white">Confirmo</strong> para prosseguir.</p>
+            <input type="text" id="deleteMesaConfirmInput" placeholder="Digite Confirmo"
+                class="search-input delete-mesa-confirm-input w-full rounded py-2 px-3 mb-4 text-sm border border-red-900/30 focus:border-red-500/50">
+            <div class="flex gap-2">
+                <button onclick="closeModal('deleteMesaConfirmModal')"
+                    class="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-2 rounded text-sm font-bold transition-colors border border-white/10">Cancelar</button>
+                <button onclick="confirmDeleteMesa()"
+                    class="flex-1 bg-red-900/20 hover:bg-red-600 hover:text-white text-red-500 py-2 rounded text-sm font-bold transition-colors border border-red-900/50">Deletar Mesa</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Fundo de Escurecimento Geral -->
     <div class="fixed inset-0 bg-black/60 z-[-1] pointer-events-none"></div>
 
     <!-- HEADER -->
     <header class="w-full bg-black/80 border-b border-white/10 backdrop-blur-md sticky top-0 z-40">
+
+        <!-- PAINEL DO DROPDOWN DE SEÇÕES -->
+        <div id="sectionsDropdown" class="hidden">
+            <div class="max-w-6xl mx-auto px-4 py-4">
+                <p class="text-[9px] uppercase tracking-widest text-slate-600 font-bold mb-3">Navegar para</p>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                    <button class="section-nav-item" onclick="selectSection('habilidades')"><span>⚡ Habilidades</span></button>
+                    <button class="section-nav-item" onclick="selectSection('itens')"><span>🗡️ Itens</span></button>
+                    <button class="section-nav-item" onclick="selectSection('personagens')"><span>🧙 Personagens</span></button>
+                    <button class="section-nav-item" onclick="selectSection('escolas')"><span>🎓 Escolas</span></button>
+                    <button class="section-nav-item" onclick="selectSection('categorias')"><span>📚 Categorias</span></button>
+                    <button class="section-nav-item" onclick="selectSection('lugares')"><span>🗺️ Lugares</span></button>
+                    <button class="section-nav-item" onclick="selectSection('treinamentos')"><span>🏋️ Treinamentos</span></button>
+                    <button class="section-nav-item wip" onclick="selectSection('racas')">
+                        <span>🧬 Raças</span>
+                        <span class="wip-badge">Em construção</span>
+                    </button>
+                    <button class="section-nav-item wip" onclick="selectSection('cidades_e_lugares')">
+                        <span>🏛️ Cidades e Lugares</span>
+                        <span class="wip-badge">Em construção</span>
+                    </button>
+                    <button class="section-nav-item wip" onclick="selectSection('reacao_elemental')">
+                        <span>🌪️ Reação Elemental</span>
+                        <span class="wip-badge">Em construção</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-4 cursor-pointer" onclick="location.href='portasinfinitum.html'">
-                <img src="imgs/archive_favicon.png" alt="Archive Logo" class="w-16 h-16 object-cover" style="mask-image: radial-gradient(circle at center, black 40%, transparent 70%); -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 70%);">
-                <h1 class="text-3xl font-black tracking-widest text-[#cfaa56]"
-                    style="font-family: var(--font-heading);">
-                    Archive From Eder
-                </h1>
+            <div class="flex items-center gap-3">
+                <!-- BOTÃO SEÇÕES — à esquerda do logo -->
+                <button id="sectionsMenuBtn" onclick="toggleSectionsMenu()" title="Seções do Arquivo" class="flex flex-col items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <svg id="sectionsChevron" xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <!-- LOGO -->
+                <div class="flex items-center gap-4 cursor-pointer" onclick="location.href='portasinfinitum.html'">
+                    <img src="imgs/archive_favicon.png" alt="Archive Logo" class="w-16 h-16 object-cover" style="mask-image: radial-gradient(circle at center, black 40%, transparent 70%); -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 70%);">
+                    <h1 class="text-3xl font-black tracking-widest text-[#cfaa56]"
+                        style="font-family: var(--font-heading);">
+                        Archive From Eder
+                    </h1>
+                </div>
             </div>
 
-            <!-- SEARCH BAR -->
-            <div class="w-full md:w-96 relative">
-                <input type="text" id="searchInput" placeholder="Buscar... ex: [escola][trovão] magia"
-                    class="search-input w-full rounded-full py-2 px-4 pr-10 text-sm" oninput="handleSearch()">
-                <div class="absolute right-3 top-2 text-slate-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+            <!-- SEARCH BAR + MESA INDICATOR -->
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <div class="w-full md:w-80 relative">
+                    <input type="text" id="searchInput" placeholder="Buscar... ex: [escola][trovão] magia"
+                        class="search-input w-full rounded-full py-2 px-4 pr-10 text-sm" oninput="handleSearch()">
+                    <div class="absolute right-3 top-2 text-slate-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div id="mesaIndicator" onclick="changeMesa()" title="Clique para mudar de mesa">
+                    <span class="mesa-icon">🎲</span>
+                    <span class="mesa-label" id="mesaIndicatorLabel">Todas</span>
+                    <span class="mesa-change-icon">⟳</span>
+                </div>
+                <div id="playerViewToggle" onclick="togglePlayerView()" title="Alternar visão de jogador">
+                    👁 <span id="playerViewLabel">Visão Admin</span>
                 </div>
             </div>
         </div>
@@ -432,6 +837,8 @@
                 onclick="switchTab('lugares', this)">Lugares</button>
             <button class="tab-btn py-3 px-2 text-sm uppercase tracking-widest font-bold whitespace-nowrap"
                 onclick="switchTab('treinamentos', this)">Treinamentos</button>
+            <button id="tabMesasBtn" class="tab-btn py-3 px-2 text-sm uppercase tracking-widest font-bold whitespace-nowrap hidden"
+                onclick="switchTab('mesas', this)" style="color: #38bdf8;">Mesas</button>
             <button id="tabAdminsBtn" class="tab-btn py-3 px-2 text-sm uppercase tracking-widest font-bold whitespace-nowrap hidden"
                 onclick="switchTab('admins', this)" style="color: #cfaa56;">Cronistas</button>
         </div>
@@ -534,6 +941,9 @@
                 <button
                     class="flex-1 py-2 rounded bg-slate-800 text-white text-sm border border-white/10 font-bold hover:bg-slate-700 min-w-[100px]"
                     onclick="switchAdminForm('treinamentos')">Treinamento</button>
+                <button
+                    class="flex-1 py-2 rounded bg-sky-900/50 text-[#38bdf8] text-sm border border-[#38bdf8]/30 font-bold hover:bg-sky-900/80 min-w-[100px]"
+                    onclick="switchAdminForm('mesas')">Mesa</button>
                 <button
                     class="flex-1 py-2 rounded bg-amber-900/50 text-[#cfaa56] text-sm border border-[#cfaa56]/30 font-bold hover:bg-amber-900/80 min-w-[100px]"
                     onclick="switchAdminForm('admins')">Cronistas</button>
@@ -814,6 +1224,68 @@
                     </div>
                 </div>
 
+                <!-- Específicos de Mesas -->
+                <div id="fieldsMesas" class="space-y-4 hidden">
+                    <div class="bg-sky-900/20 border border-sky-500/30 rounded p-3 mb-2">
+                        <p class="text-xs text-sky-400 font-bold uppercase">🎲 Criação / Edição de Mesa de Jogo</p>
+                    </div>
+                    <div class="w-full">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Background (Lore da Mesa)</label>
+                        <textarea id="inpBackgroundMesa" rows="4" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="Descreva a história e contexto da campanha..."></textarea>
+                    </div>
+                    <div class="w-full bg-black/30 p-4 rounded border border-sky-500/30">
+                        <h3 class="text-sky-400 text-sm font-bold mb-2">🎭 Jogadores da Mesa</h3>
+                        <div id="mesaPlayersList" class="space-y-3 mb-3"></div>
+                        <button type="button" onclick="addMesaPlayer()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white py-1 px-3 rounded border border-white/10">+ Adicionar Jogador</button>
+                    </div>
+                    <div class="w-full bg-black/30 p-4 rounded border border-red-500/20">
+                        <h3 class="text-red-400 text-sm font-bold mb-1">🚫 Registros Ocultos nesta Mesa</h3>
+                        <p class="text-[10px] text-slate-500 mb-2">Registros selecionados aqui ficam invisíveis para jogadores quando esta mesa estiver ativa.</p>
+                        <div class="relative">
+                            <div id="hiddenRecordsTagsBox" class="records-tags-container" onclick="document.getElementById('hiddenRecordsSearchInput').focus()">
+                                <input type="text" id="hiddenRecordsSearchInput" class="records-search-input" placeholder="Buscar registro por ID ou nome..." autocomplete="off" oninput="filterHiddenRecordsDropdown()" onfocus="filterHiddenRecordsDropdown()">
+                            </div>
+                            <div id="hiddenRecordsDropdown" class="records-dropdown"></div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-1">Clique para adicionar. Registros ocultos aparecem como tags acima.</p>
+                    </div>
+                </div>
+
+                <!-- Campos de Mesa (Exclusivo / Exclusão) - visível para todos exceto mesas e admins -->
+                <div id="mesaFieldsCommon" class="space-y-3 hidden">
+                    <!-- Mesa Selecionada (select) -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Mesa</label>
+                            <div id="mesaPickerWrapper" class="relative">
+                                <div class="search-input w-full rounded px-3 py-2 text-sm flex items-center gap-1 cursor-text" onclick="document.getElementById('inpMesaSearchInput').focus()">
+                                    <input type="hidden" id="inpMesaSelect" value="">
+                                    <input type="text" id="inpMesaSearchInput" class="bg-transparent outline-none flex-1 min-w-0 text-sm" placeholder="Todas (Padrão)" autocomplete="off" oninput="filterMesaPickerDropdown()" onfocus="filterMesaPickerDropdown()">
+                                    <button type="button" id="inpMesaClearBtn" onclick="clearMesaPicker(event)" class="text-slate-400 hover:text-white text-xs hidden leading-none px-1">✕</button>
+                                </div>
+                                <div id="mesaPickerDropdown" class="records-dropdown"></div>
+                            </div>
+                        </div>
+                        <div id="exclusivoContainer" class="exclusive-container">
+                            <label>
+                                <input type="checkbox" id="inpExclusivo">
+                                Exclusivo desta Mesa
+                            </label>
+                            <span class="exclusive-info">Só visível nesta mesa</span>
+                        </div>
+                    </div>
+                    <!-- Exclusão de Mesas -->
+                    <div class="bg-black/30 p-3 rounded border border-red-500/20">
+                        <label class="block text-[10px] text-red-400 uppercase font-bold mb-2">Exclusão de Mesas (registro não aparece nestas mesas)</label>
+                        <div class="relative">
+                            <div id="mesaExclTagsBox" class="mesa-exclusion-container" onclick="document.getElementById('mesaExclSearchInput').focus()">
+                                <input type="text" id="mesaExclSearchInput" class="records-search-input" placeholder="Buscar mesa para excluir..." autocomplete="off" oninput="filterMesaExclDropdown()" onfocus="filterMesaExclDropdown()">
+                            </div>
+                            <div id="mesaExclDropdown" class="records-dropdown"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="pt-4 flex gap-3">
                     <button type="button" onclick="limparCamposAdmin()"
                         class="w-1/3 bg-slate-700 hover:bg-slate-600 text-white py-3 rounded font-bold uppercase tracking-widest transition-colors border border-white/10 text-xs flex items-center justify-center shadow-md">
@@ -841,7 +1313,8 @@
             categorias: [],
             lugares: [],
             admins: [],
-            treinamentos: []
+            treinamentos: [],
+            mesas: []
         };
 
         // Mocks Iniciais para quando a API não estiver disponível / estiver vazia
@@ -870,15 +1343,28 @@
                 { id: "l1", nome: "Faera", descricao: "A grande floresta mística e lar dos elfos e fadas.", imagem: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=400", cor: "#84cc16" },
                 { id: "l2", nome: "Castelo Infinitum", descricao: "O nexo de todas as dimensões conhecidas.", imagem: "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?auto=format&fit=crop&q=80&w=400", cor: "#9333ea" }
             ],
-            admins: [
-                { nome: "Cronista_Mestre", senha: btoa("senha123"), access_level: 1 },
-                { nome: "Cronista_Limitado", senha: btoa("senha123"), access_level: 2, tabs_allowed: ["habilidades", "itens"] },
-                { nome: "Cronista_Especifico", senha: btoa("senha123"), access_level: 3, records_allowed: ["h1", "i2"] }
-            ],
+            admins: [],
             treinamentos: [
                 { id: "t1", nome: "Lâmina Oculta", descricao: "Treinamento avançado em técnicas de assassinato.", imagem: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=400", cor: "#8b0000" }
+            ],
+            mesas: [
+                { id: "mesa_1", titulo: "A Queda dos Reinos", nome: "A Queda dos Reinos", background: "Uma campanha épica sobre a destruição dos reinos antigos e a ascensão de novos heróis.", mestre: "Cronista_Mestre", jogadores: [{ nome: "Jogador1", personagens: ["p1"] }, { nome: "Jogador2", personagens: ["p2"] }] }
             ]
         };
+
+        // ===== MESA STATE =====
+        let selectedMesa = null; // null = 'Todas'
+        let playerViewMode = false; // Admin vê como jogador
+
+        function sanitize(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
 
         // ================= INTEGRAÇÃO API (DYNAMO DB) =================
         async function apiFetch(endpoint, method, data = null) {
@@ -916,6 +1402,7 @@
                 if (!database.lugares) database.lugares = defaultMocks.lugares;
                 if (!database.admins) database.admins = defaultMocks.admins;
                 if (!database.treinamentos) database.treinamentos = defaultMocks.treinamentos;
+                if (!database.mesas) database.mesas = defaultMocks.mesas;
             } else {
                 database = JSON.parse(JSON.stringify(defaultMocks));
             }
@@ -923,10 +1410,24 @@
             // Se a API retornar sucesso, fazemos merge ou sobreposição
             if (apiData && apiData.habilidades) {
                 database = apiData;
+                if (!database.mesas) database.mesas = [];
             }
 
             document.getElementById('loading').classList.add('hidden');
+            
+            // Verificar se já tinha mesa em sessionStorage
+            let savedMesa = sessionStorage.getItem('woe_selected_mesa');
+            if (savedMesa && savedMesa !== 'null') {
+                selectedMesa = savedMesa;
+                updateMesaIndicator();
+            }
+            
             renderCards();
+            
+            // Mostrar popup de seleção de mesa se não houver mesa salva na session
+            if (!savedMesa) {
+                showMesaSelectPopup();
+            }
         }
 
         async function saveToDatabase(type, newItem, isEdit) {
@@ -977,9 +1478,39 @@
             const noResults = document.getElementById('noResults');
             grid.innerHTML = '';
 
+            // Mesas tab renderiza cards de mesa especiais
+            if (currentTab === 'mesas') {
+                let mesas = database.mesas || [];
+                let searchFiltered = filterItems(mesas);
+                if (searchFiltered.length === 0) {
+                    noResults.classList.remove('hidden');
+                } else {
+                    noResults.classList.add('hidden');
+                    searchFiltered.forEach(mesa => {
+                        grid.appendChild(createMesaCardHTML(mesa));
+                    });
+                }
+                return;
+            }
+
             let items = database[currentTab] || [];
             let filtered = filterItems(items);
-
+            
+            // Aplicar filtragem por mesa
+            let shouldFilterMesa = (isAdmin && !playerViewMode) ? false : true;
+            if (shouldFilterMesa && selectedMesa) {
+                let mesaData = (database.mesas || []).find(m => m.id === selectedMesa);
+                let registrosOcultos = mesaData ? (mesaData.registros_ocultos || []) : [];
+                filtered = filtered.filter(item => {
+                    // Registro exclusivo de outra mesa → ocultar
+                    if (item.mesa_exclusiva && item.mesa_exclusiva !== selectedMesa) return false;
+                    // Registro excluído desta mesa (via campo do registro) → ocultar
+                    if (item.mesas_excluidas && item.mesas_excluidas.includes(selectedMesa)) return false;
+                    // Registro marcado como oculto na configuração da mesa → ocultar
+                    if (registrosOcultos.includes(item.id)) return false;
+                    return true;
+                });
+            }
             if (filtered.length === 0) {
                 noResults.classList.remove('hidden');
             } else {
@@ -988,6 +1519,79 @@
                     grid.appendChild(createCardHTML(item, currentTab));
                 });
             }
+        }
+
+        function createMesaCardHTML(mesa) {
+            let div = document.createElement('div');
+            div.className = 'item-card flex flex-col h-full cursor-pointer hover:border-sky-500/50 transition-colors duration-300';
+            div.style.borderColor = 'rgba(56,189,248,0.3)';
+            div.style.backgroundColor = 'rgba(56,189,248,0.05)';
+            div.setAttribute('onclick', 'this.classList.toggle("expanded"); let tc = this.querySelector(".topics-container"); if(tc) tc.classList.toggle("hidden");');
+            
+            let playersCount = mesa.jogadores ? mesa.jogadores.length : 0;
+            let playersList = '';
+            if (mesa.jogadores && mesa.jogadores.length > 0) {
+                playersList = `<div class="mt-4 pt-3 border-t border-white/10 hidden topics-container">
+                    <h4 class="text-sky-400 font-bold mb-2 text-xs uppercase tracking-widest">🎭 Jogadores</h4>
+                    <ul class="space-y-2">
+                        ${mesa.jogadores.map(j => {
+                            let charNames = '';
+                            if (j.personagens && j.personagens.length > 0) {
+                                charNames = j.personagens.map(pid => {
+                                    let char = (database.personagens || []).find(p => p.id === pid);
+                                    return sanitize(char ? char.nome : pid);
+                                }).join(', ');
+                            }
+                            return `<li class="bg-black/30 p-2 rounded text-xs border border-white/5">
+                                <strong class="text-sky-400">${sanitize(j.nome)}</strong>
+                                ${charNames ? `<span class="text-slate-400 ml-2">→ ${charNames}</span>` : '<span class="text-slate-500 ml-2">Sem personagem</span>'}
+                            </li>`;
+                        }).join('')}
+                    </ul>
+                </div>`;
+            }
+
+            let adminBtns = '';
+            if (isAdmin && loggedAdmin) {
+                let canEdit = (loggedAdmin.access_level === 1 || !loggedAdmin.access_level || mesa.mestre === loggedAdmin.nome);
+                let canDelete = canEdit;
+                if (canEdit || canDelete) {
+                    adminBtns = '<div class="absolute top-3 right-3 flex gap-2 z-10">';
+                    if (canEdit) {
+                        adminBtns += `<button onclick="event.stopPropagation(); editItem('${mesa.id}', 'mesas')" class="text-slate-400 hover:text-white p-1.5 bg-black/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors hover:bg-slate-800 border border-white/20" title="Editar">✏️</button>`;
+                    }
+                    if (canDelete) {
+                        adminBtns += `<button onclick="event.stopPropagation(); promptDeleteMesa('${mesa.id}')" class="text-slate-400 hover:text-red-500 p-1.5 bg-black/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors hover:bg-red-900/50 border border-white/20" title="Excluir">🗑️</button>`;
+                    }
+                    adminBtns += '</div>';
+                }
+            }
+
+            let imgHtml = '';
+            if (mesa.imagem && mesa.imagem.trim() !== '') {
+                imgHtml = `<img src="${mesa.imagem}" alt="${mesa.titulo || mesa.nome}" class="card-image">`;
+            } else {
+                imgHtml = `<div class="card-image w-full h-full" style="background: radial-gradient(circle at center, rgba(56,189,248,0.3) 0%, #111111 100%);"></div>`;
+            }
+
+            div.innerHTML = `
+                <div class="card-image-wrapper">
+                    ${imgHtml}
+                    <div class="absolute top-3 left-3 flex gap-2 flex-wrap z-10">
+                        <span class="tag-pill blue">🎲 Mesa</span>
+                        <span class="tag-pill" style="background:rgba(56,189,248,0.15);border-color:rgba(56,189,248,0.3);color:#38bdf8;">${playersCount} jogador${playersCount !== 1 ? 'es' : ''}</span>
+                    </div>
+                    ${adminBtns}
+                </div>
+                <div class="p-5 flex flex-col flex-grow">
+                    <h3 class="text-xl font-bold text-sky-400 mb-1" style="font-family: var(--font-heading);">${sanitize(mesa.titulo || mesa.nome)}</h3>
+                    <div class="text-[10px] text-slate-500 uppercase tracking-widest mb-2">Mestre: ${sanitize(mesa.mestre) || '?'}</div>
+                    ${isAdmin ? `<span class="text-[10px] text-slate-500 font-mono -mt-1 mb-2 select-all" title="ID da mesa">ID: ${sanitize(mesa.id)}</span>` : ''}
+                    <div class="text-xs text-slate-400 italic mb-3 border-l-2 border-sky-800 pl-2">"${sanitize(mesa.background) || 'Sem descrição.'}"</div>
+                    ${playersList}
+                </div>
+            `;
+            return div;
         }
 
         function createCardHTML(data, type) {
@@ -1046,13 +1650,13 @@
                 if (data.tipoEscola !== 'Treinamento' && database.escolas && data.escola) {
                     let schoolObj = database.escolas.find(e => e.nome === data.escola);
                     if (schoolObj && schoolObj.lugar) {
-                        lugarSubtext = ` <span class="opacity-70 ml-1 font-normal text-[9px]">(Lugar: ${schoolObj.lugar})</span>`;
+                        lugarSubtext = ` <span class="opacity-70 ml-1 font-normal text-[9px]">(Lugar: ${sanitize(schoolObj.lugar)})</span>`;
                     }
                 }
 
                 tagsHtml = `
-                    <span class="tag-pill">${data.tipo || 'N/A'}</span>
-                    <span class="tag-pill tag-custom flex items-center ${extraTagClass}" style="--tag-color: ${schoolColor}; --tag-bg: ${schoolColor}26; --tag-bg-hover: ${schoolColor}99; border-width: 2px;"${tagTooltip}>${tagLabel}${data.escola || 'N/A'}${lugarSubtext}${rankHtml}</span>
+                    <span class="tag-pill">${sanitize(data.tipo) || 'N/A'}</span>
+                    <span class="tag-pill tag-custom flex items-center ${extraTagClass}" style="--tag-color: ${schoolColor}; --tag-bg: ${schoolColor}26; --tag-bg-hover: ${schoolColor}99; border-width: 2px;"${tagTooltip}>${tagLabel}${sanitize(data.escola) || 'N/A'}${lugarSubtext}${rankHtml}</span>
                 `;
 
                 let habTopicsHtml = '';
@@ -1069,8 +1673,8 @@
                         <h4 class="text-[#cfaa56] font-bold mb-2 text-xs uppercase tracking-widest">${topicsTitle}</h4>
                         <ul class="space-y-2">
                             ${topicsList.map(t => {
-                                let tagHtml = t.tag && t.tag !== 'Padrão' ? `<span class="bg-slate-800 border border-white/20 px-1.5 py-0.5 rounded text-[9px] uppercase ml-2 text-white shadow-md">${t.tag}</span>` : '';
-                                return `<li class="bg-black/30 p-2 rounded text-xs border border-white/5"><strong class="text-[#cfaa56] flex items-center flex-wrap mb-1">${t.title}${tagHtml}</strong><span class="text-slate-300">${t.desc}</span></li>`;
+                                let tagHtml = t.tag && t.tag !== 'Padrão' ? `<span class="bg-slate-800 border border-white/20 px-1.5 py-0.5 rounded text-[9px] uppercase ml-2 text-white shadow-md">${sanitize(t.tag)}</span>` : '';
+                                return `<li class="bg-black/30 p-2 rounded text-xs border border-white/5"><strong class="text-[#cfaa56] flex items-center flex-wrap mb-1">${sanitize(t.title)}${tagHtml}</strong><span class="text-slate-300">${sanitize(t.desc)}</span></li>`;
                             }).join('')}
                         </ul>
                     </div>`;
@@ -1080,11 +1684,11 @@
 
                 detailsHtml = `
                     <div class="grid grid-cols-2 gap-2 text-xs mb-3 text-slate-400">
-                        <div><strong class="text-slate-300">Recarga:</strong> ${data.recarga || '-'}</div>
-                        <div><strong class="text-slate-300">Custo:</strong> ${data.custo || '-'}</div>
+                        <div><strong class="text-slate-300">Recarga:</strong> ${sanitize(data.recarga) || '-'}</div>
+                        <div><strong class="text-slate-300">Custo:</strong> ${sanitize(data.custo) || '-'}</div>
                     </div>
-                    ${data.acao ? `<div class="text-sm text-red-400 mb-2 font-bold bg-red-900/20 p-2 rounded border border-red-500/20">Ação: ${data.acao}</div>` : ''}
-                    <p class="text-sm text-slate-300 leading-relaxed mt-2 flex-grow">${data.descricao || ''}</p>
+                    ${data.acao ? `<div class="text-sm text-red-400 mb-2 font-bold bg-red-900/20 p-2 rounded border border-red-500/20">Ação: ${sanitize(data.acao)}</div>` : ''}
+                    <p class="text-sm text-slate-300 leading-relaxed mt-2 flex-grow">${sanitize(data.descricao) || ''}</p>
                     ${habTopicsHtml}
                 `;
             }
@@ -1104,9 +1708,9 @@
                     extraClass = ` raridade-${rClass}`;
                 }
                 tagsHtml = `
-                    <span class="tag-pill">${data.tipo || 'Outro'}</span>
-                    <span class="tag-pill">Capítulo: ${data.capitulo || '-'}</span>
-                    <span class="tag-pill tag-custom flex items-center" style="--tag-color: ${rarityColor}; --tag-bg: transparent; --tag-bg-hover: ${rarityColor}99; border-width: 2px;">${data.raridade || 'Comum'}</span>
+                    <span class="tag-pill">${sanitize(data.tipo) || 'Outro'}</span>
+                    <span class="tag-pill">Capítulo: ${sanitize(data.capitulo) || '-'}</span>
+                    <span class="tag-pill tag-custom flex items-center" style="--tag-color: ${rarityColor}; --tag-bg: transparent; --tag-bg-hover: ${rarityColor}99; border-width: 2px;">${sanitize(data.raridade) || 'Comum'}</span>
                 `;
                 baseColor = rarityColor;
                 let specialAbilitiesHtml = '';
@@ -1116,18 +1720,18 @@
                     specialAbilitiesHtml = `<div class="mt-4 pt-3 border-t border-white/10 hidden topics-container">
                         <h4 class="text-[#cfaa56] font-bold mb-2 text-xs uppercase tracking-widest">Special Ability</h4>
                         <ul class="space-y-2">
-                            ${effectsList.map(sa => `<li class="bg-black/30 p-2 rounded text-xs border border-white/5"><strong class="text-[#cfaa56] block mb-1">${sa.title}</strong><span class="text-slate-300">${sa.desc}</span></li>`).join('')}
+                            ${effectsList.map(sa => `<li class="bg-black/30 p-2 rounded text-xs border border-white/5"><strong class="text-[#cfaa56] block mb-1">${sanitize(sa.title)}</strong><span class="text-slate-300">${sanitize(sa.desc)}</span></li>`).join('')}
                         </ul>
                     </div>`;
                 }
 
                 detailsHtml = `
                     <div class="grid grid-cols-2 gap-2 text-xs mb-3 text-slate-400">
-                        <div><strong class="text-slate-300">Obtenção:</strong> ${data.obtencao || '-'}</div>
-                        <div><strong class="text-slate-300">Dano:</strong> ${data.dano || '-'}</div>
-                        <div class="col-span-2"><strong class="text-slate-300">Atr. Chave:</strong> ${data.atributos_chave || '-'}</div>
+                        <div><strong class="text-slate-300">Obtenção:</strong> ${sanitize(data.obtencao) || '-'}</div>
+                        <div><strong class="text-slate-300">Dano:</strong> ${sanitize(data.dano) || '-'}</div>
+                        <div class="col-span-2"><strong class="text-slate-300">Atr. Chave:</strong> ${sanitize(data.atributos_chave) || '-'}</div>
                     </div>
-                    <p class="text-sm text-slate-300 leading-relaxed mt-2 flex-grow">${data.descricao || ''}</p>
+                    <p class="text-sm text-slate-300 leading-relaxed mt-2 flex-grow">${sanitize(data.descricao) || ''}</p>
                     ${specialAbilitiesHtml}
                 `;
                 
@@ -1141,7 +1745,7 @@
                         if (lugarObj && lugarObj.cor) lugarColor = lugarObj.cor;
                     }
                     baseColor = lugarColor;
-                    tagsHtml = `<span class="tag-pill tag-custom flex items-center" style="--tag-color: ${lugarColor}; --tag-bg: ${lugarColor}1a; --tag-bg-hover: ${lugarColor}99; border-width: 2px;">Origem: ${data.origem}</span>`;
+                    tagsHtml = `<span class="tag-pill tag-custom flex items-center" style="--tag-color: ${lugarColor}; --tag-bg: ${lugarColor}1a; --tag-bg-hover: ${lugarColor}99; border-width: 2px;">Origem: ${sanitize(data.origem)}</span>`;
                 }
 
                 let capitulosHtml = '';
@@ -1152,9 +1756,9 @@
                             ${data.capitulos.map(cap => {
                                 let imgHtml = '';
                                 if (cap.image && cap.image.trim() !== '') {
-                                    imgHtml = `<img src="${cap.image}" class="mt-2 w-full max-h-48 object-cover rounded border border-white/10 cursor-pointer hover:border-[#cfaa56]/50 transition-colors" onclick="event.stopPropagation(); openImageModal('${cap.image}')">`;
+                                    imgHtml = `<img src="${sanitize(cap.image)}" class="mt-2 w-full max-h-48 object-cover rounded border border-white/10 cursor-pointer hover:border-[#cfaa56]/50 transition-colors" onclick="event.stopPropagation(); openImageModal('${sanitize(cap.image)}')">`;
                                 }
-                                return `<li class="bg-black/30 p-3 rounded text-xs border border-white/5"><strong class="text-[#cfaa56] block mb-1 text-sm">${cap.title}</strong><span class="text-slate-300 leading-relaxed block whitespace-pre-wrap">${cap.desc}</span>${imgHtml}</li>`;
+                                return `<li class="bg-black/30 p-3 rounded text-xs border border-white/5"><strong class="text-[#cfaa56] block mb-1 text-sm">${sanitize(cap.title)}</strong><span class="text-slate-300 leading-relaxed block whitespace-pre-wrap">${sanitize(cap.desc)}</span>${imgHtml}</li>`;
                             }).join('')}
                         </ul>
                     </div>`;
@@ -1162,9 +1766,9 @@
 
                 detailsHtml = `
                     <div class="text-xs text-slate-400 italic mb-3 border-l-2 border-slate-600 pl-2">
-                        "${data.lore || data.descricao || 'Nenhum registro encontrado.'}"
+                        "${sanitize(data.lore || data.descricao) || 'Nenhum registro encontrado.'}"
                     </div>
-                    <p class="text-sm text-slate-300 leading-relaxed mt-2 flex-grow">${data.descricao || ''}</p>
+                    <p class="text-sm text-slate-300 leading-relaxed mt-2 flex-grow">${sanitize(data.descricao) || ''}</p>
                     ${capitulosHtml}
                 `;
             } else if (type === 'admins') {
@@ -1178,9 +1782,9 @@
                 
                 let extraInfo = '';
                 if (data.access_level === 2 && data.tabs_allowed) {
-                    extraInfo = `<div class="text-xs text-slate-400 mt-2"><strong class="text-slate-300">Abas:</strong> ${data.tabs_allowed.join(', ')}</div>`;
+                    extraInfo = `<div class="text-xs text-slate-400 mt-2"><strong class="text-slate-300">Abas:</strong> ${data.tabs_allowed.map(sanitize).join(', ')}</div>`;
                 } else if (data.access_level === 3 && data.records_allowed) {
-                    extraInfo = `<div class="text-xs text-slate-400 mt-2"><strong class="text-slate-300">Registros:</strong> ${data.records_allowed.join(', ')}</div>`;
+                    extraInfo = `<div class="text-xs text-slate-400 mt-2"><strong class="text-slate-300">Registros:</strong> ${data.records_allowed.map(sanitize).join(', ')}</div>`;
                 }
                 
                 detailsHtml = `
@@ -1267,9 +1871,9 @@
                     ${adminBtns}
                 </div>
                 <div class="p-5 flex flex-col flex-grow">
-                    <h3 class="text-xl font-bold text-[#cfaa56] mb-2" style="font-family: var(--font-heading);">${data.nome}</h3>
-                    ${isAdmin ? `<span class="text-[10px] text-slate-500 font-mono -mt-1 mb-2 select-all" title="ID do registro">ID: ${data.id || data.nome}</span>` : ''}
-                    ${isAdmin && (data.created_by || data.updated_by) ? `<div class="text-[10px] text-slate-600 mb-2 border-l-2 border-slate-700 pl-2 space-y-0.5">${data.created_by ? `<div>📝 Criado por <strong class="text-slate-400">${data.created_by}</strong> em ${data.created_at || '?'}</div>` : ''}${data.updated_by ? `<div>✏️ Editado por <strong class="text-slate-400">${data.updated_by}</strong> em ${data.updated_at || '?'}</div>` : ''}</div>` : ''}
+                    <h3 class="text-xl font-bold text-[#cfaa56] mb-2" style="font-family: var(--font-heading);">${sanitize(data.nome)}</h3>
+                    ${isAdmin ? `<span class="text-[10px] text-slate-500 font-mono -mt-1 mb-2 select-all" title="ID do registro">ID: ${sanitize(data.id || data.nome)}</span>` : ''}
+                    ${isAdmin && (data.created_by || data.updated_by) ? `<div class="text-[10px] text-slate-600 mb-2 border-l-2 border-slate-700 pl-2 space-y-0.5">${data.created_by ? `<div>📝 Criado por <strong class="text-slate-400">${sanitize(data.created_by)}</strong> em ${sanitize(data.created_at) || '?'}</div>` : ''}${data.updated_by ? `<div>✏️ Editado por <strong class="text-slate-400">${sanitize(data.updated_by)}</strong> em ${sanitize(data.updated_at) || '?'}</div>` : ''}</div>` : ''}
                     ${detailsHtml}
                 </div>
             `;
@@ -1282,14 +1886,8 @@
         }
 
         function parseSearchQuery(query) {
-            let tags = [];
             let text = query;
-            const regex = /\[(.*?)\]/g;
             let match;
-            while ((match = regex.exec(query)) !== null) {
-                // armazena ex: "escola][trovão" (se o usuário digitar [escola][trovão])
-                // ou simplesmente guarda cada valor. A lógica abaixo separa.
-            }
 
             // Nova lógica para suportar [chave][valor]
             const regexChaveValor = /\[(.*?)\]\[(.*?)\]/g;
@@ -1357,9 +1955,9 @@
             div.className = 'char-capitulo-item bg-black/40 p-2 rounded relative border border-white/10 flex flex-col gap-2';
             div.innerHTML = `
                 <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-400 text-xs font-bold">X</button>
-                <input type="text" placeholder="Título (Ex: Capítulo 1)" value="${title}" class="char-capitulo-title search-input w-full rounded px-2 py-1 text-xs pr-6">
-                <textarea rows="2" placeholder="Lore do Capítulo" class="char-capitulo-desc search-input w-full rounded px-2 py-1 text-xs">${desc}</textarea>
-                <input type="text" placeholder="URL da Imagem (Opcional)" value="${image}" class="char-capitulo-image search-input w-full rounded px-2 py-1 text-xs">
+                <input type="text" placeholder="Título (Ex: Capítulo 1)" value="${sanitize(title)}" class="char-capitulo-title search-input w-full rounded px-2 py-1 text-xs pr-6">
+                <textarea rows="2" placeholder="Lore do Capítulo" class="char-capitulo-desc search-input w-full rounded px-2 py-1 text-xs">${sanitize(desc)}</textarea>
+                <input type="text" placeholder="URL da Imagem (Opcional)" value="${sanitize(image)}" class="char-capitulo-image search-input w-full rounded px-2 py-1 text-xs">
             `;
             list.appendChild(div);
         }
@@ -1510,6 +2108,14 @@
             let charCapitulos = document.getElementById('capitulosCharList');
             if(charCapitulos) charCapitulos.innerHTML = '';
             clearRecordTags();
+            
+            // Clear mesa fields
+            let mesaPlayers = document.getElementById('mesaPlayersList');
+            if(mesaPlayers) mesaPlayers.innerHTML = '';
+            clearMesaExclTags();
+            clearHiddenRecordTags();
+            clearMesaPicker();
+            
             document.getElementById('editItemId').value = '';
             
             let btnSubmit = document.getElementById('btnSubmitAdmin');
@@ -1607,7 +2213,7 @@
             }
             if (!itemToEdit) return;
 
-            document.getElementById('inpNome').value = itemToEdit.nome || '';
+            document.getElementById('inpNome').value = (type === 'mesas') ? (itemToEdit.titulo || itemToEdit.nome || '') : (itemToEdit.nome || '');
             document.getElementById('inpImagem').value = itemToEdit.imagem || '';
             document.getElementById('inpDescricao').value = itemToEdit.descricao || '';
             document.getElementById('editItemId').value = (type === 'admins') ? itemToEdit.nome : id;
@@ -1677,6 +2283,36 @@
                     clearRecordTags();
                     itemToEdit.records_allowed.forEach(rid => addRecordTag(rid));
                 }
+            } else if (type === 'mesas') {
+                document.getElementById('inpBackgroundMesa').value = itemToEdit.background || '';
+                document.getElementById('mesaPlayersList').innerHTML = '';
+                if (itemToEdit.jogadores && itemToEdit.jogadores.length > 0) {
+                    itemToEdit.jogadores.forEach(j => addMesaPlayer(j.nome, j.personagens));
+                }
+                clearHiddenRecordTags();
+                if (itemToEdit.registros_ocultos && itemToEdit.registros_ocultos.length > 0) {
+                    itemToEdit.registros_ocultos.forEach(rid => addHiddenRecordTag(rid));
+                }
+            }
+
+            // Populate mesa fields for content types
+            let contentTypes = ['habilidades', 'itens', 'personagens', 'escolas', 'categorias', 'lugares', 'treinamentos'];
+            if (contentTypes.includes(type)) {
+                populateMesaSelect();
+                // Set mesa_exclusiva
+                if (itemToEdit.mesa_exclusiva) {
+                    let mesaObj = (database.mesas || []).find(m => m.id === itemToEdit.mesa_exclusiva);
+                    selectMesaPicker(itemToEdit.mesa_exclusiva, mesaObj ? (mesaObj.titulo || mesaObj.nome) : itemToEdit.mesa_exclusiva);
+                    document.getElementById('inpExclusivo').checked = true;
+                } else {
+                    clearMesaPicker();
+                    document.getElementById('inpExclusivo').checked = false;
+                }
+                // Set mesas_excluidas
+                clearMesaExclTags();
+                if (itemToEdit.mesas_excluidas && itemToEdit.mesas_excluidas.length > 0) {
+                    itemToEdit.mesas_excluidas.forEach(mid => addMesaExclTag(mid));
+                }
             }
 
             updateAdminTabsVisibility();
@@ -1728,7 +2364,7 @@
             div.innerHTML = `
                 <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-400 text-xs font-bold">X</button>
                 <div class="flex gap-2 mb-2 pr-6">
-                    <input type="text" placeholder="Título do Tópico" value="${title}" class="hab-topic-title search-input flex-grow rounded px-2 py-1 text-xs">
+                    <input type="text" placeholder="Título do Tópico" value="${sanitize(title)}" class="hab-topic-title search-input flex-grow rounded px-2 py-1 text-xs">
                     <select class="hab-topic-tag search-input rounded px-2 py-1 text-xs w-28">
                         <option value="Padrão" ${tag === 'Padrão' ? 'selected' : ''}>Padrão</option>
                         <option value="Passivo" ${tag === 'Passivo' ? 'selected' : ''}>Passivo</option>
@@ -1736,7 +2372,7 @@
                         <option value="Reforço" ${tag === 'Reforço' ? 'selected' : ''}>Reforço</option>
                     </select>
                 </div>
-                <textarea rows="2" placeholder="Descrição do Tópico" class="hab-topic-desc search-input w-full rounded px-2 py-1 text-xs">${desc}</textarea>
+                <textarea rows="2" placeholder="Descrição do Tópico" class="hab-topic-desc search-input w-full rounded px-2 py-1 text-xs">${sanitize(desc)}</textarea>
             `;
             list.appendChild(div);
         }
@@ -1747,8 +2383,8 @@
             div.className = 'sa-item bg-black/40 p-2 rounded relative border border-white/10';
             div.innerHTML = `
                 <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-400 text-xs font-bold">X</button>
-                <input type="text" placeholder="Título (Ex: Special Ability)" value="${title}" class="sa-title search-input w-full rounded px-2 py-1 text-xs mb-2">
-                <textarea rows="2" placeholder="Descrição da habilidade ou bônus" class="sa-desc search-input w-full rounded px-2 py-1 text-xs">${desc}</textarea>
+                <input type="text" placeholder="Título (Ex: Special Ability)" value="${sanitize(title)}" class="sa-title search-input w-full rounded px-2 py-1 text-xs mb-2">
+                <textarea rows="2" placeholder="Descrição da habilidade ou bônus" class="sa-desc search-input w-full rounded px-2 py-1 text-xs">${sanitize(desc)}</textarea>
             `;
             list.appendChild(div);
         }
@@ -1797,7 +2433,19 @@
                     if (adminTabBtn) {
                         adminTabBtn.classList.toggle('hidden', loggedAdmin.access_level !== 1);
                     }
-                    
+
+                    // Mostrar aba Mesas no header para Level 1
+                    let mesasTabBtn = document.getElementById('tabMesasBtn');
+                    if (mesasTabBtn) {
+                        mesasTabBtn.classList.toggle('hidden', loggedAdmin.access_level !== 1);
+                    }
+
+                    // Mostrar botão de alternância de visão para todos os admins
+                    let playerViewBtn = document.getElementById('playerViewToggle');
+                    if (playerViewBtn) {
+                        playerViewBtn.style.display = 'flex';
+                    }
+
                     if (loggedAdmin.access_level !== 3) {
                         openAdminConsole();
                     } else {
@@ -1820,9 +2468,15 @@
             tabBtns.forEach(btn => {
                 let match = btn.getAttribute('onclick').match(/'([^']+)'/);
                 if (match && match[1] === type) {
-                    btn.className = 'flex-1 py-2 rounded bg-[#cfaa56] text-black text-sm border border-[#cfaa56] font-bold min-w-[100px] shadow-[0_0_10px_rgba(207,170,86,0.3)]';
+                    if (match[1] === 'mesas') {
+                        btn.className = 'flex-1 py-2 rounded bg-sky-500 text-white text-sm border border-sky-500 font-bold min-w-[100px] shadow-[0_0_10px_rgba(56,189,248,0.3)]';
+                    } else {
+                        btn.className = 'flex-1 py-2 rounded bg-[#cfaa56] text-black text-sm border border-[#cfaa56] font-bold min-w-[100px] shadow-[0_0_10px_rgba(207,170,86,0.3)]';
+                    }
                 } else if (match && match[1] === 'admins') {
                     btn.className = 'flex-1 py-2 rounded bg-amber-900/50 text-[#cfaa56] text-sm border border-[#cfaa56]/30 font-bold hover:bg-amber-900/80 min-w-[100px]';
+                } else if (match && match[1] === 'mesas') {
+                    btn.className = 'flex-1 py-2 rounded bg-sky-900/50 text-[#38bdf8] text-sm border border-[#38bdf8]/30 font-bold hover:bg-sky-900/80 min-w-[100px]';
                 } else {
                     btn.className = 'flex-1 py-2 rounded bg-slate-800 text-white text-sm border border-white/10 font-bold hover:bg-slate-700 min-w-[100px]';
                 }
@@ -1835,6 +2489,7 @@
             document.getElementById('fieldsLugares').classList.add('hidden');
             document.getElementById('fieldsTreinamentos').classList.add('hidden');
             document.getElementById('fieldsAdmins').classList.add('hidden');
+            document.getElementById('fieldsMesas').classList.add('hidden');
 
             if (type === 'habilidades') document.getElementById('fieldsHabilidades').classList.remove('hidden');
             if (type === 'itens') document.getElementById('fieldsItens').classList.remove('hidden');
@@ -1844,13 +2499,29 @@
             if (type === 'lugares') document.getElementById('fieldsLugares').classList.remove('hidden');
             if (type === 'treinamentos') document.getElementById('fieldsTreinamentos').classList.remove('hidden');
             if (type === 'admins') document.getElementById('fieldsAdmins').classList.remove('hidden');
+            if (type === 'mesas') document.getElementById('fieldsMesas').classList.remove('hidden');
 
-            // Para admins, esconder campos comuns desnecessários (Imagem, Descrição)
+            // Mostrar campos de mesa (exclusivo/exclusão) para tipos de conteúdo
+            let mesaCommon = document.getElementById('mesaFieldsCommon');
+            let contentTypes = ['habilidades', 'itens', 'personagens', 'escolas', 'categorias', 'lugares', 'treinamentos'];
+            if (contentTypes.includes(type)) {
+                mesaCommon.classList.remove('hidden');
+                populateMesaSelect();
+            } else {
+                mesaCommon.classList.add('hidden');
+            }
+
+            // Para admins e mesas, esconder campos comuns desnecessários
             let commonImagem = document.getElementById('inpImagem').closest('.grid');
             let commonDesc = document.getElementById('inpDescricao').closest('.w-full');
             let descField = document.getElementById('inpDescricao');
             if (type === 'admins') {
                 if (commonImagem) commonImagem.querySelector('#inpImagem').parentElement.style.display = 'none';
+                if (commonDesc) commonDesc.style.display = 'none';
+                if (descField) descField.removeAttribute('required');
+            } else if (type === 'mesas') {
+                // Mesas: mostrar imagem (opcional), esconder descrição (tem background)
+                if (commonImagem) commonImagem.querySelector('#inpImagem').parentElement.style.display = 'block';
                 if (commonDesc) commonDesc.style.display = 'none';
                 if (descField) descField.removeAttribute('required');
             } else {
@@ -1965,6 +2636,62 @@
                 } else if (newItem.access_level === 3) {
                     newItem.records_allowed = getRecordTagIds();
                 }
+            } else if (type === 'mesas') {
+                // Mesa usa 'titulo' como nome de exibição
+                newItem.titulo = document.getElementById('inpNome').value;
+                // Remover campos de base que não se aplicam a mesas (evita strings vazias no DynamoDB)
+                delete newItem.descricao;
+                delete newItem.nome;
+                let bg = document.getElementById('inpBackgroundMesa').value;
+                if (bg) newItem.background = bg;
+                if (!newItem.imagem) delete newItem.imagem;
+                newItem.mestre = loggedAdmin.nome;
+                
+                // Coletar jogadores
+                let jogadores = [];
+                document.querySelectorAll('.mesa-player-item').forEach(pi => {
+                    let nome = pi.querySelector('.mesa-player-name').value.trim();
+                    if (nome) {
+                        let chars = [];
+                        pi.querySelectorAll('.mesa-player-char-tag').forEach(tag => {
+                            if (tag.dataset.id) chars.push(tag.dataset.id);
+                        });
+                        jogadores.push({ nome: nome, personagens: chars });
+                    }
+                });
+                newItem.jogadores = jogadores;
+                newItem.registros_ocultos = getHiddenRecordTagIds();
+
+                // Preservar mestre original ao editar
+                if (editId) {
+                    let orig = database.mesas.find(m => m.id === editId);
+                    if (orig && orig.mestre) newItem.mestre = orig.mestre;
+                }
+            }
+
+            // Campos de mesa (exclusivo/exclusão) para tipos de conteúdo
+            let contentTypes = ['habilidades', 'itens', 'personagens', 'escolas', 'categorias', 'lugares', 'treinamentos'];
+            if (contentTypes.includes(type)) {
+                let mesaSelect = document.getElementById('inpMesaSelect').value;
+                let exclusivo = document.getElementById('inpExclusivo').checked;
+                
+                if (mesaSelect && exclusivo) {
+                    newItem.mesa_exclusiva = mesaSelect;
+                } else {
+                    newItem.mesa_exclusiva = null;
+                }
+                
+                newItem.mesas_excluidas = getMesaExclTagIds();
+                
+                // Preservar campos de mesa do original se existirem e não foram alterados
+                if (editId) {
+                    let orig = database[type].find(i => i.id === editId);
+                    if (orig) {
+                        if (!newItem.mesa_exclusiva && orig.mesa_exclusiva && mesaSelect === '') {
+                            newItem.mesa_exclusiva = orig.mesa_exclusiva;
+                        }
+                    }
+                }
             }
 
             let isEdit = editId !== "";
@@ -2009,6 +2736,498 @@
                     switchAdminForm(type);
                 }
             }, 1500);
+        }
+
+        // ================= MESA FEATURE =================
+        function showMesaSelectPopup() {
+            let grid = document.getElementById('mesaSelectGrid');
+            grid.innerHTML = '';
+            let searchInput = document.getElementById('mesaSelectSearchInput');
+            if (searchInput) searchInput.value = '';
+            
+            // Opção "Todas"
+            let allOpt = document.createElement('div');
+            allOpt.className = 'mesa-option all-option';
+            allOpt.onclick = () => selectMesa(null);
+            allOpt.innerHTML = `
+                <div class="mesa-title">🌐 Todas</div>
+                <div class="mesa-mestre">Ver todos os registros</div>
+            `;
+            grid.appendChild(allOpt);
+            
+            // Mesas disponíveis
+            (database.mesas || []).forEach(mesa => {
+                let opt = document.createElement('div');
+                opt.className = 'mesa-option';
+                opt.onclick = () => selectMesa(mesa.id);
+                let pCount = mesa.jogadores ? mesa.jogadores.length : 0;
+                opt.innerHTML = `
+                    <div class="mesa-title">${sanitize(mesa.titulo || mesa.nome)}</div>
+                    <div class="mesa-mestre">Mestre: ${sanitize(mesa.mestre) || '?'}</div>
+                    <div class="mesa-players-count">${pCount} jogador${pCount !== 1 ? 'es' : ''}</div>
+                `;
+                grid.appendChild(opt);
+            });
+            
+            document.getElementById('mesaSelectModal').classList.remove('hidden');
+        }
+
+        function filterMesaSelectGrid() {
+            let input = document.getElementById('mesaSelectSearchInput');
+            let grid = document.getElementById('mesaSelectGrid');
+            if (!input || !grid) return;
+            let query = input.value.toLowerCase().trim();
+            Array.from(grid.querySelectorAll('.mesa-option')).forEach(opt => {
+                opt.style.display = (query.length === 0 || opt.textContent.toLowerCase().includes(query)) ? '' : 'none';
+            });
+        }
+
+        function selectMesa(mesaId) {
+            selectedMesa = mesaId;
+            sessionStorage.setItem('woe_selected_mesa', mesaId || '');
+            updateMesaIndicator();
+            closeModal('mesaSelectModal');
+            renderCards();
+        }
+
+        function updateMesaIndicator() {
+            let label = document.getElementById('mesaIndicatorLabel');
+            if (!selectedMesa) {
+                label.textContent = 'Todas';
+            } else {
+                let mesa = (database.mesas || []).find(m => m.id === selectedMesa);
+                label.textContent = mesa ? (mesa.titulo || mesa.nome) : selectedMesa;
+            }
+        }
+
+        function changeMesa() {
+            showMesaSelectPopup();
+        }
+
+        // ===== TOP NAV / SECTIONS MENU =====
+        const WIP_SECTIONS = ['racas', 'cidades_e_lugares', 'reacao_elemental'];
+
+        function toggleSectionsMenu() {
+            let dropdown = document.getElementById('sectionsDropdown');
+            let chevron = document.getElementById('sectionsChevron');
+            let isOpen = !dropdown.classList.contains('hidden');
+            if (isOpen) {
+                dropdown.classList.add('hidden');
+                chevron.style.transform = '';
+            } else {
+                dropdown.classList.remove('hidden');
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        function closeSectionsMenu() {
+            document.getElementById('sectionsDropdown').classList.add('hidden');
+            document.getElementById('sectionsChevron').style.transform = '';
+        }
+
+        function selectSection(key) {
+            closeSectionsMenu();
+            if (WIP_SECTIONS.includes(key)) {
+                showToast('⚒ Esta seção ainda está em construção.');
+                return;
+            }
+            let btn = document.querySelector(`.tab-btn[onclick*="'${key}'"]`);
+            if (btn) switchTab(key, btn);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showToast(msg) {
+            let existing = document.getElementById('woeToast');
+            if (existing) existing.remove();
+            let toast = document.createElement('div');
+            toast.id = 'woeToast';
+            toast.textContent = msg;
+            toast.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1e1e24;border:1px solid rgba(207,170,86,0.3);color:#cfaa56;padding:10px 22px;border-radius:8px;font-size:13px;z-index:9999;pointer-events:none;box-shadow:0 4px 24px rgba(0,0,0,0.6);white-space:nowrap;';
+            document.body.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+        }
+
+        // Fechar sections menu ao clicar fora do header
+        document.addEventListener('click', function(e) {
+            let btn = document.getElementById('sectionsMenuBtn');
+            let dropdown = document.getElementById('sectionsDropdown');
+            if (btn && dropdown && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+                closeSectionsMenu();
+            }
+        });
+
+        function togglePlayerView() {
+            playerViewMode = !playerViewMode;
+            let btn = document.getElementById('playerViewToggle');
+            let label = document.getElementById('playerViewLabel');
+            if (playerViewMode) {
+                btn.classList.add('active');
+                label.textContent = 'Visão Jogador';
+            } else {
+                btn.classList.remove('active');
+                label.textContent = 'Visão Admin';
+            }
+            renderCards();
+        }
+
+        function toggleExclusivoCheckbox() {
+            let mesaVal = document.getElementById('inpMesaSelect').value;
+            let container = document.getElementById('exclusivoContainer');
+            if (mesaVal) {
+                container.style.display = 'flex';
+            } else {
+                container.style.display = 'none';
+                document.getElementById('inpExclusivo').checked = false;
+            }
+        }
+
+        function populateMesaSelect() {
+            toggleExclusivoCheckbox();
+        }
+
+        function filterMesaPickerDropdown() {
+            let input = document.getElementById('inpMesaSearchInput');
+            let dropdown = document.getElementById('mesaPickerDropdown');
+            if (!input || !dropdown) return;
+            let query = input.value.toLowerCase().trim();
+            let mesas = database.mesas || [];
+            let filtered = query.length > 0
+                ? mesas.filter(m => (m.titulo || m.nome || '').toLowerCase().includes(query) || (m.id || '').toLowerCase().includes(query))
+                : mesas;
+            if (filtered.length === 0) {
+                dropdown.classList.remove('visible');
+                dropdown.innerHTML = '';
+                return;
+            }
+            dropdown.innerHTML = filtered.slice(0, 20).map(m => `
+                <div class="records-dropdown-item" onclick="selectMesaPicker('${sanitize(m.id)}', '${sanitize(m.titulo || m.nome)}')">
+                    <span style="flex:1">${sanitize(m.titulo || m.nome)}</span>
+                    <span class="dd-type">${sanitize(m.mestre || '')}</span>
+                </div>
+            `).join('');
+            dropdown.classList.add('visible');
+        }
+
+        function selectMesaPicker(id, nome) {
+            document.getElementById('inpMesaSelect').value = id;
+            document.getElementById('inpMesaSearchInput').value = nome;
+            document.getElementById('inpMesaClearBtn').classList.remove('hidden');
+            document.getElementById('mesaPickerDropdown').classList.remove('visible');
+            toggleExclusivoCheckbox();
+        }
+
+        function clearMesaPicker(evt) {
+            if (evt) evt.stopPropagation();
+            document.getElementById('inpMesaSelect').value = '';
+            document.getElementById('inpMesaSearchInput').value = '';
+            document.getElementById('inpMesaClearBtn').classList.add('hidden');
+            document.getElementById('mesaPickerDropdown').classList.remove('visible');
+            toggleExclusivoCheckbox();
+        }
+
+        // ===== HIDDEN RECORDS (Registros Ocultos da Mesa) =====
+        function getHiddenRecordTagIds() {
+            let tags = document.querySelectorAll('#hiddenRecordsTagsBox .record-tag');
+            return Array.from(tags).map(tag => tag.dataset.id).filter(id => id);
+        }
+
+        function addHiddenRecordTag(id) {
+            let box = document.getElementById('hiddenRecordsTagsBox');
+            let input = document.getElementById('hiddenRecordsSearchInput');
+            if (!box || !input) return;
+            if (getHiddenRecordTagIds().includes(id)) return;
+            let allRecs = getAllRecordsForAutocomplete();
+            let rec = allRecs.find(r => r.id === id);
+            let label = rec ? `${id} — ${rec.nome}` : id;
+            let tag = document.createElement('span');
+            tag.className = 'record-tag';
+            tag.dataset.id = id;
+            tag.innerHTML = `${sanitize(label)} <span class="tag-remove" onclick="removeRecordTag(this, event)">&times;</span>`;
+            box.insertBefore(tag, input);
+        }
+
+        function clearHiddenRecordTags() {
+            let box = document.getElementById('hiddenRecordsTagsBox');
+            if (box) box.querySelectorAll('.record-tag').forEach(t => t.remove());
+        }
+
+        function filterHiddenRecordsDropdown() {
+            let input = document.getElementById('hiddenRecordsSearchInput');
+            let dropdown = document.getElementById('hiddenRecordsDropdown');
+            if (!input || !dropdown) return;
+            let query = input.value.toLowerCase().trim();
+            let allRecs = getAllRecordsForAutocomplete();
+            let selected = getHiddenRecordTagIds();
+            let filtered = allRecs.filter(r => !selected.includes(r.id));
+            if (query.length > 0) {
+                filtered = filtered.filter(r =>
+                    r.id.toLowerCase().includes(query) ||
+                    r.nome.toLowerCase().includes(query) ||
+                    r.typeLabel.toLowerCase().includes(query)
+                );
+            }
+            if (filtered.length === 0) {
+                dropdown.classList.remove('visible');
+                dropdown.innerHTML = '';
+                return;
+            }
+            filtered = filtered.slice(0, 20);
+            dropdown.innerHTML = filtered.map(r => `
+                <div class="records-dropdown-item" onclick="selectHiddenRecordFromDropdown('${sanitize(r.id)}')">
+                    <span class="dd-id">${sanitize(r.id)}</span>
+                    <span style="flex:1">${sanitize(r.nome)}</span>
+                    <span class="dd-type">${sanitize(r.typeLabel)}</span>
+                </div>
+            `).join('');
+            dropdown.classList.add('visible');
+        }
+
+        function selectHiddenRecordFromDropdown(id) {
+            addHiddenRecordTag(id);
+            let input = document.getElementById('hiddenRecordsSearchInput');
+            input.value = '';
+            document.getElementById('hiddenRecordsDropdown').classList.remove('visible');
+            input.focus();
+        }
+
+        // Fechar dropdown de registros ocultos ao clicar fora
+        document.addEventListener('click', function(e) {
+            let dropdown = document.getElementById('hiddenRecordsDropdown');
+            let container = document.getElementById('hiddenRecordsTagsBox');
+            if (dropdown && container && !container.contains(e.target)) {
+                dropdown.classList.remove('visible');
+            }
+        });
+
+        // Fechar dropdown do seletor de mesa ao clicar fora
+        document.addEventListener('click', function(e) {
+            let dropdown = document.getElementById('mesaPickerDropdown');
+            let wrapper = document.getElementById('mesaPickerWrapper');
+            if (dropdown && wrapper && !wrapper.contains(e.target)) {
+                dropdown.classList.remove('visible');
+            }
+        });
+
+        // ===== MESA PLAYERS (Admin Form) =====
+        function addMesaPlayer(nome = '', personagens = []) {
+            let list = document.getElementById('mesaPlayersList');
+            let div = document.createElement('div');
+            div.className = 'mesa-player-item';
+            let uid = 'mp_' + Date.now() + '_' + Math.random().toString(36).substr(2,4);
+            div.innerHTML = `
+                <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-500 hover:text-red-400 text-xs font-bold">X</button>
+                <div class="mb-2">
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Nome do Jogador</label>
+                    <input type="text" value="${nome}" class="mesa-player-name search-input w-full rounded px-2 py-1 text-xs" placeholder="Nome do jogador">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Personagens (Role to Play)</label>
+                    <div class="mesa-player-chars-box" data-uid="${uid}">
+                        <input type="text" class="mesa-player-char-input records-search-input" placeholder="Buscar personagem..." autocomplete="off" oninput="filterMesaCharDropdown(this, '${uid}')" onfocus="filterMesaCharDropdown(this, '${uid}')">
+                    </div>
+                    <div class="records-dropdown mesa-char-dropdown" data-uid="${uid}"></div>
+                </div>
+            `;
+            list.appendChild(div);
+            
+            // Adicionar personagens existentes
+            if (personagens && personagens.length > 0) {
+                let box = div.querySelector('.mesa-player-chars-box');
+                let input = box.querySelector('.mesa-player-char-input');
+                personagens.forEach(pid => {
+                    let char = (database.personagens || []).find(p => p.id === pid);
+                    let label = char ? char.nome : pid;
+                    let tag = document.createElement('span');
+                    tag.className = 'mesa-player-char-tag';
+                    tag.dataset.id = pid;
+                    tag.innerHTML = `${label} <span class="tag-remove" onclick="this.parentElement.remove(); event.stopPropagation();">&times;</span>`;
+                    box.insertBefore(tag, input);
+                });
+            }
+        }
+
+        function filterMesaCharDropdown(input, uid) {
+            let query = input.value.toLowerCase().trim();
+            let dropdown = document.querySelector(`.mesa-char-dropdown[data-uid="${uid}"]`);
+            let box = document.querySelector(`.mesa-player-chars-box[data-uid="${uid}"]`);
+            let selected = Array.from(box.querySelectorAll('.mesa-player-char-tag')).map(t => t.dataset.id);
+            
+            let chars = (database.personagens || []).filter(p => !selected.includes(p.id));
+            if (query.length > 0) {
+                chars = chars.filter(p => p.nome.toLowerCase().includes(query) || p.id.toLowerCase().includes(query));
+            }
+            chars = chars.slice(0, 15);
+            
+            if (chars.length === 0) {
+                dropdown.classList.remove('visible');
+                dropdown.innerHTML = '';
+                return;
+            }
+            
+            dropdown.innerHTML = chars.map(p => `
+                <div class="records-dropdown-item" onclick="selectMesaChar('${p.id}', '${uid}')">
+                    <span class="dd-id">${p.id}</span>
+                    <span style="flex:1">${p.nome}</span>
+                </div>
+            `).join('');
+            dropdown.classList.add('visible');
+        }
+
+        function selectMesaChar(charId, uid) {
+            let box = document.querySelector(`.mesa-player-chars-box[data-uid="${uid}"]`);
+            let input = box.querySelector('.mesa-player-char-input');
+            let dropdown = document.querySelector(`.mesa-char-dropdown[data-uid="${uid}"]`);
+            
+            let char = (database.personagens || []).find(p => p.id === charId);
+            let label = char ? char.nome : charId;
+            
+            let tag = document.createElement('span');
+            tag.className = 'mesa-player-char-tag';
+            tag.dataset.id = charId;
+            tag.innerHTML = `${label} <span class="tag-remove" onclick="this.parentElement.remove(); event.stopPropagation();">&times;</span>`;
+            box.insertBefore(tag, input);
+            
+            input.value = '';
+            dropdown.classList.remove('visible');
+            input.focus();
+        }
+
+        // ===== MESA EXCLUSION TAGS =====
+        function getMesaExclTagIds() {
+            let tags = document.querySelectorAll('#mesaExclTagsBox .mesa-excl-tag');
+            return Array.from(tags).map(tag => tag.dataset.id).filter(id => id);
+        }
+
+        function addMesaExclTag(mesaId) {
+            let box = document.getElementById('mesaExclTagsBox');
+            let input = document.getElementById('mesaExclSearchInput');
+            if (getMesaExclTagIds().includes(mesaId)) return;
+            
+            let mesa = (database.mesas || []).find(m => m.id === mesaId);
+            let label = mesa ? (mesa.titulo || mesa.nome) : mesaId;
+            
+            let tag = document.createElement('span');
+            tag.className = 'mesa-excl-tag';
+            tag.dataset.id = mesaId;
+            tag.innerHTML = `${label} <span class="tag-remove" onclick="this.parentElement.remove(); event.stopPropagation();">&times;</span>`;
+            box.insertBefore(tag, input);
+        }
+
+        function clearMesaExclTags() {
+            document.querySelectorAll('#mesaExclTagsBox .mesa-excl-tag').forEach(t => t.remove());
+        }
+
+        function filterMesaExclDropdown() {
+            let input = document.getElementById('mesaExclSearchInput');
+            let dropdown = document.getElementById('mesaExclDropdown');
+            let query = input.value.toLowerCase().trim();
+            let selected = getMesaExclTagIds();
+            
+            let mesas = (database.mesas || []).filter(m => !selected.includes(m.id));
+            if (query.length > 0) {
+                mesas = mesas.filter(m => 
+                    (m.titulo || m.nome || '').toLowerCase().includes(query) || 
+                    m.id.toLowerCase().includes(query)
+                );
+            }
+            mesas = mesas.slice(0, 15);
+            
+            if (mesas.length === 0) {
+                dropdown.classList.remove('visible');
+                dropdown.innerHTML = '';
+                return;
+            }
+            
+            dropdown.innerHTML = mesas.map(m => `
+                <div class="records-dropdown-item" onclick="selectMesaExcl('${m.id}')">
+                    <span class="dd-id">${m.id}</span>
+                    <span style="flex:1">${m.titulo || m.nome}</span>
+                    <span class="dd-type">Mesa</span>
+                </div>
+            `).join('');
+            dropdown.classList.add('visible');
+        }
+
+        function selectMesaExcl(mesaId) {
+            addMesaExclTag(mesaId);
+            let input = document.getElementById('mesaExclSearchInput');
+            input.value = '';
+            document.getElementById('mesaExclDropdown').classList.remove('visible');
+            input.focus();
+        }
+
+        // Close mesa exclusion dropdown on outside click
+        document.addEventListener('click', function(e) {
+            let mesaExclContainer = document.querySelector('#mesaFieldsCommon');
+            if (mesaExclContainer && !mesaExclContainer.contains(e.target)) {
+                let dd = document.getElementById('mesaExclDropdown');
+                if (dd) dd.classList.remove('visible');
+            }
+            // Close mesa char dropdowns
+            document.querySelectorAll('.mesa-char-dropdown').forEach(dd => {
+                if (!dd.parentElement.contains(e.target)) {
+                    dd.classList.remove('visible');
+                }
+            });
+        });
+
+        // ===== DELETE MESA =====
+        let mesaToDelete = null;
+
+        function promptDeleteMesa(mesaId) {
+            mesaToDelete = mesaId;
+            let mesa = (database.mesas || []).find(m => m.id === mesaId);
+            document.getElementById('deleteMesaName').innerText = mesa ? (mesa.titulo || mesa.nome) : mesaId;
+            document.getElementById('deleteMesaConfirmInput').value = '';
+            document.getElementById('deleteMesaConfirmModal').classList.remove('hidden');
+        }
+
+        async function confirmDeleteMesa() {
+            let confirmText = document.getElementById('deleteMesaConfirmInput').value.trim();
+            if (confirmText !== 'Confirmo') {
+                alert('Digite "Confirmo" para prosseguir com a exclusão.');
+                return;
+            }
+            
+            if (!mesaToDelete || !loggedAdmin) return;
+            
+            let mesaId = mesaToDelete;
+            
+            // Limpar associações em todos os registros locais
+            let contentTypes = ['habilidades', 'itens', 'personagens', 'escolas', 'categorias', 'lugares', 'treinamentos'];
+            contentTypes.forEach(ct => {
+                (database[ct] || []).forEach(item => {
+                    if (item.mesa_exclusiva === mesaId) {
+                        item.mesa_exclusiva = null;
+                    }
+                    if (item.mesas_excluidas && item.mesas_excluidas.includes(mesaId)) {
+                        item.mesas_excluidas = item.mesas_excluidas.filter(m => m !== mesaId);
+                    }
+                });
+            });
+            
+            // Remover mesa
+            database.mesas = (database.mesas || []).filter(m => m.id !== mesaId);
+            localStorage.setItem('woe_archive_db', JSON.stringify(database));
+            
+            // Se a mesa deletada era a selecionada, voltar para Todas
+            if (selectedMesa === mesaId) {
+                selectMesa(null);
+            }
+            
+            // Tentar deletar na API
+            try {
+                let deletePayload = { type: 'mesas', id: mesaId };
+                if (loggedAdmin) {
+                    deletePayload.admin_nome = loggedAdmin.nome;
+                    deletePayload.admin_senha = loggedAdmin.senha;
+                }
+                await apiFetch('/delete', 'POST', deletePayload);
+            } catch(e) { console.log('Erro API delete mesa:', e); }
+            
+            closeModal('deleteMesaConfirmModal');
+            renderCards();
+            mesaToDelete = null;
         }
 
         // INIT

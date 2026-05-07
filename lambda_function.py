@@ -25,7 +25,8 @@ TABLE_MAPPING = {
     'categorias': 'categories',
     'lugares': 'places',
     'admins': 'admins',
-    'treinamentos': 'trainings'
+    'treinamentos': 'trainings',
+    'mesas': 'mesas'
 }
 
 def get_table(type_key):
@@ -33,6 +34,14 @@ def get_table(type_key):
     if not table_name:
         raise ValueError(f"Tipo desconhecido: {type_key}")
     return dynamodb.Table(table_name)
+
+def clean_item(obj):
+    """Remove strings vazias e valores None recursivamente — DynamoDB não aceita strings vazias."""
+    if isinstance(obj, dict):
+        return {k: clean_item(v) for k, v in obj.items() if v is not None and v != ''}
+    if isinstance(obj, list):
+        return [clean_item(i) for i in obj]
+    return obj
 
 def validate_admin(admin_nome, admin_senha):
     """
@@ -88,7 +97,9 @@ def lambda_handler(event, context):
                 'escolas': [],
                 'categorias': [],
                 'lugares': [],
-                'admins': [] # Se quiser carregar no front-end ou validar depois
+                'admins': [],
+                'treinamentos': [],
+                'mesas': []
             }
             
             # Faz um scan em todas as tabelas mapeadas
@@ -175,7 +186,7 @@ def lambda_handler(event, context):
                 try:
                     table = get_table(item_type)
                     # Salva no DynamoDB (se a chave de partição já existir, ele substitui/atualiza)
-                    table.put_item(Item=item_data)
+                    table.put_item(Item=clean_item(item_data))
                     
                     return {
                         'statusCode': 200,
@@ -252,6 +263,28 @@ def lambda_handler(event, context):
                         key_to_delete = {'id': item_id}
 
                     table.delete_item(Key=key_to_delete)
+                    
+                    # Se deletando uma mesa, limpar associações em todos os registros
+                    if item_type == 'mesas' and item_id:
+                        content_types = ['habilidades', 'itens', 'personagens', 'escolas', 'categorias', 'lugares', 'treinamentos']
+                        for ct in content_types:
+                            try:
+                                ct_table = get_table(ct)
+                                ct_response = ct_table.scan()
+                                for record in ct_response.get('Items', []):
+                                    updated = False
+                                    # Limpar mesa_exclusiva
+                                    if record.get('mesa_exclusiva') == item_id:
+                                        record['mesa_exclusiva'] = None
+                                        updated = True
+                                    # Limpar mesas_excluidas
+                                    if record.get('mesas_excluidas') and item_id in record['mesas_excluidas']:
+                                        record['mesas_excluidas'] = [m for m in record['mesas_excluidas'] if m != item_id]
+                                        updated = True
+                                    if updated:
+                                        ct_table.put_item(Item=record)
+                            except Exception as cleanup_err:
+                                print(f"Erro ao limpar associações de mesa em {ct}: {str(cleanup_err)}")
                     
                     return {
                         'statusCode': 200,
