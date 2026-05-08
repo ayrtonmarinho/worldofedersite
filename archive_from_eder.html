@@ -742,6 +742,35 @@
         </div>
     </div>
 
+    <!-- MODAL DE EDIÇÃO DE JOGADOR -->
+    <div id="playerEditModal"
+        class="fixed inset-0 bg-black/80 flex items-center justify-center z-[116] hidden backdrop-blur-sm">
+        <div class="bg-[#1e1e24] p-6 rounded-xl border border-sky-900/50 shadow-2xl w-full max-w-sm">
+            <h2 class="text-lg font-bold text-sky-400 mb-4" style="font-family: var(--font-heading);">✏️ Editar Jogador</h2>
+            <input type="hidden" id="playerEditMesaId" value="">
+            <input type="hidden" id="playerEditPlayerIndex" value="">
+            <div class="mb-3">
+                <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Nome do Jogador</label>
+                <input type="text" id="playerEditName" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="Nome do jogador">
+            </div>
+            <div class="mb-4">
+                <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Personagem Associado</label>
+                <div class="relative">
+                    <div id="playerEditCharsBox" class="mesa-player-chars-box" onclick="document.getElementById('playerEditCharInput').focus()">
+                        <input type="text" id="playerEditCharInput" class="mesa-player-char-input records-search-input" placeholder="Buscar personagem..." autocomplete="off" oninput="filterPlayerEditCharDropdown()" onfocus="filterPlayerEditCharDropdown()">
+                    </div>
+                    <div id="playerEditCharDropdown" class="records-dropdown"></div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="closeModal('playerEditModal')"
+                    class="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-2 rounded text-sm font-bold transition-colors border border-white/10">Cancelar</button>
+                <button onclick="savePlayerEdit()"
+                    class="flex-1 bg-sky-700 hover:bg-sky-600 text-white py-2 rounded text-sm font-bold transition-colors">Salvar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Fundo de Escurecimento Geral -->
     <div class="fixed inset-0 bg-black/60 z-[-1] pointer-events-none"></div>
 
@@ -790,7 +819,7 @@
                 <!-- LOGO -->
                 <div class="flex items-center gap-4 cursor-pointer" onclick="location.href='portasinfinitum.html'">
                     <img src="imgs/archive_favicon.png" alt="Archive Logo" class="w-16 h-16 object-cover" style="mask-image: radial-gradient(circle at center, black 40%, transparent 70%); -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 70%);">
-                    <h1 class="text-3xl font-black tracking-widest text-[#cfaa56]"
+                    <h1 class="text-3xl font-black tracking-widest text-[#cfaa56] whitespace-nowrap"
                         style="font-family: var(--font-heading);">
                         Archive From Eder
                     </h1>
@@ -1531,10 +1560,11 @@
             let playersCount = mesa.jogadores ? mesa.jogadores.length : 0;
             let playersList = '';
             if (mesa.jogadores && mesa.jogadores.length > 0) {
+                let canEditPlayers = isAdmin && loggedAdmin && (loggedAdmin.access_level === 1 || !loggedAdmin.access_level || mesa.mestre === loggedAdmin.nome);
                 playersList = `<div class="mt-4 pt-3 border-t border-white/10 hidden topics-container">
                     <h4 class="text-sky-400 font-bold mb-2 text-xs uppercase tracking-widest">🎭 Jogadores</h4>
                     <ul class="space-y-2">
-                        ${mesa.jogadores.map(j => {
+                        ${mesa.jogadores.map((j, idx) => {
                             let charNames = '';
                             if (j.personagens && j.personagens.length > 0) {
                                 charNames = j.personagens.map(pid => {
@@ -1542,9 +1572,11 @@
                                     return sanitize(char ? char.nome : pid);
                                 }).join(', ');
                             }
-                            return `<li class="bg-black/30 p-2 rounded text-xs border border-white/5">
+                            let editBtn = canEditPlayers ? `<button onclick="event.stopPropagation(); openPlayerEditModal('${mesa.id}', ${idx})" class="ml-auto flex-shrink-0 text-slate-500 hover:text-sky-400 text-xs px-1 transition-colors" title="Editar jogador">✏️</button>` : '';
+                            return `<li class="bg-black/30 p-2 rounded text-xs border border-white/5 flex items-center gap-1 flex-wrap">
                                 <strong class="text-sky-400">${sanitize(j.nome)}</strong>
-                                ${charNames ? `<span class="text-slate-400 ml-2">→ ${charNames}</span>` : '<span class="text-slate-500 ml-2">Sem personagem</span>'}
+                                ${charNames ? `<span class="text-slate-400 ml-1">→ ${charNames}</span>` : '<span class="text-slate-500 ml-1">Sem personagem</span>'}
+                                ${editBtn}
                             </li>`;
                         }).join('')}
                     </ul>
@@ -3006,6 +3038,12 @@
             if (dropdown && wrapper && !wrapper.contains(e.target)) {
                 dropdown.classList.remove('visible');
             }
+            // Fechar dropdown do modal de edição de jogador ao clicar fora
+            let playerDropdown = document.getElementById('playerEditCharDropdown');
+            let playerBox = document.getElementById('playerEditCharsBox');
+            if (playerDropdown && playerBox && !playerBox.contains(e.target) && !playerDropdown.contains(e.target)) {
+                playerDropdown.classList.remove('visible');
+            }
         });
 
         // ===== MESA PLAYERS (Admin Form) =====
@@ -3090,6 +3128,112 @@
             input.value = '';
             dropdown.classList.remove('visible');
             input.focus();
+        }
+
+        // ===== PLAYER EDIT MODAL =====
+        function openPlayerEditModal(mesaId, playerIndex) {
+            let mesa = (database.mesas || []).find(m => m.id === mesaId);
+            if (!mesa || !mesa.jogadores || !mesa.jogadores[playerIndex]) return;
+
+            let player = mesa.jogadores[playerIndex];
+
+            document.getElementById('playerEditMesaId').value = mesaId;
+            document.getElementById('playerEditPlayerIndex').value = playerIndex;
+            document.getElementById('playerEditName').value = player.nome || '';
+
+            let box = document.getElementById('playerEditCharsBox');
+            let input = document.getElementById('playerEditCharInput');
+            box.querySelectorAll('.mesa-player-char-tag').forEach(t => t.remove());
+            input.value = '';
+            document.getElementById('playerEditCharDropdown').classList.remove('visible');
+
+            if (player.personagens && player.personagens.length > 0) {
+                player.personagens.forEach(pid => {
+                    let char = (database.personagens || []).find(p => p.id === pid);
+                    let label = char ? char.nome : pid;
+                    let tag = document.createElement('span');
+                    tag.className = 'mesa-player-char-tag';
+                    tag.dataset.id = pid;
+                    tag.innerHTML = `${label} <span class="tag-remove" onclick="this.parentElement.remove(); event.stopPropagation();">&times;</span>`;
+                    box.insertBefore(tag, input);
+                });
+            }
+
+            document.getElementById('playerEditModal').classList.remove('hidden');
+        }
+
+        function filterPlayerEditCharDropdown() {
+            let input = document.getElementById('playerEditCharInput');
+            let query = input.value.toLowerCase().trim();
+            let dropdown = document.getElementById('playerEditCharDropdown');
+            let box = document.getElementById('playerEditCharsBox');
+            let selected = Array.from(box.querySelectorAll('.mesa-player-char-tag')).map(t => t.dataset.id);
+
+            let chars = (database.personagens || []).filter(p => !selected.includes(p.id));
+            if (query.length > 0) {
+                chars = chars.filter(p => p.nome.toLowerCase().includes(query) || p.id.toLowerCase().includes(query));
+            }
+            chars = chars.slice(0, 15);
+
+            if (chars.length === 0) {
+                dropdown.classList.remove('visible');
+                dropdown.innerHTML = '';
+                return;
+            }
+
+            dropdown.innerHTML = chars.map(p => `
+                <div class="records-dropdown-item" onclick="selectPlayerEditChar('${p.id}')">
+                    <span class="dd-id">${p.id}</span>
+                    <span style="flex:1">${p.nome}</span>
+                </div>
+            `).join('');
+            dropdown.classList.add('visible');
+        }
+
+        function selectPlayerEditChar(charId) {
+            let box = document.getElementById('playerEditCharsBox');
+            let input = document.getElementById('playerEditCharInput');
+            let dropdown = document.getElementById('playerEditCharDropdown');
+
+            let char = (database.personagens || []).find(p => p.id === charId);
+            let label = char ? char.nome : charId;
+
+            let tag = document.createElement('span');
+            tag.className = 'mesa-player-char-tag';
+            tag.dataset.id = charId;
+            tag.innerHTML = `${label} <span class="tag-remove" onclick="this.parentElement.remove(); event.stopPropagation();">&times;</span>`;
+            box.insertBefore(tag, input);
+
+            input.value = '';
+            dropdown.classList.remove('visible');
+            input.focus();
+        }
+
+        async function savePlayerEdit() {
+            let mesaId = document.getElementById('playerEditMesaId').value;
+            let playerIndex = parseInt(document.getElementById('playerEditPlayerIndex').value);
+            let nome = document.getElementById('playerEditName').value.trim();
+
+            if (!nome) {
+                alert('Nome do jogador é obrigatório.');
+                return;
+            }
+
+            let box = document.getElementById('playerEditCharsBox');
+            let chars = Array.from(box.querySelectorAll('.mesa-player-char-tag')).map(t => t.dataset.id).filter(Boolean);
+
+            let mesa = (database.mesas || []).find(m => m.id === mesaId);
+            if (!mesa) return;
+
+            if (!mesa.jogadores) mesa.jogadores = [];
+            mesa.jogadores[playerIndex] = { nome: nome, personagens: chars };
+
+            let now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            mesa.updated_by = loggedAdmin.nome;
+            mesa.updated_at = now;
+
+            closeModal('playerEditModal');
+            await saveToDatabase('mesas', mesa, true);
         }
 
         // ===== MESA EXCLUSION TAGS =====
