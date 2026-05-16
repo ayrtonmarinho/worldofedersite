@@ -26,7 +26,9 @@ TABLE_MAPPING = {
     'lugares': 'places',
     'admins': 'admins',
     'treinamentos': 'trainings',
-    'mesas': 'mesas'
+    'mesas': 'mesas',
+    'temporadas': 'temporadas',
+    'musicas': 'musicas'
 }
 
 def get_table(type_key):
@@ -99,7 +101,9 @@ def lambda_handler(event, context):
                 'lugares': [],
                 'admins': [],
                 'treinamentos': [],
-                'mesas': []
+                'mesas': [],
+                'temporadas': [],
+                'musicas': []
             }
             
             # Faz um scan em todas as tabelas mapeadas

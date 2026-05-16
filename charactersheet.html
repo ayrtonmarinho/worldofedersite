@@ -1,54 +1,1030 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <link rel="stylesheet" href="css/character-sheet.css" />
-  </head>
-  <body>
-    <header></header>
-    <main class="main">
-      <div id="principal"></div>
-      <div id="atributos">
-        <div class="atrb_mod_box">
-          <div class="atrb_box"><p id="forca">10</p></div>
-        </div>
-        <div class="atrb_mod_box">
-          <div class="atrb_box">
-            <p id="destreza">10</p>
-          </div>
-        </div>
-        <div class="atrb_mod_box">
-          <div class="atrb_box">
-            <p id="constituicao">10</p>
-          </div>
-        </div>
-        <div class="atrb_mod_box">
-          <div class="atrb_box">
-            <p id="inteligencia">10</p>
-          </div>
-        </div>
-        <div class="atrb_mod_box">
-          <div class="atrb_box">
-            <p id="sabedoria">10</p>
-          </div>
-        </div>
-        <div class="atrb_mod_box">
-          <div class="atrb_box"><p id="carisma">10</p></div>
-        </div>
-      </div>
-      <div id="b2">
-        <div id="p1">
-          <div id="p1_status_combate"></div>
-          <div id="p1_pericias"></div>
-          <div id="p1_arma_inventario"></div>
-        </div>
-        <div id="p2"></div>
-      </div>
-    </main>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ficha de Personagem — World Of Eder</title>
+  <link rel="icon" type="image/png" href="imgs/archive_favicon.png">
+  <link rel="stylesheet" href="css/character-sheet.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
 
-    <footer>World Of Eder - 2023</footer>
-  </body>
+<!-- ═══════════════════════════════════════════════════════
+     TOPO: Seletor de personagem + Header
+═══════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p>Carregando dados de Eder...</p>
+  </div>
+
+  <!-- Header -->
+  <header id="sheet-header">
+    <div id="header-left">
+      <img src="imgs/logo_woe.png" alt="WoE" id="header-logo" onerror="this.style.display='none'">
+      <div id="char-selector-wrap">
+        <label>Personagem</label>
+        <select id="char-selector">
+          <option value="">— Selecionar —</option>
+        </select>
+      </div>
+    </div>
+    <div id="header-identity" class="hidden">
+      <div id="header-char-name">—</div>
+      <div id="header-char-sub"></div>
+    </div>
+    <div id="header-right">
+      <div id="admin-login-wrap">
+        <input type="text"   id="admin-nome"  placeholder="Cronista" autocomplete="off">
+        <input type="password" id="admin-senha" placeholder="Senha" autocomplete="off">
+        <button id="btn-login">Entrar</button>
+        <span id="admin-status"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main sheet (hidden until char selected) -->
+  <div id="sheet-main" class="hidden">
+
+    <!-- ─── TAB NAV ─── -->
+    <nav id="tab-nav">
+      <button class="tab-btn active" data-tab="perfil">
+        <span class="tab-icon">⚔</span><span class="tab-label">Perfil</span>
+      </button>
+      <button class="tab-btn" data-tab="atributos">
+        <span class="tab-icon">◈</span><span class="tab-label">Atributos</span>
+      </button>
+      <button class="tab-btn" data-tab="combate">
+        <span class="tab-icon">🗡</span><span class="tab-label">Combate</span>
+      </button>
+      <button class="tab-btn" data-tab="vital">
+        <span class="tab-icon">❤</span><span class="tab-label">Vital</span>
+      </button>
+      <button class="tab-btn" data-tab="magias">
+        <span class="tab-icon">✦</span><span class="tab-label">Magias</span>
+      </button>
+      <button class="tab-btn" data-tab="arsenal">
+        <span class="tab-icon">⚙</span><span class="tab-label">Arsenal</span>
+      </button>
+      <button class="tab-btn" data-tab="habilidades">
+        <span class="tab-icon">★</span><span class="tab-label">Habilidades</span>
+      </button>
+      <button class="tab-btn" data-tab="recursos">
+        <span class="tab-icon">🎒</span><span class="tab-label">Recursos</span>
+      </button>
+    </nav>
+
+    <!-- ─── SAVE BAR (visible when edited) ─── -->
+    <div id="save-bar" class="hidden">
+      <span>Você tem alterações não salvas.</span>
+      <button id="btn-save">Salvar Ficha</button>
+      <button id="btn-discard">Descartar</button>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB: PERFIL
+    ══════════════════════════════════════ -->
+    <section class="tab-content active" id="tab-perfil">
+      <div class="sheet-grid-2">
+
+        <div class="panel">
+          <div class="panel-title">Identidade</div>
+          <div class="field-group">
+            <label>Nome do Personagem</label>
+            <input type="text" data-field="nome" class="sheet-input">
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label>Nome do Jogador</label>
+              <input type="text" data-field="jogador" class="sheet-input">
+            </div>
+            <div class="field-group" style="flex:0.5">
+              <label>Raça</label>
+              <input type="text" data-field="raca" class="sheet-input">
+            </div>
+            <div class="field-group" style="flex:0.35">
+              <label>Nível</label>
+              <input type="number" data-field="nivel" class="sheet-input" min="1" max="30">
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Aparência</label>
+            <textarea data-field="aparencia" class="sheet-textarea" rows="5"></textarea>
+          </div>
+          <div class="field-group">
+            <label>História</label>
+            <textarea data-field="historia" class="sheet-textarea" rows="6"></textarea>
+          </div>
+        </div>
+
+        <div class="panel-col">
+          <div class="panel">
+            <div class="panel-title">Personalidade</div>
+            <div class="field-group">
+              <label>Traços de Personalidade</label>
+              <textarea data-field="tracos_personalidade" class="sheet-textarea" rows="3"></textarea>
+            </div>
+            <div class="field-group">
+              <label>Ideais</label>
+              <textarea data-field="ideais" class="sheet-textarea" rows="2"></textarea>
+            </div>
+            <div class="field-group">
+              <label>Trejeitos</label>
+              <textarea data-field="trejeitos" class="sheet-textarea" rows="2"></textarea>
+            </div>
+            <div class="field-group">
+              <label>Pontos Baixos</label>
+              <textarea data-field="pontos_baixos" class="sheet-textarea" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Anotações</div>
+            <textarea data-field="anotacoes" class="sheet-textarea" rows="6"></textarea>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         TAB: ATRIBUTOS
+    ══════════════════════════════════════ -->
+    <section class="tab-content" id="tab-atributos">
+
+      <!-- Stats Hexagonais -->
+      <div class="stats-row">
+        <div class="stat-hex" data-stat="sabedoria">
+          <div class="stat-label">Sabedoria</div>
+          <div class="stat-gem">
+            <input type="number" data-field="sabedoria" class="stat-val sheet-input" min="1">
+          </div>
+          <div class="stat-mod" data-mod="sabedoria"></div>
+        </div>
+        <div class="stat-hex" data-stat="carisma">
+          <div class="stat-label">Carisma</div>
+          <div class="stat-gem">
+            <input type="number" data-field="carisma" class="stat-val sheet-input" min="1">
+          </div>
+          <div class="stat-mod" data-mod="carisma"></div>
+        </div>
+        <div class="stat-hex" data-stat="inteligencia">
+          <div class="stat-label">Inteligência</div>
+          <div class="stat-gem">
+            <input type="number" data-field="inteligencia" class="stat-val sheet-input" min="1">
+          </div>
+          <div class="stat-mod" data-mod="inteligencia"></div>
+        </div>
+        <div class="stat-hex" data-stat="destreza">
+          <div class="stat-label">Destreza</div>
+          <div class="stat-gem">
+            <input type="number" data-field="destreza" class="stat-val sheet-input" min="1">
+          </div>
+          <div class="stat-mod" data-mod="destreza"></div>
+        </div>
+        <div class="stat-hex" data-stat="forca">
+          <div class="stat-label">Força</div>
+          <div class="stat-gem">
+            <input type="number" data-field="forca" class="stat-val sheet-input" min="1">
+          </div>
+          <div class="stat-mod" data-mod="forca"></div>
+        </div>
+        <div class="stat-hex" data-stat="constituicao">
+          <div class="stat-label">Constituição</div>
+          <div class="stat-gem">
+            <input type="number" data-field="constituicao" class="stat-val sheet-input" min="1">
+          </div>
+          <div class="stat-mod" data-mod="constituicao"></div>
+        </div>
+      </div>
+
+      <div class="sheet-grid-3">
+
+        <!-- Salvaguardas -->
+        <div class="panel">
+          <div class="panel-title">Salvaguardas</div>
+          <div class="saves-list">
+            <label class="save-row"><input type="checkbox" data-field="save_carisma" class="save-check"><span>Carisma</span><span class="save-val" data-save="carisma"></span></label>
+            <label class="save-row"><input type="checkbox" data-field="save_sabedoria" class="save-check"><span>Sabedoria</span><span class="save-val" data-save="sabedoria"></span></label>
+            <label class="save-row"><input type="checkbox" data-field="save_inteligencia" class="save-check"><span>Inteligência</span><span class="save-val" data-save="inteligencia"></span></label>
+            <label class="save-row"><input type="checkbox" data-field="save_destreza" class="save-check"><span>Destreza</span><span class="save-val" data-save="destreza"></span></label>
+            <label class="save-row"><input type="checkbox" data-field="save_forca" class="save-check"><span>Força</span><span class="save-val" data-save="forca"></span></label>
+            <label class="save-row"><input type="checkbox" data-field="save_constituicao" class="save-check"><span>Constituição</span><span class="save-val" data-save="constituicao"></span></label>
+          </div>
+        </div>
+
+        <!-- Perícias -->
+        <div class="panel" style="grid-column: span 2;">
+          <div class="panel-title">Perícias</div>
+          <div class="pericias-grid">
+            <div class="pericias-col">
+              <div class="pericias-col-header">Sabedoria</div>
+              <label class="pericia-row"><select data-field="p_intuicao" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Intuição</span></label>
+              <label class="pericia-row"><select data-field="p_religiao" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Religião</span></label>
+              <label class="pericia-row"><select data-field="p_medicina" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Medicina</span></label>
+              <label class="pericia-row"><select data-field="p_natureza" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Natureza</span></label>
+              <label class="pericia-row"><select data-field="p_percepcao" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Percepção</span></label>
+              <label class="pericia-row"><select data-field="p_sobrevivencia" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Sobrevivência</span></label>
+            </div>
+            <div class="pericias-col">
+              <div class="pericias-col-header">Carisma</div>
+              <label class="pericia-row"><select data-field="p_atuacao" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Atuação</span></label>
+              <label class="pericia-row"><select data-field="p_enganacao" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Enganação</span></label>
+              <label class="pericia-row"><select data-field="p_intimidacao" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Intimidação</span></label>
+              <label class="pericia-row"><select data-field="p_persuasao" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Persuasão</span></label>
+              <div class="pericias-col-header" style="margin-top:0.75rem">Inteligência</div>
+              <label class="pericia-row"><select data-field="p_arcanismo" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Arcanismo</span></label>
+              <label class="pericia-row"><select data-field="p_historia" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>História</span></label>
+              <label class="pericia-row"><select data-field="p_investigacao" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Investigação</span></label>
+            </div>
+            <div class="pericias-col">
+              <div class="pericias-col-header">Destreza</div>
+              <label class="pericia-row"><select data-field="p_acrobacia" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Acrobacia</span></label>
+              <label class="pericia-row"><select data-field="p_furtividade" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Furtividade</span></label>
+              <label class="pericia-row"><select data-field="p_invadir" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Invadir</span></label>
+              <div class="pericias-col-header" style="margin-top:0.75rem">Força</div>
+              <label class="pericia-row"><select data-field="p_atletismo" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Atletismo</span></label>
+              <label class="pericia-row"><select data-field="p_forca_bruta" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Força Bruta</span></label>
+              <div class="pericias-col-header" style="margin-top:0.75rem">Constituição</div>
+              <label class="pericia-row"><select data-field="p_fortitude" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Fortitude</span></label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         TAB: COMBATE
+    ══════════════════════════════════════ -->
+    <section class="tab-content" id="tab-combate">
+      <div class="sheet-grid-2">
+
+        <div class="panel-col">
+          <!-- Stats de combate -->
+          <div class="panel">
+            <div class="panel-title">Status de Combate</div>
+            <div class="combat-stats-grid">
+              <div class="combat-stat">
+                <div class="combat-stat-label">Precisão</div>
+                <input type="number" data-field="precisao" class="combat-stat-val sheet-input">
+              </div>
+              <div class="combat-stat">
+                <div class="combat-stat-label">Letalidade</div>
+                <input type="number" data-field="letalidade" class="combat-stat-val sheet-input">
+              </div>
+              <div class="combat-stat">
+                <div class="combat-stat-label">Proficiência</div>
+                <input type="number" data-field="proficiencia" class="combat-stat-val sheet-input">
+              </div>
+              <div class="combat-stat">
+                <div class="combat-stat-label">Inspiração</div>
+                <input type="number" data-field="inspiracao" class="combat-stat-val sheet-input">
+              </div>
+              <div class="combat-stat">
+                <div class="combat-stat-label">CA</div>
+                <input type="number" data-field="ca" class="combat-stat-val sheet-input">
+              </div>
+              <div class="combat-stat">
+                <div class="combat-stat-label">Iniciativa</div>
+                <input type="number" data-field="iniciativa" class="combat-stat-val sheet-input">
+              </div>
+              <div class="combat-stat" style="grid-column:span 2">
+                <div class="combat-stat-label">Deslocamento (m)</div>
+                <input type="number" data-field="deslocamento" class="combat-stat-val sheet-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Armas -->
+          <div class="panel">
+            <div class="panel-title">Armas</div>
+            <table class="weapons-table">
+              <thead>
+                <tr><th>Nome</th><th>Ataque</th><th>Dano</th><th></th></tr>
+              </thead>
+              <tbody id="weapons-tbody"></tbody>
+            </table>
+            <button class="btn-add" id="btn-add-weapon">+ Adicionar Arma</button>
+            <div class="field-group" style="margin-top:0.75rem">
+              <label>Raridades e Gemas das Armas</label>
+              <textarea data-field="raridades_gemas" class="sheet-textarea" rows="3"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resistências Elementais -->
+        <div class="panel">
+          <div class="panel-title">Resistências Elementais</div>
+          <div class="resistances-grid">
+            <div class="resist-item"><span>Espectral</span><input type="number" data-field="r_espectral" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Ilusão</span><input type="number" data-field="r_ilusao" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Imaterial</span><input type="number" data-field="r_imaterial" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Vazio</span><input type="number" data-field="r_vazio" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Natureza</span><input type="number" data-field="r_natureza" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Água</span><input type="number" data-field="r_agua" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Ethereal</span><input type="number" data-field="r_ethereal" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Fogo</span><input type="number" data-field="r_fogo" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Espiritual</span><input type="number" data-field="r_espiritual" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Terra</span><input type="number" data-field="r_terra" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Trovão</span><input type="number" data-field="r_trovao" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Gelo</span><input type="number" data-field="r_gelo" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Trevas</span><input type="number" data-field="r_trevas" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Luz</span><input type="number" data-field="r_luz" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Cristal</span><input type="number" data-field="r_cristal" class="resist-val sheet-input"></div>
+            <div class="resist-item"><span>Ar</span><input type="number" data-field="r_ar" class="resist-val sheet-input"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         TAB: VITAL
+    ══════════════════════════════════════ -->
+    <section class="tab-content" id="tab-vital">
+      <div class="sheet-grid-2">
+
+        <div class="panel-col">
+          <!-- HP -->
+          <div class="panel vital-panel hp-panel">
+            <div class="panel-title">❤ Pontos de Vida</div>
+            <div class="vital-bars">
+              <div class="vital-row">
+                <label>Máximo</label>
+                <input type="number" data-field="hp_max" class="sheet-input vital-input">
+                <div class="vital-bar-wrap"><div class="vital-bar hp-bar" id="hp-bar-max"></div></div>
+              </div>
+              <div class="vital-row">
+                <label>Atual</label>
+                <input type="number" data-field="hp_atual" class="sheet-input vital-input">
+                <div class="vital-bar-wrap"><div class="vital-bar hp-bar" id="hp-bar-atual"></div></div>
+              </div>
+              <div class="vital-row">
+                <label>Temporário</label>
+                <input type="number" data-field="hp_temp" class="sheet-input vital-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Mana -->
+          <div class="panel vital-panel mana-panel">
+            <div class="panel-title">✦ Mana</div>
+            <div class="vital-bars">
+              <div class="vital-row">
+                <label>Máxima</label>
+                <input type="number" data-field="mana_max" class="sheet-input vital-input">
+                <div class="vital-bar-wrap"><div class="vital-bar mana-bar" id="mana-bar-max"></div></div>
+              </div>
+              <div class="vital-row">
+                <label>Atual</label>
+                <input type="number" data-field="mana_atual" class="sheet-input vital-input">
+                <div class="vital-bar-wrap"><div class="vital-bar mana-bar" id="mana-bar-atual"></div></div>
+              </div>
+              <div class="vital-row">
+                <label>Temporária</label>
+                <input type="number" data-field="mana_temp" class="sheet-input vital-input">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-col">
+          <!-- Buffs -->
+          <div class="panel">
+            <div class="panel-title">Porcentagens de Buff / Debuff / Cura</div>
+            <textarea data-field="buffs" class="sheet-textarea" rows="5"></textarea>
+          </div>
+
+          <!-- Escolas (do banco) -->
+          <div class="panel">
+            <div class="panel-title">Escolas</div>
+            <div id="escolas-list" class="linked-list"></div>
+            <div class="field-group" style="margin-top:0.5rem">
+              <label>Adicionar escola</label>
+              <select id="escolas-add-select"><option value="">— Selecionar —</option></select>
+              <button class="btn-add" id="btn-add-escola">+ Vincular</button>
+            </div>
+          </div>
+
+          <!-- Treinamentos (do banco) -->
+          <div class="panel">
+            <div class="panel-title">Treinamentos</div>
+            <div id="treinamentos-list" class="linked-list"></div>
+            <div class="field-group" style="margin-top:0.5rem">
+              <label>Adicionar treinamento</label>
+              <select id="treinamentos-add-select"><option value="">— Selecionar —</option></select>
+              <button class="btn-add" id="btn-add-treinamento">+ Vincular</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         TAB: MAGIAS
+    ══════════════════════════════════════ -->
+    <section class="tab-content" id="tab-magias">
+      <div id="magias-grid" class="magias-grid"></div>
+      <div style="text-align:center; margin-top:1rem">
+        <button class="btn-add" id="btn-add-magia">+ Adicionar Magia</button>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         TAB: ARSENAL (Desc. Itens/Armas)
+    ══════════════════════════════════════ -->
+    <section class="tab-content" id="tab-arsenal">
+      <div class="panel">
+        <div class="panel-title">Descrição de Itens e Armas</div>
+        <div id="descricao-itens-grid" class="desc-grid"></div>
+        <button class="btn-add" id="btn-add-desc-item">+ Adicionar Descrição</button>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         TAB: HABILIDADES
+    ══════════════════════════════════════ -->
+    <section class="tab-content" id="tab-habilidades">
+      <div class="sheet-grid-2">
+        <div class="panel">
+          <div class="panel-title">Descrição de Habilidades e Características Especiais</div>
+          <div id="descricao-habilidades-grid" class="desc-grid"></div>
+          <button class="btn-add" id="btn-add-desc-hab">+ Adicionar Descrição</button>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Habilidades Vinculadas (banco)</div>
+          <div id="habilidades-list" class="linked-list linked-list-detailed"></div>
+          <div class="field-group" style="margin-top:0.5rem">
+            <label>Vincular habilidade</label>
+            <select id="habilidades-add-select"><option value="">— Selecionar —</option></select>
+            <button class="btn-add" id="btn-add-habilidade">+ Vincular</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         TAB: RECURSOS (Inventário)
+    ══════════════════════════════════════ -->
+    <section class="tab-content" id="tab-recursos">
+      <div class="sheet-grid-2">
+
+        <!-- Moedas -->
+        <div class="panel">
+          <div class="panel-title">🎒 Bolsa Mágica Universal</div>
+          <div class="coins-grid">
+            <div class="coin-item platina">
+              <div class="coin-icon">◈</div>
+              <label>Platina</label>
+              <input type="number" data-field="platina" class="sheet-input coin-input" min="0">
+            </div>
+            <div class="coin-item ouro">
+              <div class="coin-icon">◉</div>
+              <label>Ouro</label>
+              <input type="number" data-field="ouro" class="sheet-input coin-input" min="0">
+            </div>
+            <div class="coin-item prata">
+              <div class="coin-icon">○</div>
+              <label>Prata</label>
+              <input type="number" data-field="prata" class="sheet-input coin-input" min="0">
+            </div>
+            <div class="coin-item bronze">
+              <div class="coin-icon">◌</div>
+              <label>Bronze</label>
+              <input type="number" data-field="bronze" class="sheet-input coin-input" min="0">
+            </div>
+            <div class="coin-item cobre">
+              <div class="coin-icon">·</div>
+              <label>Cobre</label>
+              <input type="number" data-field="cobre" class="sheet-input coin-input" min="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- Itens do banco -->
+        <div class="panel">
+          <div class="panel-title">Itens no Inventário (banco)</div>
+          <div id="itens-list" class="linked-list linked-list-detailed"></div>
+          <div class="field-group" style="margin-top:0.5rem">
+            <label>Adicionar item</label>
+            <select id="itens-add-select"><option value="">— Selecionar —</option></select>
+            <button class="btn-add" id="btn-add-item">+ Adicionar</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div><!-- /#sheet-main -->
+</div><!-- /#app -->
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════════════════
+const API_URL = 'https://ac53afc98d.execute-api.sa-east-1.amazonaws.com/prod';
+
+// ═══════════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════════
+let database   = {};
+let currentChar = null;   // objeto personagem atual (deep copy)
+let originalChar = null;  // referência para detectar mudanças
+let isDirty    = false;
+let loggedAdmin = null;
+
+// ═══════════════════════════════════════════════════════════════════
+//  BOOTSTRAP
+// ═══════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadDatabase();
+  populateCharSelector();
+  populateLinkedSelects();
+  setupTabs();
+  setupAdminLogin();
+  setupSaveBar();
+  hideLoading();
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  DATA LOADING
+// ═══════════════════════════════════════════════════════════════════
+async function loadDatabase() {
+  try {
+    const res = await fetch(API_URL, { method: 'GET' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.personagens) { database = data; return; }
+    }
+  } catch(e) {}
+  // fallback localStorage
+  const local = localStorage.getItem('woe_archive_db');
+  if (local) { try { database = JSON.parse(local); } catch(e) {} }
+}
+
+function populateCharSelector() {
+  const sel = document.getElementById('char-selector');
+  (database.personagens || []).forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.nome || p.id;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => {
+    const id = sel.value;
+    if (!id) return;
+    loadChar(id);
+  });
+}
+
+function populateLinkedSelects() {
+  populateSelect('escolas-add-select',     database.escolas     || [], 'nome');
+  populateSelect('treinamentos-add-select',database.treinamentos|| [], 'nome');
+  populateSelect('habilidades-add-select', database.habilidades || [], 'nome');
+  populateSelect('itens-add-select',       database.itens       || [], 'nome');
+}
+
+function populateSelect(id, arr, labelField) {
+  const sel = document.getElementById(id);
+  arr.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.id;
+    opt.textContent = item[labelField] || item.id;
+    sel.appendChild(opt);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  LOAD CHARACTER INTO FORM
+// ═══════════════════════════════════════════════════════════════════
+function loadChar(id) {
+  const found = (database.personagens || []).find(p => p.id === id);
+  if (!found) return;
+  currentChar  = JSON.parse(JSON.stringify(found));
+  originalChar = JSON.parse(JSON.stringify(found));
+  isDirty = false;
+  renderSheet();
+  document.getElementById('sheet-main').classList.remove('hidden');
+  document.getElementById('header-identity').classList.remove('hidden');
+  updateHeaderIdentity();
+  hideSaveBar();
+}
+
+function renderSheet() {
+  if (!currentChar) return;
+
+  // Text/number inputs
+  document.querySelectorAll('[data-field]').forEach(el => {
+    const f = el.dataset.field;
+    const val = currentChar[f];
+    if (el.type === 'checkbox') {
+      el.checked = !!val;
+    } else {
+      el.value = val !== undefined && val !== null ? val : '';
+    }
+  });
+
+  // Computed modifiers
+  updateAllMods();
+  updateSaveVals();
+
+  // Dynamic sections
+  renderWeapons();
+  renderMagias();
+  renderDescGrid('descricao-itens-grid',       currentChar.descricao_itens       || []);
+  renderDescGrid('descricao-habilidades-grid',  currentChar.descricao_habilidades  || []);
+  renderLinkedList('escolas-list',      currentChar.escolas_ids      || [], database.escolas     || []);
+  renderLinkedList('treinamentos-list', currentChar.treinamentos_ids || [], database.treinamentos|| []);
+  renderLinkedList('habilidades-list',  currentChar.habilidades_ids  || [], database.habilidades || [], true);
+  renderLinkedList('itens-list',        currentChar.itens_ids        || [], database.itens       || [], true);
+
+  updateVitalBars();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MODIFIERS
+// ═══════════════════════════════════════════════════════════════════
+function calcMod(val) {
+  return Math.floor((parseInt(val) - 10) / 2);
+}
+
+function updateAllMods() {
+  ['sabedoria','carisma','inteligencia','destreza','forca','constituicao'].forEach(stat => {
+    const val = currentChar[stat];
+    const mod = calcMod(val || 10);
+    const el = document.querySelector(`[data-mod="${stat}"]`);
+    if (el) el.textContent = (mod >= 0 ? '+' : '') + mod;
+  });
+}
+
+function updateSaveVals() {
+  const prof = parseInt(currentChar.proficiencia) || 0;
+  ['carisma','sabedoria','inteligencia','destreza','forca','constituicao'].forEach(stat => {
+    const base = calcMod(currentChar[stat] || 10);
+    const hasProficiency = !!currentChar['save_' + stat];
+    const total = base + (hasProficiency ? prof : 0);
+    const el = document.querySelector(`[data-save="${stat}"]`);
+    if (el) el.textContent = (total >= 0 ? '+' : '') + total;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  WEAPONS
+// ═══════════════════════════════════════════════════════════════════
+function renderWeapons() {
+  const tbody = document.getElementById('weapons-tbody');
+  tbody.innerHTML = '';
+  const weapons = currentChar.armas || [];
+  weapons.forEach((w, i) => {
+    tbody.appendChild(createWeaponRow(w, i));
+  });
+}
+
+function createWeaponRow(w, i) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text"   class="sheet-input w-nome"    value="${esc(w.nome||'')}"    placeholder="Nome"></td>
+    <td><input type="text"   class="sheet-input w-ataque"  value="${esc(w.ataque||'')}"  placeholder="Ataque"></td>
+    <td><input type="text"   class="sheet-input w-dano"    value="${esc(w.dano||'')}"    placeholder="Dano"></td>
+    <td><button class="btn-remove" data-idx="${i}">✕</button></td>
+  `;
+  tr.querySelector('.w-nome').addEventListener('input', e => { currentChar.armas[i].nome = e.target.value; markDirty(); });
+  tr.querySelector('.w-ataque').addEventListener('input', e => { currentChar.armas[i].ataque = e.target.value; markDirty(); });
+  tr.querySelector('.w-dano').addEventListener('input', e => { currentChar.armas[i].dano = e.target.value; markDirty(); });
+  tr.querySelector('.btn-remove').addEventListener('click', () => {
+    currentChar.armas.splice(i, 1);
+    markDirty();
+    renderWeapons();
+  });
+  return tr;
+}
+
+document.getElementById('btn-add-weapon').addEventListener('click', () => {
+  if (!currentChar) return;
+  if (!currentChar.armas) currentChar.armas = [];
+  currentChar.armas.push({ nome:'', ataque:'', dano:'' });
+  markDirty();
+  renderWeapons();
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  MAGIAS
+// ═══════════════════════════════════════════════════════════════════
+function renderMagias() {
+  const grid = document.getElementById('magias-grid');
+  grid.innerHTML = '';
+  const magias = currentChar.magias || [];
+  magias.forEach((m, i) => grid.appendChild(createMagiaCard(m, i)));
+}
+
+function createMagiaCard(m, i) {
+  const card = document.createElement('div');
+  card.className = 'magia-card';
+  card.innerHTML = `
+    <div class="magia-header">
+      <div class="magia-custo-wrap">
+        <span class="magia-custo-label">Custo</span>
+        <input type="text" class="sheet-input magia-custo" value="${esc(m.custo||'')}" placeholder="0">
+      </div>
+      <input type="text" class="sheet-input magia-nome" value="${esc(m.nome||'')}" placeholder="Nome da magia">
+      <button class="btn-remove magia-remove" data-idx="${i}">✕</button>
+    </div>
+    <textarea class="sheet-textarea magia-desc" rows="5" placeholder="Descrição da magia...">${esc(m.descricao||'')}</textarea>
+  `;
+  card.querySelector('.magia-custo').addEventListener('input', e => { currentChar.magias[i].custo = e.target.value; markDirty(); });
+  card.querySelector('.magia-nome').addEventListener('input', e => { currentChar.magias[i].nome = e.target.value; markDirty(); });
+  card.querySelector('.magia-desc').addEventListener('input', e => { currentChar.magias[i].descricao = e.target.value; markDirty(); });
+  card.querySelector('.magia-remove').addEventListener('click', () => {
+    currentChar.magias.splice(i, 1);
+    markDirty();
+    renderMagias();
+  });
+  return card;
+}
+
+document.getElementById('btn-add-magia').addEventListener('click', () => {
+  if (!currentChar) return;
+  if (!currentChar.magias) currentChar.magias = [];
+  currentChar.magias.push({ nome:'', custo:'', descricao:'' });
+  markDirty();
+  renderMagias();
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  DESCRIPTION GRIDS (itens e habilidades)
+// ═══════════════════════════════════════════════════════════════════
+function renderDescGrid(containerId, arr) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  arr.forEach((text, i) => {
+    const card = document.createElement('div');
+    card.className = 'desc-card';
+    const ta = document.createElement('textarea');
+    ta.className = 'sheet-textarea';
+    ta.rows = 8;
+    ta.value = text || '';
+    ta.placeholder = 'Descrição...';
+    ta.addEventListener('input', () => { arr[i] = ta.value; markDirty(); });
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'btn-remove';
+    removeBtn.textContent = '✕';
+    removeBtn.addEventListener('click', () => {
+      arr.splice(i, 1);
+      markDirty();
+      renderDescGrid(containerId, arr);
+    });
+    card.appendChild(removeBtn);
+    card.appendChild(ta);
+    container.appendChild(card);
+  });
+}
+
+document.getElementById('btn-add-desc-item').addEventListener('click', () => {
+  if (!currentChar) return;
+  if (!currentChar.descricao_itens) currentChar.descricao_itens = [];
+  currentChar.descricao_itens.push('');
+  markDirty();
+  renderDescGrid('descricao-itens-grid', currentChar.descricao_itens);
+});
+
+document.getElementById('btn-add-desc-hab').addEventListener('click', () => {
+  if (!currentChar) return;
+  if (!currentChar.descricao_habilidades) currentChar.descricao_habilidades = [];
+  currentChar.descricao_habilidades.push('');
+  markDirty();
+  renderDescGrid('descricao-habilidades-grid', currentChar.descricao_habilidades);
+});
+
+// ═══════════════════════════════════════════════════════════════════
+//  LINKED LISTS (escolas, treinamentos, habilidades, itens)
+// ═══════════════════════════════════════════════════════════════════
+function renderLinkedList(containerId, ids, sourceArr, detailed = false) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  ids.forEach((id, i) => {
+    const obj = sourceArr.find(x => x.id === id);
+    const tag = document.createElement('div');
+    tag.className = 'linked-tag';
+    tag.innerHTML = `<span>${obj ? obj.nome : id}</span><button class="btn-remove" data-idx="${i}">✕</button>`;
+    if (detailed && obj && obj.descricao) {
+      const desc = document.createElement('div');
+      desc.className = 'linked-tag-desc';
+      desc.textContent = obj.descricao;
+      tag.appendChild(desc);
+    }
+    tag.querySelector('.btn-remove').addEventListener('click', () => {
+      ids.splice(i, 1);
+      markDirty();
+      renderLinkedList(containerId, ids, sourceArr, detailed);
+    });
+    container.appendChild(tag);
+  });
+}
+
+function setupLinkedAdd(btnId, selectId, fieldKey, sourceArr, containerId, detailed = false) {
+  document.getElementById(btnId).addEventListener('click', () => {
+    if (!currentChar) return;
+    const sel = document.getElementById(selectId);
+    const id = sel.value;
+    if (!id) return;
+    if (!currentChar[fieldKey]) currentChar[fieldKey] = [];
+    if (!currentChar[fieldKey].includes(id)) {
+      currentChar[fieldKey].push(id);
+      markDirty();
+      renderLinkedList(containerId, currentChar[fieldKey], sourceArr, detailed);
+    }
+    sel.value = '';
+  });
+}
+
+setupLinkedAdd('btn-add-escola',      'escolas-add-select',      'escolas_ids',      database.escolas     || [], 'escolas-list');
+setupLinkedAdd('btn-add-treinamento', 'treinamentos-add-select', 'treinamentos_ids', database.treinamentos|| [], 'treinamentos-list');
+setupLinkedAdd('btn-add-habilidade',  'habilidades-add-select',  'habilidades_ids',  database.habilidades || [], 'habilidades-list', true);
+setupLinkedAdd('btn-add-item',        'itens-add-select',        'itens_ids',        database.itens       || [], 'itens-list',       true);
+
+// ═══════════════════════════════════════════════════════════════════
+//  VITAL BARS
+// ═══════════════════════════════════════════════════════════════════
+function updateVitalBars() {
+  const hpMax   = parseFloat(currentChar.hp_max)   || 1;
+  const hpAtual = parseFloat(currentChar.hp_atual)  || 0;
+  const manaMax   = parseFloat(currentChar.mana_max)   || 1;
+  const manaAtual = parseFloat(currentChar.mana_atual)  || 0;
+  setBar('hp-bar-atual', hpAtual / hpMax);
+  setBar('mana-bar-atual', manaAtual / manaMax);
+}
+
+function setBar(id, ratio) {
+  const el = document.getElementById(id);
+  if (el) el.style.width = Math.min(1, Math.max(0, ratio)) * 100 + '%';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════════════════
+function setupTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CHANGE TRACKING
+// ═══════════════════════════════════════════════════════════════════
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (!currentChar) return;
+  const field = el.dataset.field;
+  if (!field) return;
+  const val = el.type === 'checkbox' ? el.checked
+            : el.type === 'number'   ? (el.value === '' ? '' : Number(el.value))
+            : el.value;
+  currentChar[field] = val;
+  markDirty();
+
+  // live updates
+  if (['sabedoria','carisma','inteligencia','destreza','forca','constituicao'].includes(field)) {
+    updateAllMods();
+    updateSaveVals();
+  }
+  if (field.startsWith('save_') || field === 'proficiencia') updateSaveVals();
+  if (field.startsWith('hp_') || field.startsWith('mana_')) updateVitalBars();
+  if (field === 'nome' || field === 'raca' || field === 'nivel') updateHeaderIdentity();
+});
+
+function markDirty() {
+  isDirty = true;
+  document.getElementById('save-bar').classList.remove('hidden');
+}
+
+function updateHeaderIdentity() {
+  if (!currentChar) return;
+  document.getElementById('header-char-name').textContent = currentChar.nome || '—';
+  document.getElementById('header-char-sub').textContent =
+    [currentChar.raca, currentChar.nivel ? 'Nv. ' + currentChar.nivel : ''].filter(Boolean).join(' · ');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ADMIN LOGIN
+// ═══════════════════════════════════════════════════════════════════
+function setupAdminLogin() {
+  document.getElementById('btn-login').addEventListener('click', async () => {
+    const nome  = document.getElementById('admin-nome').value.trim();
+    const senha = document.getElementById('admin-senha').value.trim();
+    if (!nome || !senha) return;
+    const status = document.getElementById('admin-status');
+    status.textContent = '...';
+    try {
+      const res = await fetch(API_URL + '/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'admins', data: { nome }, admin_nome: nome, admin_senha: senha })
+      });
+      // We just attempt a no-op save to validate credentials
+      // A 403 means wrong credentials, 200 means valid
+      if (res.status === 200 || res.status === 403) {
+        if (res.status === 200) {
+          loggedAdmin = { nome, senha };
+          status.textContent = '✓ ' + nome;
+          status.className = 'admin-ok';
+          document.getElementById('admin-login-wrap').classList.add('logged');
+          showToast('Bem-vindo, ' + nome + '!');
+        } else {
+          status.textContent = '✗ Inválido';
+          status.className = 'admin-fail';
+        }
+      }
+    } catch(e) { status.textContent = '✗ Erro'; }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  SAVE / DISCARD
+// ═══════════════════════════════════════════════════════════════════
+function setupSaveBar() {
+  document.getElementById('btn-save').addEventListener('click', saveChar);
+  document.getElementById('btn-discard').addEventListener('click', discardChanges);
+}
+
+async function saveChar() {
+  if (!currentChar) return;
+  if (!loggedAdmin) { showToast('Faça login como cronista para salvar.', 'error'); return; }
+
+  try {
+    const res = await fetch(API_URL + '/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'personagens',
+        data: currentChar,
+        admin_nome:  loggedAdmin.nome,
+        admin_senha: loggedAdmin.senha
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      originalChar = JSON.parse(JSON.stringify(currentChar));
+      isDirty = false;
+      hideSaveBar();
+      // update local cache
+      const idx = (database.personagens || []).findIndex(p => p.id === currentChar.id);
+      if (idx >= 0) database.personagens[idx] = { ...currentChar };
+      localStorage.setItem('woe_archive_db', JSON.stringify(database));
+      showToast('Ficha salva com sucesso!');
+    } else {
+      showToast(data.error || 'Erro ao salvar.', 'error');
+    }
+  } catch(e) {
+    showToast('Erro de conexão.', 'error');
+  }
+}
+
+function discardChanges() {
+  if (!originalChar) return;
+  currentChar = JSON.parse(JSON.stringify(originalChar));
+  isDirty = false;
+  hideSaveBar();
+  renderSheet();
+  showToast('Alterações descartadas.');
+}
+
+function hideSaveBar() { document.getElementById('save-bar').classList.add('hidden'); }
+
+// ═══════════════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════════════
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'show ' + type;
+  setTimeout(() => toast.className = '', 3000);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  LOADING
+// ═══════════════════════════════════════════════════════════════════
+function hideLoading() {
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════════════
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
 </html>
