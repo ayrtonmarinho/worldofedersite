@@ -976,6 +976,12 @@
                 <button
                     class="flex-1 py-2 rounded bg-amber-900/50 text-[#cfaa56] text-sm border border-[#cfaa56]/30 font-bold hover:bg-amber-900/80 min-w-[100px]"
                     onclick="switchAdminForm('admins')">Cronistas</button>
+                <button
+                    class="flex-1 py-2 rounded bg-purple-900/50 text-purple-300 text-sm border border-purple-500/30 font-bold hover:bg-purple-900/80 min-w-[100px]"
+                    onclick="switchAdminForm('temporadas')">Temporada</button>
+                <button
+                    class="flex-1 py-2 rounded bg-purple-900/50 text-purple-300 text-sm border border-purple-500/30 font-bold hover:bg-purple-900/80 min-w-[100px]"
+                    onclick="switchAdminForm('musicas')">Música</button>
             </div>
 
             <form id="adminForm" class="space-y-4" onsubmit="submitAdminForm(event)">
@@ -1280,6 +1286,83 @@
                     </div>
                 </div>
 
+                <!-- ===== CAMPOS TEMPORADA ===== -->
+                <div id="fieldsTemporadas" class="space-y-4 hidden">
+                    <div class="bg-purple-900/20 border border-purple-500/30 rounded p-3 mb-2">
+                        <p class="text-xs text-purple-300 font-bold uppercase">🎼 Criação / Edição de Temporada</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Nome da Temporada *</label>
+                            <input type="text" id="inpNomeTemporada" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="Ex: Temporada 1 – O Início">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Número *</label>
+                            <input type="number" id="inpNumeroTemporada" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="1" min="1">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Descrição</label>
+                        <textarea id="inpDescTemporada" rows="3" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="Descreva esta temporada, seus temas e acontecimentos marcantes..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">URL da Imagem de Fundo</label>
+                        <input type="url" id="inpImagemBgTemporada" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="https://... (imagem que gerará a paleta de cores da seção)">
+                        <p class="text-[10px] text-purple-400 mt-1">Os tons dominantes desta imagem serão extraídos e aplicados como gradiente de fundo na página pública.</p>
+                    </div>
+                    <div id="previewTemporada" class="hidden">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Preview da Imagem</label>
+                        <img id="imgPreviewTemporada" src="" alt="preview" class="w-full h-32 object-cover rounded border border-white/10">
+                    </div>
+                </div>
+
+                <!-- ===== CAMPOS MUSICA (TRILHA SONORA) ===== -->
+                <div id="fieldsMusicasSoundtrack" class="space-y-4 hidden">
+                    <div class="bg-purple-900/20 border border-purple-500/30 rounded p-3 mb-2">
+                        <p class="text-xs text-purple-300 font-bold uppercase">🎵 Criação / Edição de Música</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Título *</label>
+                            <input type="text" id="inpTituloMusica" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="Nome da música">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Artista</label>
+                            <input type="text" id="inpArtistaMusica" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="Banda ou artista">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Temporada *</label>
+                            <select id="inpTemporadaMusica" class="search-input w-full rounded px-3 py-2 text-sm">
+                                <option value="">— Selecione a Temporada —</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Ordem na Temporada</label>
+                            <input type="number" id="inpOrdemMusica" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="1" min="1">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">O Momento *</label>
+                        <textarea id="inpMomentoMusica" rows="3" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="Descreva o momento épico em que esta música tocou na campanha..."></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Link YouTube</label>
+                            <input type="url" id="inpYoutubeMusica" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="https://youtube.com/...">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Link Spotify</label>
+                            <input type="url" id="inpSpotifyMusica" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="https://open.spotify.com/...">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">URL da Capa (imagem)</label>
+                        <input type="url" id="inpCapaMusica" class="search-input w-full rounded px-3 py-2 text-sm" placeholder="https://... (capa do álbum ou arte)">
+                    </div>
+                </div>
+
                 <!-- Campos de Mesa (Exclusivo / Exclusão) - visível para todos exceto mesas e admins -->
                 <div id="mesaFieldsCommon" class="space-y-3 hidden">
                     <!-- Mesa Selecionada (select) -->
@@ -1432,6 +1515,8 @@
                 if (!database.admins) database.admins = defaultMocks.admins;
                 if (!database.treinamentos) database.treinamentos = defaultMocks.treinamentos;
                 if (!database.mesas) database.mesas = defaultMocks.mesas;
+                if (!database.temporadas) database.temporadas = [];
+                if (!database.musicas) database.musicas = [];
             } else {
                 database = JSON.parse(JSON.stringify(defaultMocks));
             }
@@ -1440,6 +1525,8 @@
             if (apiData && apiData.habilidades) {
                 database = apiData;
                 if (!database.mesas) database.mesas = [];
+                if (!database.temporadas) database.temporadas = [];
+                if (!database.musicas) database.musicas = [];
             }
 
             document.getElementById('loading').classList.add('hidden');
@@ -2000,8 +2087,8 @@
                 let match = btn.getAttribute('onclick').match(/'([^']+)'/);
                 if (match) {
                     let tabType = match[1];
-                    // Aba Cronistas só é visível para Level 1
-                    if (tabType === 'admins') {
+                    // Abas restritas a Level 1 (Cronistas e Trilha Sonora)
+                    if (tabType === 'admins' || tabType === 'temporadas' || tabType === 'musicas') {
                         btn.style.display = (loggedAdmin.access_level === 1 || !loggedAdmin.access_level) ? 'block' : 'none';
                     } else if (loggedAdmin.access_level === 2 && loggedAdmin.tabs_allowed && !loggedAdmin.tabs_allowed.includes(tabType)) {
                         btn.style.display = 'none';
@@ -2157,6 +2244,18 @@
                 btnSubmit.classList.add('bg-[#cfaa56]', 'text-black');
             }
             
+            // Limpar campos de trilha sonora
+            ['inpNomeTemporada','inpNumeroTemporada','inpDescTemporada','inpImagemBgTemporada',
+             'inpTituloMusica','inpArtistaMusica','inpMomentoMusica','inpYoutubeMusica',
+             'inpSpotifyMusica','inpCapaMusica','inpOrdemMusica'].forEach(id => {
+                let el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            let selTemp = document.getElementById('inpTemporadaMusica');
+            if (selTemp) selTemp.selectedIndex = 0;
+            let prevTemp = document.getElementById('previewTemporada');
+            if (prevTemp) prevTemp.classList.add('hidden');
+
             // Re-aplicar toggles básicos para garantir consistência
             toggleRankHab();
         }
@@ -2522,6 +2621,8 @@
             document.getElementById('fieldsTreinamentos').classList.add('hidden');
             document.getElementById('fieldsAdmins').classList.add('hidden');
             document.getElementById('fieldsMesas').classList.add('hidden');
+            document.getElementById('fieldsTemporadas').classList.add('hidden');
+            document.getElementById('fieldsMusicasSoundtrack').classList.add('hidden');
 
             if (type === 'habilidades') document.getElementById('fieldsHabilidades').classList.remove('hidden');
             if (type === 'itens') document.getElementById('fieldsItens').classList.remove('hidden');
@@ -2532,6 +2633,34 @@
             if (type === 'treinamentos') document.getElementById('fieldsTreinamentos').classList.remove('hidden');
             if (type === 'admins') document.getElementById('fieldsAdmins').classList.remove('hidden');
             if (type === 'mesas') document.getElementById('fieldsMesas').classList.remove('hidden');
+            if (type === 'temporadas') {
+                document.getElementById('fieldsTemporadas').classList.remove('hidden');
+                // Preview da imagem ao digitar URL
+                let imgInput = document.getElementById('inpImagemBgTemporada');
+                imgInput.oninput = function() {
+                    let preview = document.getElementById('previewTemporada');
+                    let img = document.getElementById('imgPreviewTemporada');
+                    if (this.value.trim()) {
+                        img.src = this.value.trim();
+                        preview.classList.remove('hidden');
+                    } else {
+                        preview.classList.add('hidden');
+                    }
+                };
+            }
+            if (type === 'musicas') {
+                document.getElementById('fieldsMusicasSoundtrack').classList.remove('hidden');
+                // Popular dropdown de temporadas
+                let sel = document.getElementById('inpTemporadaMusica');
+                sel.innerHTML = '<option value="">— Selecione a Temporada —</option>';
+                let temps = (database.temporadas || []).sort((a,b) => (a.numero||0)-(b.numero||0));
+                temps.forEach(t => {
+                    let opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.nome || `Temporada ${t.numero}`;
+                    sel.appendChild(opt);
+                });
+            }
 
             // Mostrar campos de mesa (exclusivo/exclusão) para tipos de conteúdo
             let mesaCommon = document.getElementById('mesaFieldsCommon');
@@ -2544,22 +2673,33 @@
             }
 
             // Para admins e mesas, esconder campos comuns desnecessários
-            let commonImagem = document.getElementById('inpImagem').closest('.grid');
+            let isSoundtrackType = (type === 'temporadas' || type === 'musicas');
+            let commonGrid = document.getElementById('inpImagem').closest('.grid');
             let commonDesc = document.getElementById('inpDescricao').closest('.w-full');
             let descField = document.getElementById('inpDescricao');
-            if (type === 'admins') {
-                if (commonImagem) commonImagem.querySelector('#inpImagem').parentElement.style.display = 'none';
+            let nomeField = document.getElementById('inpNome');
+            if (isSoundtrackType) {
+                // Trilha sonora: esconder todo o grid comum (nome + imagem) e descrição
+                if (commonGrid) commonGrid.style.display = 'none';
                 if (commonDesc) commonDesc.style.display = 'none';
                 if (descField) descField.removeAttribute('required');
+                if (nomeField) nomeField.removeAttribute('required');
+            } else if (type === 'admins') {
+                if (commonGrid) commonGrid.querySelector('#inpImagem').parentElement.style.display = 'none';
+                if (commonGrid) commonGrid.querySelector('#inpNome').parentElement.style.display = 'block';
+                if (commonDesc) commonDesc.style.display = 'none';
+                if (descField) descField.removeAttribute('required');
+                if (nomeField) nomeField.setAttribute('required', '');
             } else if (type === 'mesas') {
-                // Mesas: mostrar imagem (opcional), esconder descrição (tem background)
-                if (commonImagem) commonImagem.querySelector('#inpImagem').parentElement.style.display = 'block';
+                if (commonGrid) { commonGrid.style.display = ''; commonGrid.querySelector('#inpImagem').parentElement.style.display = 'block'; }
                 if (commonDesc) commonDesc.style.display = 'none';
                 if (descField) descField.removeAttribute('required');
+                if (nomeField) nomeField.setAttribute('required', '');
             } else {
-                if (commonImagem) commonImagem.querySelector('#inpImagem').parentElement.style.display = 'block';
+                if (commonGrid) { commonGrid.style.display = ''; commonGrid.querySelector('#inpImagem').parentElement.style.display = 'block'; }
                 if (commonDesc) commonDesc.style.display = 'block';
                 if (descField) descField.setAttribute('required', '');
+                if (nomeField) nomeField.setAttribute('required', '');
             }
         }
 
@@ -2678,7 +2818,7 @@
                 if (bg) newItem.background = bg;
                 if (!newItem.imagem) delete newItem.imagem;
                 newItem.mestre = loggedAdmin.nome;
-                
+
                 // Coletar jogadores
                 let jogadores = [];
                 document.querySelectorAll('.mesa-player-item').forEach(pi => {
@@ -2699,6 +2839,34 @@
                     let orig = database.mesas.find(m => m.id === editId);
                     if (orig && orig.mestre) newItem.mestre = orig.mestre;
                 }
+            } else if (type === 'temporadas') {
+                let nomeTemp = document.getElementById('inpNomeTemporada').value.trim();
+                if (!nomeTemp) { alert('Preencha o nome da temporada.'); return; }
+                newItem = {
+                    id: editId ? editId : "temp_" + Date.now(),
+                    nome: nomeTemp,
+                    numero: parseInt(document.getElementById('inpNumeroTemporada').value) || 1,
+                    descricao: document.getElementById('inpDescTemporada').value.trim(),
+                    imagem_bg: document.getElementById('inpImagemBgTemporada').value.trim()
+                };
+            } else if (type === 'musicas') {
+                let titulo = document.getElementById('inpTituloMusica').value.trim();
+                let tempId = document.getElementById('inpTemporadaMusica').value;
+                let momento = document.getElementById('inpMomentoMusica').value.trim();
+                if (!titulo) { alert('Preencha o título da música.'); return; }
+                if (!tempId) { alert('Selecione a temporada.'); return; }
+                if (!momento) { alert('Descreva o momento em que a música tocou.'); return; }
+                newItem = {
+                    id: editId ? editId : "mus_" + Date.now(),
+                    titulo: titulo,
+                    artista: document.getElementById('inpArtistaMusica').value.trim(),
+                    temporada_id: tempId,
+                    momento: momento,
+                    link_youtube: document.getElementById('inpYoutubeMusica').value.trim(),
+                    link_spotify: document.getElementById('inpSpotifyMusica').value.trim(),
+                    imagem_capa: document.getElementById('inpCapaMusica').value.trim(),
+                    ordem: parseInt(document.getElementById('inpOrdemMusica').value) || 999
+                };
             }
 
             // Campos de mesa (exclusivo/exclusão) para tipos de conteúdo
