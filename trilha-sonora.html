@@ -462,6 +462,16 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
         .animate-in {
             animation: fadeInUp 0.6s ease forwards;
         }
@@ -737,6 +747,42 @@
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowfullscreen></iframe>
         </div>
+        <!-- Capa em destaque -->
+        <div id="modalCoverWrap" style="display:none; position:relative; width:100%; height:220px; overflow:hidden;">
+            <img id="modalCover" src="" alt=""
+                style="width:100%; height:100%; object-fit:cover; display:block;">
+            <div style="position:absolute; inset:0;
+                        background:linear-gradient(to top, rgba(10,10,14,0.95) 0%, rgba(10,10,14,0.4) 50%, transparent 100%);
+                        pointer-events:none;"></div>
+            <!-- Botão expandir imagem -->
+            <button onclick="openImageLightbox()" title="Ver imagem completa"
+                style="position:absolute; top:10px; right:10px;
+                       background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.18);
+                       border-radius:7px; color:#e6e0d4; cursor:pointer;
+                       width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+                       backdrop-filter:blur(6px); transition:all 0.2s; z-index:2;"
+                onmouseover="this.style.background='rgba(207,170,86,0.25)';this.style.borderColor='rgba(207,170,86,0.6)'"
+                onmouseout="this.style.background='rgba(0,0,0,0.55)';this.style.borderColor='rgba(255,255,255,0.18)'">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+                    <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+                </svg>
+            </button>
+            <!-- Momento sobreposto no rodapé da imagem -->
+            <div id="modalMomentoWrap" style="display:none; position:absolute; bottom:0; left:0; right:0; padding:18px 22px;">
+                <span style="display:block; font-size:0.6rem; font-weight:bold; text-transform:uppercase;
+                             letter-spacing:2px; color:var(--accent-gold); margin-bottom:6px;">♦ O Momento</span>
+                <p id="modalMomento" style="font-size:0.88rem; color:#e6e0d4; line-height:1.65;
+                                            font-style:italic; margin:0; text-shadow:0 1px 4px rgba(0,0,0,0.9);"></p>
+            </div>
+        </div>
+        <!-- Momento sem imagem -->
+        <div id="modalMomentoSolo" style="display:none; padding:18px 22px; border-top:1px solid rgba(255,255,255,0.06);">
+            <span style="display:block; font-size:0.6rem; font-weight:bold; text-transform:uppercase;
+                         letter-spacing:2px; color:var(--accent-gold); margin-bottom:8px;">♦ O Momento</span>
+            <p id="modalMomentoSoloText" style="font-size:0.88rem; color:var(--text-secondary);
+                                                line-height:1.7; font-style:italic; margin:0;"></p>
+        </div>
     </div>
 </div>
 
@@ -806,7 +852,39 @@
 
             document.getElementById('modalTitle').textContent = musica.titulo || '—';
             document.getElementById('modalArtist').textContent = musica.artista || '';
-            // youtube-nocookie.com para melhor compatibilidade; autoplay via URL funciona com gesture do clique
+
+            // Preencher capa e momento
+            const hasCover  = musica.imagem_capa && musica.imagem_capa.trim();
+            const hasMomento = musica.momento && musica.momento.trim();
+
+            const coverWrap       = document.getElementById('modalCoverWrap');
+            const cover           = document.getElementById('modalCover');
+            const momentoWrap     = document.getElementById('modalMomentoWrap');
+            const momento         = document.getElementById('modalMomento');
+            const momentoSolo     = document.getElementById('modalMomentoSolo');
+            const momentoSoloText = document.getElementById('modalMomentoSoloText');
+
+            // Capa em destaque (banner full-width)
+            if (hasCover) {
+                cover.src = musica.imagem_capa;
+                coverWrap.style.display = 'block';
+                if (hasMomento) {
+                    momento.textContent = musica.momento;
+                    momentoWrap.style.display = 'block';
+                } else {
+                    momentoWrap.style.display = 'none';
+                }
+                momentoSolo.style.display = 'none';
+            } else {
+                coverWrap.style.display = 'none';
+                if (hasMomento) {
+                    momentoSoloText.textContent = musica.momento;
+                    momentoSolo.style.display = 'block';
+                } else {
+                    momentoSolo.style.display = 'none';
+                }
+            }
+
             document.getElementById('videoModalIframe').src =
                 `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`;
             document.getElementById('videoModal').classList.add('open');
@@ -835,6 +913,9 @@
     function closeVideoModal() {
         document.getElementById('videoModal').classList.remove('open');
         document.getElementById('videoModalIframe').src = '';
+        document.getElementById('modalCover').src = '';
+        document.getElementById('modalCoverWrap').style.display = 'none';
+        document.getElementById('modalMomentoSolo').style.display = 'none';
         document.body.style.overflow = '';
         document.querySelectorAll('.play-btn').forEach(btn => btn.classList.remove('playing'));
         currentPlayingId = null;
@@ -874,6 +955,58 @@
         playerEmbedOpen = false;
         document.querySelectorAll('.play-btn').forEach(btn => btn.classList.remove('playing'));
         document.getElementById('playerToggleBtn').textContent = '▼ Abrir';
+    }
+
+    // ===== IMAGE LIGHTBOX =====
+    function openImageLightbox() {
+        const src = document.getElementById('modalCover').src;
+        if (!src) return;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'imageLightbox';
+        overlay.style.cssText = `
+            position:fixed; inset:0; z-index:10000;
+            background:rgba(0,0,0,0.92);
+            display:flex; align-items:center; justify-content:center;
+            cursor:zoom-out; animation:fadeIn 0.18s ease;
+        `;
+
+        const img = document.createElement('img');
+        img.src = src;
+        img.style.cssText = `
+            max-width:92vw; max-height:90vh;
+            object-fit:contain; border-radius:8px;
+            box-shadow:0 8px 60px rgba(0,0,0,0.8);
+            cursor:default;
+        `;
+        img.onclick = e => e.stopPropagation();
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '✕';
+        closeBtn.style.cssText = `
+            position:fixed; top:18px; right:22px;
+            background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.2);
+            color:#e6e0d4; font-size:1.2rem; width:40px; height:40px;
+            border-radius:50%; cursor:pointer; display:flex;
+            align-items:center; justify-content:center;
+            backdrop-filter:blur(8px); transition:all 0.2s; z-index:1;
+        `;
+        closeBtn.onmouseover = () => { closeBtn.style.background = 'rgba(207,170,86,0.3)'; closeBtn.style.borderColor = 'rgba(207,170,86,0.6)'; };
+        closeBtn.onmouseout  = () => { closeBtn.style.background = 'rgba(0,0,0,0.6)';       closeBtn.style.borderColor = 'rgba(255,255,255,0.2)'; };
+        closeBtn.onclick = e => { e.stopPropagation(); closeLightbox(); };
+
+        overlay.appendChild(img);
+        overlay.appendChild(closeBtn);
+        overlay.onclick = () => closeLightbox();
+        document.body.appendChild(overlay);
+
+        const escHandler = e => { if (e.key === 'Escape') { closeLightbox(); document.removeEventListener('keydown', escHandler); } };
+        document.addEventListener('keydown', escHandler);
+
+        function closeLightbox() {
+            overlay.style.animation = 'fadeOut 0.15s ease forwards';
+            setTimeout(() => overlay.remove(), 150);
+        }
     }
 
     // ===== COLOR EXTRACTION =====
