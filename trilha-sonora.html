@@ -468,6 +468,231 @@
 
         /* Hidden canvas for color extraction */
         #colorCanvas { display: none; }
+
+        /* ===== MUSIC PLAYER ===== */
+        #musicPlayer {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 200;
+            background: rgba(12, 12, 16, 0.97);
+            border-top: 1px solid rgba(207,170,86,0.25);
+            backdrop-filter: blur(24px);
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 -8px 40px rgba(0,0,0,0.8);
+        }
+
+        #musicPlayer.active { transform: translateY(0); }
+
+        .player-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .player-info { flex: 1; min-width: 0; }
+
+        .player-song-title {
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-song-artist {
+            font-size: 0.72rem;
+            color: var(--accent-gold);
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .player-platform-badge {
+            font-size: 0.65rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 2px 8px;
+            border-radius: 99px;
+            border: 1px solid;
+            flex-shrink: 0;
+        }
+
+        .player-platform-badge.yt {
+            color: #ff4444;
+            border-color: rgba(255,68,68,0.4);
+            background: rgba(255,68,68,0.1);
+        }
+
+        .player-platform-badge.sp {
+            color: #1ed760;
+            border-color: rgba(30,215,96,0.4);
+            background: rgba(30,215,96,0.1);
+        }
+
+        #playerToggleBtn {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        #playerToggleBtn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+
+        #playerCloseBtn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: color 0.2s;
+            flex-shrink: 0;
+        }
+
+        #playerCloseBtn:hover { color: #f87171; }
+
+        .player-embed-area {
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.4s ease;
+        }
+
+        .player-embed-area.expanded { max-height: 200px; }
+
+        .player-embed-area iframe {
+            width: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* Play button on cards */
+        .play-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(207,170,86,0.12);
+            border: 1px solid rgba(207,170,86,0.3);
+            color: var(--accent-gold);
+            padding: 5px 12px;
+            border-radius: 99px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .play-btn:hover {
+            background: rgba(207,170,86,0.25);
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 12px rgba(207,170,86,0.2);
+            transform: scale(1.04);
+        }
+
+        .play-btn.playing {
+            filter: brightness(1.5);
+            box-shadow: 0 0 14px currentColor;
+        }
+
+        .platform-btn.youtube.playing {
+            background: rgba(255,0,0,0.3);
+            border-color: #ff4444;
+        }
+
+        .platform-btn.spotify.playing {
+            background: rgba(30,215,96,0.3);
+            border-color: #1ed760;
+        }
+
+        /* ===== VIDEO MODAL (YouTube) ===== */
+        #videoModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            background: rgba(0,0,0,0.88);
+            backdrop-filter: blur(10px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #videoModal.open { display: flex; }
+
+        .video-modal-inner {
+            width: 100%;
+            max-width: 860px;
+            background: #0d0d12;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.9);
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .video-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .video-modal-title {
+            font-family: var(--font-heading);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-modal-artist {
+            font-size: 0.75rem;
+            color: var(--accent-gold);
+            opacity: 0.8;
+        }
+
+        .video-modal-close {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px 11px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .video-modal-close:hover { background: rgba(248,113,113,0.15); border-color: #f87171; color: #f87171; }
+
+        .video-modal-frame {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 */
+            background: #000;
+        }
+        .video-modal-frame iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
     </style>
 </head>
 <body>
@@ -497,6 +722,40 @@
 <!-- CONTENT -->
 <div id="content" class="hidden"></div>
 
+<!-- VIDEO MODAL (YouTube) -->
+<div id="videoModal" onclick="handleModalBackdropClick(event)">
+    <div class="video-modal-inner">
+        <div class="video-modal-header">
+            <div style="flex:1;min-width:0;">
+                <div class="video-modal-title" id="modalTitle">—</div>
+                <div class="video-modal-artist" id="modalArtist"></div>
+            </div>
+            <button class="video-modal-close" onclick="closeVideoModal()">✕</button>
+        </div>
+        <div class="video-modal-frame">
+            <iframe id="videoModalIframe"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen></iframe>
+        </div>
+    </div>
+</div>
+
+<!-- MUSIC PLAYER -->
+<div id="musicPlayer">
+    <div class="player-bar">
+        <div class="player-info">
+            <div class="player-song-title" id="playerTitle">—</div>
+            <div class="player-song-artist" id="playerArtist"></div>
+        </div>
+        <span class="player-platform-badge" id="playerBadge"></span>
+        <button id="playerToggleBtn" onclick="togglePlayerEmbed()">▼ Abrir</button>
+        <button id="playerCloseBtn" onclick="closePlayer()" title="Fechar player">✕</button>
+    </div>
+    <div class="player-embed-area" id="playerEmbedArea">
+        <iframe id="playerIframe" height="166" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+    </div>
+</div>
+
 <!-- NO DATA -->
 <div id="noData" class="hidden">
     <h2>Silêncio...</h2>
@@ -508,6 +767,114 @@
 
     let allTemporadas = [];
     let allMusicas = [];
+    let currentPlayingId = null;
+    let playerEmbedOpen = false;
+
+    // ===== PLAYER =====
+    function extractYouTubeId(url) {
+        if (!url) return null;
+        const match = url.match(/(?:v=|youtu\.be\/|embed\/)([^&?/\s]+)/);
+        return match ? match[1] : null;
+    }
+
+    function extractSpotifyTrackId(url) {
+        if (!url) return null;
+        const match = url.match(/track\/([^?/\s]+)/);
+        return match ? match[1] : null;
+    }
+
+    function playMusica(musicaId) {
+        const musica = allMusicas.find(m => m.id === musicaId);
+        if (!musica) return;
+
+        const ytId = extractYouTubeId(musica.link_youtube);
+        const spId = extractSpotifyTrackId(musica.link_spotify);
+        if (!ytId && !spId) return;
+
+        // Marca botão ativo
+        document.querySelectorAll('.play-btn').forEach(btn => btn.classList.remove('playing'));
+        const activeBtn = document.querySelector(`.play-btn[data-id="${musicaId}"]`);
+
+        if (ytId) {
+            // YouTube → modal overlay (evita bloqueio de autoplay do iframe)
+            if (currentPlayingId === musicaId) {
+                closeVideoModal();
+                return;
+            }
+            currentPlayingId = musicaId;
+            if (activeBtn) activeBtn.classList.add('playing');
+
+            document.getElementById('modalTitle').textContent = musica.titulo || '—';
+            document.getElementById('modalArtist').textContent = musica.artista || '';
+            // youtube-nocookie.com para melhor compatibilidade; autoplay via URL funciona com gesture do clique
+            document.getElementById('videoModalIframe').src =
+                `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`;
+            document.getElementById('videoModal').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        } else {
+            // Só Spotify → barra de baixo
+            if (currentPlayingId === musicaId) {
+                closePlayer();
+                return;
+            }
+            currentPlayingId = musicaId;
+            if (activeBtn) activeBtn.classList.add('playing');
+
+            document.getElementById('playerTitle').textContent = musica.titulo || '—';
+            document.getElementById('playerArtist').textContent = musica.artista || '';
+            const iframe = document.getElementById('playerIframe');
+            iframe.src = `https://open.spotify.com/embed/track/${spId}?utm_source=generator`;
+            iframe.height = '152';
+            document.getElementById('playerBadge').textContent = 'Spotify';
+            document.getElementById('playerBadge').className = 'player-platform-badge sp';
+            document.getElementById('musicPlayer').classList.add('active');
+            openPlayerEmbed();
+        }
+    }
+
+    function closeVideoModal() {
+        document.getElementById('videoModal').classList.remove('open');
+        document.getElementById('videoModalIframe').src = '';
+        document.body.style.overflow = '';
+        document.querySelectorAll('.play-btn').forEach(btn => btn.classList.remove('playing'));
+        currentPlayingId = null;
+    }
+
+    function handleModalBackdropClick(e) {
+        if (e.target === document.getElementById('videoModal')) closeVideoModal();
+    }
+
+    // Fechar modal com ESC
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVideoModal(); });
+
+    function openPlayerEmbed() {
+        const area = document.getElementById('playerEmbedArea');
+        const btn = document.getElementById('playerToggleBtn');
+        area.classList.add('expanded');
+        btn.textContent = '▲ Fechar';
+        playerEmbedOpen = true;
+    }
+
+    function togglePlayerEmbed() {
+        const area = document.getElementById('playerEmbedArea');
+        const btn = document.getElementById('playerToggleBtn');
+        playerEmbedOpen = !playerEmbedOpen;
+        area.classList.toggle('expanded', playerEmbedOpen);
+        btn.textContent = playerEmbedOpen ? '▲ Fechar' : '▼ Abrir';
+    }
+
+    function closePlayer() {
+        const player = document.getElementById('musicPlayer');
+        const iframe = document.getElementById('playerIframe');
+        const area = document.getElementById('playerEmbedArea');
+        player.classList.remove('active');
+        area.classList.remove('expanded');
+        iframe.src = '';
+        currentPlayingId = null;
+        playerEmbedOpen = false;
+        document.querySelectorAll('.play-btn').forEach(btn => btn.classList.remove('playing'));
+        document.getElementById('playerToggleBtn').textContent = '▼ Abrir';
+    }
 
     // ===== COLOR EXTRACTION =====
     function extractDominantColors(imageUrl) {
@@ -585,17 +952,29 @@
             ? `<img class="musica-cover" src="${sanitize(musica.imagem_capa)}" alt="${sanitize(musica.titulo)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=musica-cover-placeholder>🎵</div><div class=musica-cover-gradient></div>'">`
             : `<div class="musica-cover-placeholder">🎵</div>`;
 
-        const linksHtml = (hasYT || hasSP) ? `
-            <div class="musica-links">
-                ${hasYT ? `<a class="platform-btn youtube" href="${sanitize(musica.link_youtube)}" target="_blank" rel="noopener">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-2.75 12.64 12.64 0 0 0-8.07 3 12.51 12.51 0 0 0-3.74 8.32 4.84 4.84 0 0 1 3.06 4.54 4.85 4.85 0 0 1-4.84 4.84A4.85 4.85 0 0 1 2.38 16a12.45 12.45 0 0 0 3.89-3.78 12.57 12.57 0 0 0 2-6.58 4.83 4.83 0 0 1 2.37-4.06A4.82 4.82 0 0 1 15.36 3a4.85 4.85 0 0 1 4.23 3.69Z"/></svg>
-                    YouTube
-                </a>` : ''}
-                ${hasSP ? `<a class="platform-btn spotify" href="${sanitize(musica.link_spotify)}" target="_blank" rel="noopener">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 14.36a.62.62 0 0 1-.86.21c-2.36-1.44-5.33-1.77-8.83-.97a.62.62 0 1 1-.28-1.21c3.83-.87 7.1-.5 9.76 1.11a.62.62 0 0 1 .21.86zm1.24-2.76a.78.78 0 0 1-1.07.26c-2.7-1.66-6.81-2.14-10-.17a.78.78 0 1 1-.88-1.29c3.65-2.22 8.21-1.68 11.29.19a.78.78 0 0 1 .26 1.07zm.11-2.87c-3.24-1.92-8.59-2.1-11.68-.8a.94.94 0 1 1-.7-1.74c3.55-1.43 9.46-1.21 13.19.87a.94.94 0 0 1-1.11 1.53z"/></svg>
+        // YouTube vira o botão de embed; Spotify fica como link externo
+        const ytEmbedBtn = hasYT
+            ? `<button class="platform-btn youtube play-btn" data-id="${sanitize(musica.id)}" onclick="playMusica('${sanitize(musica.id)}')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                YouTube
+               </button>`
+            : (hasSP
+                ? `<button class="platform-btn spotify play-btn" data-id="${sanitize(musica.id)}" onclick="playMusica('${sanitize(musica.id)}')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                     Spotify
-                </a>` : ''}
-            </div>` : '';
+                   </button>`
+                : '');
+
+        const spLinkBtn = hasSP
+            ? `<a class="platform-btn spotify" href="${sanitize(musica.link_spotify)}" target="_blank" rel="noopener" title="Abrir no Spotify">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 14.36a.62.62 0 0 1-.86.21c-2.36-1.44-5.33-1.77-8.83-.97a.62.62 0 1 1-.28-1.21c3.83-.87 7.1-.5 9.76 1.11a.62.62 0 0 1 .21.86zm1.24-2.76a.78.78 0 0 1-1.07.26c-2.7-1.66-6.81-2.14-10-.17a.78.78 0 1 1-.88-1.29c3.65-2.22 8.21-1.68 11.29.19a.78.78 0 0 1 .26 1.07zm.11-2.87c-3.24-1.92-8.59-2.1-11.68-.8a.94.94 0 1 1-.7-1.74c3.55-1.43 9.46-1.21 13.19.87a.94.94 0 0 1-1.11 1.53z"/></svg>
+                ↗
+               </a>`
+            : '';
+
+        const linksHtml = (hasYT || hasSP)
+            ? `<div class="musica-links">${ytEmbedBtn}${spLinkBtn}</div>`
+            : '';
 
         const div = document.createElement('div');
         div.className = 'musica-card';
