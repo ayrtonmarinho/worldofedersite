@@ -357,6 +357,72 @@
         <span class="text-[10px] text-slate-500 group-hover:text-slate-300">⚙️</span>
     </button>
 
+    <!-- TOOLTIP DA BARRA LATERAL -->
+    <div id="sidebar-tooltip" class="fixed hidden bg-slate-900 border border-slate-700 rounded-lg shadow-2xl pointer-events-none z-50 w-72 overflow-hidden">
+        <div id="stt-accent" class="h-0.5 w-full"></div>
+        <div class="px-4 pt-2.5 pb-1.5">
+            <p id="stt-type" class="text-[10px] uppercase tracking-widest font-black mb-0.5"></p>
+            <h3 id="stt-name" class="font-bold text-base text-white leading-tight"></h3>
+        </div>
+        <div class="px-4 pb-3 space-y-1.5">
+            <p id="stt-desc" class="text-sm text-slate-300 italic hidden border-t border-slate-700/50 pt-2"></p>
+            <div id="stt-stats" class="text-sm text-blue-300 font-medium space-y-0.5"></div>
+        </div>
+    </div>
+
+    <!-- MODAL PONTOS (ADMIN) -->
+    <div id="points-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-600 shadow-2xl w-80 relative">
+
+            <!-- Botão de deletar (canto superior direito) -->
+            <button onclick="toggleDeleteConfirm()" id="pm-delete-btn" title="Excluir jogador"
+                class="absolute top-3 right-3 text-slate-500 hover:text-red-400 transition-colors p-1 rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+            </button>
+
+            <!-- Cabeçalho (sempre visível) -->
+            <div class="flex items-center gap-3 mb-5 pr-6">
+                <div class="w-11 h-11 rounded-full bg-indigo-900 border border-indigo-600 flex items-center justify-center text-xl shrink-0">👤</div>
+                <div class="min-w-0">
+                    <h2 class="text-base font-bold text-white leading-tight truncate" id="pm-name"></h2>
+                    <p class="text-xs text-slate-400"><span id="pm-code" class="text-slate-500"></span> &middot; <span class="text-green-400">Pontos: <strong id="pm-current"></strong></span></p>
+                </div>
+            </div>
+
+            <!-- Corpo: adicionar pontos -->
+            <div id="pm-body">
+                <label class="block text-xs text-slate-400 uppercase font-bold mb-2">Quantidade</label>
+                <div class="flex gap-2 mb-1">
+                    <button onclick="adjustPtsInput(-1)" class="bg-red-900/50 hover:bg-red-800/80 border border-red-800 text-red-300 font-bold w-10 shrink-0 rounded text-xl transition-colors">−</button>
+                    <input type="number" id="pm-pts-input" placeholder="Ex: 5 ou -3"
+                        class="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white text-center text-sm focus:outline-none focus:border-indigo-500"
+                        onkeydown="if(event.key==='Enter') applyPointsFromModal()">
+                    <button onclick="adjustPtsInput(1)" class="bg-emerald-900/50 hover:bg-emerald-800/80 border border-emerald-800 text-emerald-300 font-bold w-10 shrink-0 rounded text-xl transition-colors">+</button>
+                </div>
+                <p class="text-[10px] text-slate-500 text-center mb-5">Valores negativos removem pontos</p>
+                <div class="flex gap-2">
+                    <button onclick="closePointsModal()" class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 rounded font-bold text-sm transition-colors">Cancelar</button>
+                    <button onclick="applyPointsFromModal()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded font-bold text-sm transition-colors shadow-lg shadow-indigo-900/50">Aplicar</button>
+                </div>
+            </div>
+
+            <!-- Corpo: confirmar exclusão -->
+            <div id="pm-confirm-panel" class="hidden">
+                <div class="bg-red-950/60 border border-red-800/60 rounded-lg p-4 mb-5 text-center">
+                    <p class="text-red-300 font-bold text-sm mb-1">Excluir este jogador?</p>
+                    <p class="text-red-400/70 text-xs">Esta ação remove o jogador do banco de dados e é irreversível.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="toggleDeleteConfirm()" class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 rounded font-bold text-sm transition-colors">Cancelar</button>
+                    <button onclick="deleteUserFromModal()" class="flex-1 bg-red-700 hover:bg-red-600 text-white py-2 rounded font-bold text-sm transition-colors shadow-lg shadow-red-900/50">Confirmar</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <!-- MODAL DE LOGIN ADMIN -->
     <div id="admin-modal"
         class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden backdrop-blur-sm">
@@ -380,6 +446,18 @@
         let intendedTab = null;
         let currentUser = null; // Objeto do jogador logado atualmente
         let imageCache = {};
+        let adminUserCache = {};
+
+        function countPointsUsed(allocatedNodes) {
+            return allocatedNodes.filter(id => {
+                let n = treeData.nodes[id];
+                return n && n.type !== 'omega';
+            }).length;
+        }
+
+        function escHtml(str) {
+            return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
 
         const ATTR_COLORS = {
             "none": { fill: "#1e293b", stroke: "#e2e8f0", shadow: "#ffffff" }, // Branco
@@ -555,7 +633,7 @@
         async function saveUserFlow() {
             if (!currentUser) return;
 
-            currentUser.level = currentUser.allocatedNodes.length; // Nível = qtd de nodos
+            currentUser.level = countPointsUsed(currentUser.allocatedNodes); // Nível = pontos gastos (omega não conta)
 
             let askCloud = confirm("Deseja sincronizar este save com o DynamoDB (Nuvem)?");
 
@@ -884,7 +962,7 @@
                 hoveredNode = null;
                 for (let key in treeData.nodes) {
                     let n = treeData.nodes[key];
-                    let r = n.type === "root" ? 28 : n.type === "large" ? 24 : n.type === "notable" ? 18 : 12;
+                    let r = n.type === "root" ? 28 : n.type === "large" ? 24 : n.type === "notable" ? 18 : n.type === "omega" ? 16 : 12;
                     let dx = wp.x - n.x, dy = wp.y - n.y;
                     if (dx * dx + dy * dy <= r * r) { hoveredNode = n; break; }
                 }
@@ -915,7 +993,10 @@
             if (!currentUser) return false;
             if (allocSet.has(nodeId)) return false;
 
-            let isTargetRoot = treeData.nodes[nodeId].type === 'root';
+            let node = treeData.nodes[nodeId];
+            let isTargetRoot = node.type === 'root';
+            let isOmega = node.type === 'omega';
+            let usedPoints = countPointsUsed(Array.from(allocSet));
 
             // Se for tentar alocar um root, verifica se já existe alguma classe (root) escolhida na árvore deste usuário.
             if (isTargetRoot) {
@@ -925,13 +1006,14 @@
                     }
                 }
                 // Se chegou aqui, não tem classe nenhuma. Pode pegar se tiver pontos.
-                return currentUser.totalPoints > allocSet.size;
+                return currentUser.totalPoints > usedPoints;
             }
 
-            // Para os outros nodos, precisa estar conectado a algo já alocado
+            // Para os outros nodos, precisa estar conectado a algo já alocado.
+            // Nodos omega (portais) são gratuitos — não consomem pontos, apenas precisam de conectividade.
             let ns = getNeighbors(nodeId);
             for (let n of ns) {
-                if (allocSet.has(n)) return currentUser.totalPoints > allocSet.size;
+                if (allocSet.has(n)) return isOmega ? true : currentUser.totalPoints > usedPoints;
             }
             return false;
         }
@@ -962,6 +1044,157 @@
             return visited.size === temp.size;
         }
 
+        // ================= SOM =================
+        let _audioCtx = null;
+        function _ac() {
+            if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return _audioCtx;
+        }
+
+        // Helper: voz de coro — sawtooth + formantes vocais para simular "Aah"
+        function _choirVoice(ctx, freq, start, dur, vol, detune = 0) {
+            let o = ctx.createOscillator(), env = ctx.createGain();
+            let f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter();
+            o.type = 'sawtooth'; o.frequency.value = freq; o.detune.value = detune;
+            // Formantes do "Aah" (trato vocal masculino)
+            f1.type = 'bandpass'; f1.frequency.value = 700;  f1.Q.value = 7;
+            f2.type = 'bandpass'; f2.frequency.value = 1150; f2.Q.value = 4;
+            env.gain.setValueAtTime(0, start);
+            env.gain.linearRampToValueAtTime(vol, start + 0.45);
+            env.gain.setValueAtTime(vol, start + dur - 0.4);
+            env.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+            // LFO de vibrato (entra após o ataque)
+            let lfo = ctx.createOscillator(), lfoG = ctx.createGain();
+            lfo.frequency.value = 5.2; lfoG.gain.value = 6;
+            lfo.connect(lfoG); lfoG.connect(o.frequency);
+            o.connect(f1); f1.connect(env);
+            o.connect(f2); f2.connect(env);
+            env.connect(ctx.destination);
+            o.start(start); o.stop(start + dur + 0.05);
+            lfo.start(start + 0.5); lfo.stop(start + dur + 0.05);
+        }
+
+        // Som 1: ESCOLHA DE CLASSE — coro épico (tipo descoberta/revelação)
+        function playClassSound() {
+            try {
+                let ctx = _ac(), t = ctx.currentTime;
+                // Acorde Dó maior em 2 oitavas, múltiplas vozes levemente desafinadas
+                let chord = [130.8, 164.8, 196, 261.6, 329.6, 392];
+                chord.forEach((freq, i) => {
+                    let vol = i < 3 ? 0.18 : 0.14;
+                    _choirVoice(ctx, freq, t + i * 0.04, 2.4, vol, 0);
+                    _choirVoice(ctx, freq, t + i * 0.04, 2.4, vol * 0.6, 12); // voz detuned
+                    _choirVoice(ctx, freq, t + i * 0.04, 2.4, vol * 0.4, -10);
+                });
+                // Shimmer de cordas agudas no topo
+                [1046, 1318, 1568].forEach((freq, i) => {
+                    let o = ctx.createOscillator(), g = ctx.createGain();
+                    o.type = 'sine'; o.frequency.value = freq;
+                    g.gain.setValueAtTime(0, t + 0.5 + i * 0.08);
+                    g.gain.linearRampToValueAtTime(0.07, t + 0.9 + i * 0.08);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+                    o.connect(g); g.connect(ctx.destination);
+                    o.start(t + 0.5 + i * 0.08); o.stop(t + 2.3);
+                });
+            } catch (e) {}
+        }
+
+        // Som 2: ALOCAR NODO — espadas pesadas sendo fincadas e raspando metal
+        function playAllocateSound() {
+            try {
+                let ctx = _ac(), t = ctx.currentTime;
+                // Impacto surdo (lâmina fincando)
+                let imp = ctx.createOscillator(), impG = ctx.createGain();
+                imp.type = 'sine'; imp.frequency.setValueAtTime(120, t);
+                imp.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+                impG.gain.setValueAtTime(0.55, t);
+                impG.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+                imp.connect(impG); impG.connect(ctx.destination);
+                imp.start(t); imp.stop(t + 0.2);
+                // Raspagem metálica (ruído filtrado varredura ascendente)
+                let len = Math.floor(ctx.sampleRate * 0.38);
+                let buf = ctx.createBuffer(1, len, ctx.sampleRate);
+                let d = buf.getChannelData(0);
+                for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+                let src = ctx.createBufferSource();
+                src.buffer = buf;
+                let bp = ctx.createBiquadFilter();
+                bp.type = 'bandpass'; bp.Q.value = 18;
+                bp.frequency.setValueAtTime(600, t + 0.02);
+                bp.frequency.exponentialRampToValueAtTime(5500, t + 0.35);
+                let scrG = ctx.createGain();
+                scrG.gain.setValueAtTime(0.35, t + 0.02);
+                scrG.gain.exponentialRampToValueAtTime(0.0001, t + 0.38);
+                src.connect(bp); bp.connect(scrG); scrG.connect(ctx.destination);
+                src.start(t + 0.02);
+                // Repique metálico (harmônicos de aço)
+                [2200, 3100, 4300].forEach((freq, i) => {
+                    let o = ctx.createOscillator(), g = ctx.createGain();
+                    o.type = 'sine'; o.frequency.value = freq;
+                    g.gain.setValueAtTime(0.07 - i * 0.015, t + 0.04);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+                    o.connect(g); g.connect(ctx.destination);
+                    o.start(t + 0.04); o.stop(t + 0.48);
+                });
+            } catch (e) {}
+        }
+
+        // Som 3: DESALOCAR — envelope reverso quente (como um feitiço sendo desfeito)
+        function playDeallocateSound() {
+            try {
+                let ctx = _ac(), t = ctx.currentTime;
+                // Harmônicos quentes que constroem e cortam (envelope reverso)
+                [[220, 0.16], [277.2, 0.12], [330, 0.09]].forEach(([freq, vol], i) => {
+                    let o = ctx.createOscillator(), g = ctx.createGain();
+                    let lp = ctx.createBiquadFilter();
+                    o.type = 'sine'; o.frequency.value = freq;
+                    lp.type = 'lowpass'; lp.frequency.value = 900;
+                    // Envelope reverso: cresce lentamente, corta no pico
+                    g.gain.setValueAtTime(0, t + i * 0.03);
+                    g.gain.linearRampToValueAtTime(vol, t + 0.38 + i * 0.03);
+                    g.gain.linearRampToValueAtTime(0, t + 0.48);
+                    o.connect(lp); lp.connect(g); g.connect(ctx.destination);
+                    o.start(t + i * 0.03); o.stop(t + 0.52);
+                });
+                // Sopro grave final (calidez)
+                let o2 = ctx.createOscillator(), g2 = ctx.createGain();
+                o2.type = 'triangle'; o2.frequency.setValueAtTime(180, t);
+                o2.frequency.exponentialRampToValueAtTime(110, t + 0.4);
+                g2.gain.setValueAtTime(0, t); g2.gain.linearRampToValueAtTime(0.18, t + 0.25);
+                g2.gain.linearRampToValueAtTime(0, t + 0.48);
+                o2.connect(g2); g2.connect(ctx.destination);
+                o2.start(t); o2.stop(t + 0.52);
+            } catch (e) {}
+        }
+
+        // Som 4: OMEGA — brass majestoso em acorde de poder (órgão + metais)
+        function playOmegaSound() {
+            try {
+                let ctx = _ac(), t = ctx.currentTime;
+                // Acorde de poder: fundamental + quinta + oitava em sawtooth (brass)
+                let brassNotes = [65.4, 98, 130.8, 196, 261.6, 392];
+                brassNotes.forEach((freq, i) => {
+                    let o = ctx.createOscillator(), g = ctx.createGain();
+                    let lp = ctx.createBiquadFilter();
+                    o.type = 'sawtooth'; o.frequency.value = freq;
+                    lp.type = 'lowpass';
+                    lp.frequency.setValueAtTime(300, t + i * 0.05);
+                    lp.frequency.exponentialRampToValueAtTime(3200, t + 0.8 + i * 0.05);
+                    let vol = [0.22, 0.2, 0.18, 0.15, 0.12, 0.1][i];
+                    g.gain.setValueAtTime(0, t + i * 0.05);
+                    g.gain.linearRampToValueAtTime(vol, t + 0.7 + i * 0.05);
+                    g.gain.setValueAtTime(vol, t + 1.6);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+                    o.connect(lp); lp.connect(g); g.connect(ctx.destination);
+                    o.start(t + i * 0.05); o.stop(t + 2.5);
+                });
+                // Camada de coro por cima (revelar o portal)
+                [261.6, 329.6, 392].forEach((freq, i) => {
+                    _choirVoice(ctx, freq, t + 0.3 + i * 0.06, 1.8, 0.1, i * 8 - 8);
+                });
+            } catch (e) {}
+        }
+
         function toggleAllocation(nodeId) {
             if (!currentUser) return alert("Carregue um personagem primeiro.");
             let allocSet = new Set(currentUser.allocatedNodes);
@@ -977,14 +1210,18 @@
 
                 if (canAllocate(nodeId, allocSet)) {
                     currentUser.allocatedNodes.push(nodeId);
+                    if (nodeType === 'omega') playOmegaSound();
+                    else if (nodeType === 'root') playClassSound();
+                    else playAllocateSound();
                     updatePointsUI();
                     updateSummaryUI();
-                } else if (currentUser.totalPoints <= allocSet.size) {
+                } else if (currentUser.totalPoints <= countPointsUsed(Array.from(allocSet))) {
                     alert("Sem pontos de atributo disponíveis.");
                 }
             } else {
                 if (canDeallocate(nodeId, allocSet)) {
                     currentUser.allocatedNodes = currentUser.allocatedNodes.filter(id => id !== nodeId);
+                    playDeallocateSound();
                     updatePointsUI();
                     updateSummaryUI();
                 } else {
@@ -996,10 +1233,9 @@
         // ================= UI E ATUALIZAÇÕES =================
         function updatePointsUI() {
             if (!currentUser) return;
-            // GARANTE QUE O NÍVEL SEJA ATUALIZADO IMEDIATAMENTE NA ALOCAÇÃO/DESALOCAÇÃO
-            currentUser.level = currentUser.allocatedNodes.length;
+            let used = countPointsUsed(currentUser.allocatedNodes);
+            currentUser.level = used;
 
-            let used = currentUser.allocatedNodes.length;
             let avail = currentUser.totalPoints - used;
             document.getElementById('lbl-pts-used').textContent = used;
             document.getElementById('lbl-pts-avail').textContent = avail;
@@ -1025,22 +1261,22 @@
             if (Object.keys(basics).length > 0) {
                 html += `<div class="bg-slate-800 p-3 rounded border border-slate-700">
                     <h4 class="text-xs font-bold text-slate-400 mb-2">Atributos Básicos</h4>`;
-                for (let k in basics) html += `<div class="text-sm text-blue-300">• ${basics[k] > 1 ? k + ' (x' + basics[k] + ')' : k}</div>`;
+                for (let k in basics) { let ek = escHtml(k); html += `<div class="text-sm text-blue-300">• ${basics[k] > 1 ? ek + ' (x' + basics[k] + ')' : ek}</div>`; }
                 html += `</div>`;
             }
             if (passives.length > 0) {
                 html += `<div class="bg-slate-800 p-3 rounded border border-slate-700">
                     <h4 class="text-xs font-bold text-fuchsia-400 mb-2">Passivas Notáveis</h4>`;
                 passives.forEach(p => {
-                    let statsText = p.stats && p.stats.length > 0 ? `<div class="text-[10px] text-fuchsia-400/80 ml-3">↳ ${p.stats.join(', ')}</div>` : '';
-                    html += `<div class="text-sm text-fuchsia-200 cursor-help mb-2" title="${p.desc || 'Sem descrição.'}">• ${p.name}${statsText}</div>`;
+                    let statsText = p.stats && p.stats.length > 0 ? `<div class="text-[10px] text-fuchsia-400/80 ml-3">↳ ${p.stats.map(escHtml).join(', ')}</div>` : '';
+                    html += `<div class="text-sm text-fuchsia-200 cursor-default mb-2" data-node-id="${p.id}">• ${escHtml(p.name)}${statsText}</div>`;
                 });
                 html += `</div>`;
             }
             if (actives.length > 0) {
                 html += `<div class="bg-slate-800 p-3 rounded border border-slate-700">
                     <h4 class="text-xs font-bold text-amber-400 mb-2">Habilidades Ativas (Keystones)</h4>`;
-                actives.forEach(a => html += `<div class="text-sm text-amber-200 font-bold cursor-help" title="${a.desc || 'Sem descrição.'}">⭐ ${a.name}</div>`);
+                actives.forEach(a => html += `<div class="text-sm text-amber-200 font-bold cursor-default" data-node-id="${a.id}">⭐ ${escHtml(a.name)}</div>`);
                 html += `</div>`;
             }
             if (html === '') html = '<div class="text-slate-500 text-sm">Nenhum ponto alocado.</div>';
@@ -1485,8 +1721,8 @@
             }
 
             userToEdit.totalPoints += pts;
-            if (userToEdit.totalPoints < userToEdit.allocatedNodes.length) {
-                userToEdit.totalPoints = userToEdit.allocatedNodes.length;
+            if (userToEdit.totalPoints < countPointsUsed(userToEdit.allocatedNodes)) {
+                userToEdit.totalPoints = countPointsUsed(userToEdit.allocatedNodes);
             }
 
             let apiUpdate = await apiFetch('/user', 'POST', userToEdit);
@@ -1505,6 +1741,25 @@
             renderAdminUserList();
         }
 
+        function renderUserListHtml() {
+            let html = '';
+            for (let code in adminUserCache) {
+                let u = adminUserCache[code];
+                html += `<div onclick="openPointsModal('${u.code}')" class="bg-slate-900 p-2 rounded border border-slate-700 flex justify-between items-center cursor-pointer hover:border-indigo-500 hover:bg-slate-800/80 transition-colors group">
+                    <div class="min-w-0">
+                        <strong class="text-white group-hover:text-indigo-300 transition-colors truncate block">${escHtml(u.name)}</strong>
+                        <span class="text-slate-500 text-xs">(${escHtml(u.code)})</span>
+                    </div>
+                    <div class="text-right shrink-0 ml-2">
+                        <div class="text-xs text-green-400">Pts: ${u.totalPoints}</div>
+                        <div class="text-xs text-blue-400">Nvl: ${u.level}</div>
+                    </div>
+                </div>`;
+            }
+            if (!html) html = '<div class="text-slate-500 text-sm text-center py-4 italic">Nenhum jogador cadastrado.</div>';
+            document.getElementById('admin-user-list').innerHTML = html;
+        }
+
         async function renderAdminUserList() {
             let userList = [];
             let apiUsers = await apiFetch('/users', 'GET');
@@ -1516,17 +1771,9 @@
                 for (let k in db) { userList.push(db[k]); }
             }
 
-            let html = '';
-            for (let u of userList) {
-                html += `<div class="bg-slate-900 p-2 rounded border border-slate-700 flex justify-between items-center">
-                    <div><strong class="text-white">${u.name}</strong> <span class="text-slate-500 text-xs">(${u.code})</span></div>
-                    <div class="text-right">
-                        <div class="text-xs text-green-400">Pts: ${u.totalPoints}</div>
-                        <div class="text-xs text-blue-400">Nvl: ${u.level}</div>
-                    </div>
-                </div>`;
-            }
-            document.getElementById('admin-user-list').innerHTML = html;
+            adminUserCache = {};
+            for (let u of userList) adminUserCache[u.code] = u;
+            renderUserListHtml();
         }
 
         // ================= ADMIN ÁRVORES =================
@@ -1616,7 +1863,9 @@
             if (currentUser) {
                 let validNodes = currentUser.allocatedNodes.filter(nId => treeData.nodes[nId]);
                 if (validNodes.length !== currentUser.allocatedNodes.length) {
-                    alert("Atenção: Alguns pontos alocados anteriormente não existem nesta árvore e foram temporariamente ignorados da visualização.");
+                    currentUser.allocatedNodes = validNodes;
+                    currentUser.level = countPointsUsed(validNodes);
+                    alert("Atenção: Alguns pontos alocados não existem nesta árvore e foram removidos temporariamente. Salve para confirmar.");
                 }
                 updatePointsUI();
                 updateSummaryUI();
@@ -1682,7 +1931,7 @@
             let n = treeData.nodes[rootNodeId];
             camera.x = -n.x;
             camera.y = -n.y;
-            camera.zoom = 1.2; // Aproxima o zoom para focar melhor!
+            if (camera.zoom < 0.8) camera.zoom = 1.2;
         }
 
         async function adminDeleteUser() {
@@ -1695,10 +1944,8 @@
                 delete db[code];
                 saveLocalUsers(db);
             }
-
-            let res = await apiFetch(`/user/${code}`, 'DELETE');
-            if (res) alert("Utilizador excluído da Nuvem (DynamoDB).");
-            else alert("Utilizador excluído Localmente (Nuvem Indisponível).");
+            delete adminUserCache[code];
+            renderUserListHtml();
 
             if (currentUser && currentUser.code === code) {
                 currentUser = null;
@@ -1707,7 +1954,170 @@
             }
 
             document.getElementById('del-user-code').value = '';
+            apiFetch(`/user/${code}`, 'DELETE');
+        }
+
+        // ================= MODAL DE PONTOS (ADMIN) =================
+        function openPointsModal(code) {
+            let u = adminUserCache[code] || getLocalUsers()[code];
+            if (!u) return alert("Jogador não encontrado. Tente recarregar a lista.");
+
+            document.getElementById('pm-name').textContent = u.name;
+            document.getElementById('pm-code').textContent = code;
+            document.getElementById('pm-current').textContent = u.totalPoints;
+
+            let input = document.getElementById('pm-pts-input');
+            input.value = '';
+            input.dataset.code = code;
+
+            document.getElementById('points-modal').classList.remove('hidden');
+            setTimeout(() => input.focus(), 50);
+        }
+
+        function closePointsModal() {
+            document.getElementById('points-modal').classList.add('hidden');
+            document.getElementById('pm-body').classList.remove('hidden');
+            document.getElementById('pm-confirm-panel').classList.add('hidden');
+            document.getElementById('pm-delete-btn').classList.remove('text-red-400');
+            document.getElementById('pm-delete-btn').classList.add('text-slate-500');
+        }
+
+        function toggleDeleteConfirm() {
+            let body = document.getElementById('pm-body');
+            let panel = document.getElementById('pm-confirm-panel');
+            let btn = document.getElementById('pm-delete-btn');
+            let isConfirming = !panel.classList.contains('hidden');
+            if (isConfirming) {
+                panel.classList.add('hidden');
+                body.classList.remove('hidden');
+                btn.classList.remove('text-red-400');
+                btn.classList.add('text-slate-500');
+            } else {
+                body.classList.add('hidden');
+                panel.classList.remove('hidden');
+                btn.classList.remove('text-slate-500');
+                btn.classList.add('text-red-400');
+            }
+        }
+
+        async function deleteUserFromModal() {
+            let code = document.getElementById('pm-pts-input').dataset.code;
+            if (!code) return;
+
+            let db = getLocalUsers();
+            if (db[code]) { delete db[code]; saveLocalUsers(db); }
+            delete adminUserCache[code];
+            renderUserListHtml();
+
+            if (currentUser && currentUser.code === code) {
+                currentUser = null;
+                document.getElementById('player-info').classList.add('hidden');
+                document.getElementById('summary-container').innerHTML = '<div class="text-slate-500 text-sm">Nenhum ponto alocado.</div>';
+            }
+
+            closePointsModal();
+            apiFetch(`/user/${code}`, 'DELETE');
+        }
+
+        function adjustPtsInput(delta) {
+            let input = document.getElementById('pm-pts-input');
+            input.value = (parseInt(input.value) || 0) + delta;
+        }
+
+        async function applyPointsFromModal() {
+            let input = document.getElementById('pm-pts-input');
+            let code = input.dataset.code;
+            let pts = parseInt(input.value);
+            if (!code || isNaN(pts) || pts === 0) return alert("Digite uma quantidade válida (diferente de zero).");
+
+            let apiUser = await apiFetch(`/user/${code}`, 'GET');
+            let db = getLocalUsers();
+            let userToEdit = apiUser || db[code];
+            if (!userToEdit) return alert("Usuário não encontrado.");
+
+            let minimum = countPointsUsed(userToEdit.allocatedNodes);
+            userToEdit.totalPoints = Math.max(userToEdit.totalPoints + pts, minimum);
+
+            await apiFetch('/user', 'POST', userToEdit);
+            db[code] = userToEdit;
+            saveLocalUsers(db);
+
+            if (currentUser && currentUser.code === code) {
+                currentUser.totalPoints = userToEdit.totalPoints;
+                updatePointsUI();
+            }
+
+            closePointsModal();
             renderAdminUserList();
+        }
+
+        // ================= TOOLTIP DA BARRA LATERAL =================
+        function showSidebarTooltip(nodeId, mx, my) {
+            let n = treeData.nodes[nodeId];
+            if (!n) return;
+            let tt = document.getElementById('sidebar-tooltip');
+            let colors = ATTR_COLORS[n.attribute] || ATTR_COLORS['none'];
+
+            let tmap = { basic: "Atributo", notable: "Passiva Notável", large: "Habilidade Ativa", root: "Classe", omega: "Portal" };
+            let typeColors = { basic: 'text-slate-400', notable: 'text-fuchsia-400', large: 'text-amber-400', root: 'text-rose-400', omega: 'text-cyan-400' };
+
+            let typeEl = document.getElementById('stt-type');
+            typeEl.textContent = tmap[n.type] || n.type;
+            typeEl.className = `text-[10px] uppercase tracking-widest font-black mb-0.5 ${typeColors[n.type] || 'text-slate-400'}`;
+
+            document.getElementById('stt-name').textContent = n.name;
+            document.getElementById('stt-accent').style.background = colors.stroke;
+            tt.style.borderColor = colors.stroke + '55';
+
+            let descEl = document.getElementById('stt-desc');
+            if (n.desc) { descEl.textContent = n.desc; descEl.classList.remove('hidden'); }
+            else { descEl.classList.add('hidden'); }
+
+            let statsEl = document.getElementById('stt-stats');
+            statsEl.innerHTML = n.stats && n.stats.length > 0
+                ? n.stats.map(s => `<div>+ ${escHtml(s)}</div>`).join('')
+                : '<div class="text-slate-500 italic text-xs">Sem efeitos adicionais.</div>';
+
+            tt.classList.remove('hidden');
+
+            let tw = 288;
+            let px = mx - tw - 16;
+            if (px < 8) px = mx + 16;
+            let th = tt.scrollHeight || 160;
+            let py = my - Math.round(th / 2);
+            if (py + th > window.innerHeight - 8) py = window.innerHeight - th - 8;
+            if (py < 8) py = 8;
+            tt.style.left = px + 'px';
+            tt.style.top = py + 'px';
+        }
+
+        function hideSidebarTooltip() {
+            document.getElementById('sidebar-tooltip').classList.add('hidden');
+        }
+
+        function setupSidebarTooltip() {
+            let container = document.getElementById('summary-container');
+            container.addEventListener('mouseover', e => {
+                let el = e.target.closest('[data-node-id]');
+                if (el) showSidebarTooltip(el.dataset.nodeId, e.clientX, e.clientY);
+                else hideSidebarTooltip();
+            });
+            container.addEventListener('mousemove', e => {
+                let tt = document.getElementById('sidebar-tooltip');
+                if (tt.classList.contains('hidden')) return;
+                let el = e.target.closest('[data-node-id]');
+                if (!el) { hideSidebarTooltip(); return; }
+                let tw = 288;
+                let px = e.clientX - tw - 16;
+                if (px < 8) px = e.clientX + 16;
+                let th = tt.scrollHeight || 160;
+                let py = e.clientY - Math.round(th / 2);
+                if (py + th > window.innerHeight - 8) py = window.innerHeight - th - 8;
+                if (py < 8) py = 8;
+                tt.style.left = px + 'px';
+                tt.style.top = py + 'px';
+            });
+            container.addEventListener('mouseleave', hideSidebarTooltip);
         }
 
         // ================= INIT =================
@@ -1717,6 +2127,7 @@
             await initTreeSystem();
             initDefaultUser();
             setupInput();
+            setupSidebarTooltip();
             requestAnimationFrame(drawLoop);
         }
 
