@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WOE – Tabletop Session</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0f172a;color:#e2e8f0;font-family:'Segoe UI',sans-serif;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+  #canvas-wrap{position:relative;flex:1;overflow:hidden;cursor:default}
+  canvas{display:block;width:100%;height:100%}
+  .glass{background:rgba(15,23,42,.88);border:1px solid rgba(99,102,241,.22);backdrop-filter:blur(8px)}
+  .btn{padding:.35rem .85rem;border-radius:.4rem;font-size:.8rem;cursor:pointer;border:1px solid transparent;transition:all .15s}
+  .btn-primary{background:#4f46e5;color:#fff;border-color:#6366f1}
+  .btn-primary:hover{background:#6366f1}
+  .btn-ghost{background:transparent;color:#94a3b8;border-color:#334155}
+  .btn-ghost:hover{background:#1e293b;color:#e2e8f0}
+  input,select{background:#1e293b;border:1px solid #334155;color:#e2e8f0;border-radius:.4rem;padding:.35rem .6rem;font-size:.8rem;width:100%}
+  input:focus,select:focus{outline:none;border-color:#6366f1}
+  .panel-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6366f1;margin-bottom:.5rem}
+  ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0f172a}::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
+  .initiative-row{display:flex;align-items:center;gap:.4rem;padding:.3rem .5rem;border-radius:.35rem;border:1px solid #334155;background:#1e293b;font-size:.78rem}
+  .initiative-row.active-turn{border-color:#6366f1;background:#1e1b4b}
+  #toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;padding:.5rem 1.2rem;border-radius:.5rem;font-size:.8rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+  #toast.show{opacity:1}
+  #join-screen{position:fixed;inset:0;background:#0f172a;display:flex;align-items:center;justify-content:center;z-index:100}
+  #init-bar{position:absolute;top:0;left:0;right:0;z-index:5;pointer-events:none;display:flex;gap:.3rem;padding:.4rem .5rem;background:linear-gradient(to bottom,rgba(5,7,15,.9) 55%,transparent 100%);min-height:3rem;align-items:center;overflow:hidden;flex-wrap:nowrap}
+  .init-entry{display:flex;align-items:center;gap:.3rem;padding:.2rem .55rem;border-radius:.4rem;border:1px solid #334155;background:rgba(15,23,42,.75);font-size:.72rem;white-space:nowrap;flex-shrink:0;transition:all .25s}
+  .init-entry.active{border-color:#6366f1;background:rgba(79,70,229,.38);box-shadow:0 0 10px rgba(99,102,241,.45)}
+</style>
+</head>
+<body>
+
+<!-- JOIN SCREEN -->
+<div id="join-screen">
+  <div class="glass rounded-2xl p-8 flex flex-col gap-4 w-96 shadow-2xl">
+    <div class="text-center">
+      <div class="text-2xl font-bold text-indigo-400 tracking-widest mb-1">WOE TABLETOP</div>
+      <div class="text-xs text-slate-500 uppercase tracking-widest">Sessão de Jogo</div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label class="text-xs text-slate-400">Código da Sessão</label>
+      <input id="join-session-id" placeholder="ex: a3f7b2c1" class="text-center text-lg tracking-widest font-bold"/>
+    </div>
+    <div class="flex flex-col gap-2">
+      <label class="text-xs text-slate-400">Seu nome (deve coincidir com o token)</label>
+      <input id="join-player-name" placeholder="ex: Faera"/>
+    </div>
+    <button class="btn btn-primary w-full py-2 text-sm" onclick="joinSession()">Entrar na Sessão</button>
+    <div id="join-error" class="text-red-400 text-xs text-center hidden"></div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div id="topbar" class="glass hidden flex items-center gap-3 px-4 py-2 border-b border-slate-700/50 z-20 flex-shrink-0">
+  <span class="text-indigo-400 font-bold text-sm tracking-widest uppercase">WOE · Sessão</span>
+  <div class="w-px h-5 bg-slate-600"></div>
+  <span id="tb-session-name" class="text-sm text-slate-300"></span>
+  <span id="tb-paused-badge" class="hidden text-xs bg-yellow-800 text-yellow-300 px-2 py-0.5 rounded-full border border-yellow-600">⏸ Pausado</span>
+  <div class="flex-1"></div>
+  <span id="tb-my-name" class="text-xs text-slate-400"></span>
+  <div id="sync-indicator" class="w-2 h-2 rounded-full bg-slate-600" title="Sync"></div>
+  <button class="btn btn-ghost text-xs" onclick="leaveSession()">Sair</button>
+</div>
+
+<!-- MAIN -->
+<div id="main-layout" class="hidden flex flex-1 overflow-hidden">
+
+  <!-- CANVAS -->
+  <div id="canvas-wrap">
+    <canvas id="canvas"></canvas>
+    <!-- Initiative bar -->
+    <div id="init-bar"></div>
+    <div id="coord-label" style="position:absolute;bottom:.5rem;left:.5rem;font-size:.7rem;color:#475569;pointer-events:none;background:#0f172a88;padding:.15rem .4rem;border-radius:.25rem;"></div>
+    <div id="move-hint" class="hidden" style="position:absolute;top:3.5rem;left:50%;transform:translateX(-50%);background:#1e1b4b;border:1px solid #6366f1;color:#a5b4fc;font-size:.75rem;padding:.3rem .8rem;border-radius:.4rem;pointer-events:none">Clique em um hex verde para mover · ESC para cancelar</div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="glass flex flex-col border-l border-slate-700/50 overflow-y-auto flex-shrink-0" style="width:220px;padding:.75rem .65rem;gap:.75rem">
+    <div>
+      <div class="panel-title">Meu Personagem</div>
+      <div id="my-token-card" class="flex flex-col gap-1">
+        <div class="text-xs text-slate-400 italic">Aguardando mapa...</div>
+      </div>
+      <button id="btn-move" class="btn btn-primary w-full mt-2 text-xs hidden" onclick="startMove()">🚶 Mover</button>
+    </div>
+    <div class="border-t border-slate-700/50"></div>
+    <div>
+      <div class="panel-title">No Campo</div>
+      <div id="field-list" class="flex flex-col gap-1"></div>
+    </div>
+    <div class="border-t border-slate-700/50"></div>
+    <div>
+      <div class="panel-title">Iniciativa</div>
+      <div id="initiative-list" class="flex flex-col gap-1"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API    = 'https://l6ivu5buke.execute-api.sa-east-1.amazonaws.com/prod';
+const POLL_MS = 1500;
+
+let sessionId    = null;
+let playerName   = null;
+let myToken      = null;
+let sessionState = null;
+let mapData      = null;
+let elementLib   = [];
+let pollTimer    = null;
+
+let camera = {x:60,y:60,zoom:1};
+let hoverHex = null;
+let movingMode = false;
+let reachableHexes = [];
+let selectedTokenOnMap = null;
+
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+let bgImage  = null;
+let imageCache = {};
+
+// ── SOUNDS ────────────────────────────────────────────────────────────────────
+function playMoveSound(){
+  try{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const buf=ac.createBuffer(1,Math.floor(ac.sampleRate*.12),ac.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.8);
+    const src=ac.createBufferSource(); src.buffer=buf;
+    const bp=ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=750; bp.Q.value=2.5;
+    const g=ac.createGain(); g.gain.setValueAtTime(.28,ac.currentTime); g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.12);
+    src.connect(bp); bp.connect(g); g.connect(ac.destination);
+    src.start(); src.stop(ac.currentTime+.12);
+  }catch(e){}
+}
+
+function playSyncSound(){
+  try{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    [[523.25,0],[659.25,.11]].forEach(([freq,delay])=>{
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.type='sine'; o.frequency.value=freq;
+      g.gain.setValueAtTime(0,ac.currentTime+delay);
+      g.gain.linearRampToValueAtTime(.1,ac.currentTime+delay+.03);
+      g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+delay+.55);
+      o.connect(g); g.connect(ac.destination);
+      o.start(ac.currentTime+delay); o.stop(ac.currentTime+delay+.6);
+    });
+  }catch(e){}
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function toast(msg,dur=2400){
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
+}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+async function apiFetch(path,method='GET',body=null){
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  if(body) opts.body=JSON.stringify(body);
+  const r=await fetch(API+path,opts);
+  return r.json();
+}
+
+// ── HEX MATH ──────────────────────────────────────────────────────────────────
+function hexToPixel(q,r){
+  const S=mapData?.hex_size??48;
+  return {x:S*Math.sqrt(3)*(q+r/2), y:S*1.5*r};
+}
+function pixelToHex(x,y){
+  const S=mapData?.hex_size??48;
+  const q=(Math.sqrt(3)/3*x-1/3*y)/S;
+  const r=(2/3*y)/S;
+  return hexRound(q,r);
+}
+function hexRound(q,r){
+  let s=-q-r;
+  let rq=Math.round(q),rr=Math.round(r),rs=Math.round(s);
+  const dq=Math.abs(rq-q),dr=Math.abs(rr-r),ds=Math.abs(rs-s);
+  if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs;
+  return {q:rq,r:rr};
+}
+function hexKey(q,r){return `${q},${r}`}
+function hexDist(q1,r1,q2,r2){return(Math.abs(q1-q2)+Math.abs(q1+r1-q2-r2)+Math.abs(r1-r2))/2}
+
+function hexNeighbors(q,r){
+  return [{q:q+1,r},{q:q-1,r},{q,r:r+1},{q,r:r-1},{q:q+1,r:r-1},{q:q-1,r:r+1}];
+}
+
+function allHexes(){
+  if(!mapData) return [];
+  const list=[];
+  for(let row=0;row<mapData.rows;row++)
+    for(let col=0;col<mapData.cols;col++){
+      list.push({q:col-Math.floor(row/2),r:row});
+    }
+  return list;
+}
+
+function computeReachable(q,r,movement,collision){
+  const visited=new Map();
+  visited.set(hexKey(q,r),0);
+  const queue=[{q,r,steps:0}];
+  const occupied=new Set((sessionState?.tokens||[]).map(t=>hexKey(t.q,t.r)));
+  while(queue.length){
+    const cur=queue.shift();
+    if(cur.steps>=movement) continue;
+    for(const nb of hexNeighbors(cur.q,cur.r)){
+      const k=hexKey(nb.q,nb.r);
+      if(collision[k]||occupied.has(k)||visited.has(k)) continue;
+      visited.set(k,cur.steps+1);
+      queue.push({q:nb.q,r:nb.r,steps:cur.steps+1});
+    }
+  }
+  visited.delete(hexKey(q,r));
+  return visited;
+}
+
+// ── FOG ───────────────────────────────────────────────────────────────────────
+function buildFogVisible(){
+  const vis=new Set();
+  if(!mapData) return vis;
+  // Sem token próprio → espectador, vê tudo
+  if(!myToken){
+    for(const {q,r} of allHexes()) vis.add(hexKey(q,r));
+    return vis;
+  }
+  const range=Math.max(3,(myToken.movement||3)*2);
+  for(const {q,r} of allHexes()){
+    if(hexDist(myToken.q,myToken.r,q,r)<=range) vis.add(hexKey(q,r));
+  }
+  const revealed=sessionState?.fog_revealed||{};
+  for(const k in revealed) if(revealed[k]) vis.add(k);
+  return vis;
+}
+
+// Smooth fog overlay — draws dark layer with soft circular cutouts for visible hexes
+function renderFogOverlay(visSet){
+  if(!canvas.width||!canvas.height) return;
+  const fc=document.createElement('canvas');
+  fc.width=canvas.width; fc.height=canvas.height;
+  const fc2=fc.getContext('2d');
+
+  fc2.fillStyle='rgba(5,7,15,.94)';
+  fc2.fillRect(0,0,fc.width,fc.height);
+
+  fc2.globalCompositeOperation='destination-out';
+  const S=mapData.hex_size*camera.zoom;
+  const R=S*1.18;
+
+  for(const {q,r} of allHexes()){
+    if(!visSet.has(hexKey(q,r))) continue;
+    const p=hexToPixel(q,r);
+    const sx=p.x*camera.zoom+camera.x;
+    const sy=p.y*camera.zoom+camera.y;
+
+    const grad=fc2.createRadialGradient(sx,sy,0,sx,sy,R);
+    grad.addColorStop(0,'rgba(0,0,0,1)');
+    grad.addColorStop(.5,'rgba(0,0,0,1)');
+    grad.addColorStop(.82,'rgba(0,0,0,.55)');
+    grad.addColorStop(1,'rgba(0,0,0,0)');
+
+    fc2.fillStyle=grad;
+    fc2.beginPath(); fc2.arc(sx,sy,R,0,Math.PI*2); fc2.fill();
+  }
+
+  ctx.drawImage(fc,0,0);
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function resize(){
+  const wrap=document.getElementById('canvas-wrap');
+  canvas.width=wrap.clientWidth; canvas.height=wrap.clientHeight;
+  render();
+}
+
+function drawHexPath(cx,cy,S){
+  ctx.beginPath();
+  for(let i=0;i<6;i++){
+    const a=Math.PI/180*(60*i-30);
+    i===0?ctx.moveTo(cx+S*Math.cos(a),cy+S*Math.sin(a)):ctx.lineTo(cx+S*Math.cos(a),cy+S*Math.sin(a));
+  }
+  ctx.closePath();
+}
+
+function loadImg(url,cb){
+  if(!url){cb(null);return}
+  if(imageCache[url]){cb(imageCache[url]);return}
+  const img=new Image(); img.crossOrigin='anonymous';
+  img.onload=()=>{imageCache[url]=img;cb(img);render();};
+  img.onerror=()=>cb(null);
+  img.src=url;
+}
+
+function render(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  if(!mapData) return;
+
+  const S=mapData.hex_size;
+  const coll=mapData.collision||{};
+  const visSet=buildFogVisible();
+  const reachMap=reachableHexes instanceof Map?reachableHexes:null;
+
+  ctx.save();
+  ctx.translate(camera.x,camera.y);
+  ctx.scale(camera.zoom,camera.zoom);
+
+  // Background image
+  if(bgImage){
+    const all=allHexes();
+    if(all.length){
+      const p0=hexToPixel(all[0].q,all[0].r);
+      const p1=hexToPixel(all[all.length-1].q,all[all.length-1].r);
+      ctx.drawImage(bgImage,p0.x-S,p0.y-S,(p1.x-p0.x)+S*3,(p1.y-p0.y)+S*3);
+    }
+  }
+
+  // Hex grid (all visible hexes with reach/wall highlights)
+  for(const {q,r} of allHexes()){
+    const p=hexToPixel(q,r);
+    const k=hexKey(q,r);
+    const isVis=visSet.has(k);
+    const isWall=coll[k];
+    const isReach=reachMap?.has(k);
+
+    if(!isVis) continue; // fog overlay handles hidden areas
+
+    drawHexPath(p.x,p.y,S-1);
+    ctx.fillStyle=isReach?'rgba(99,102,241,.28)':isWall?'rgba(239,68,68,.3)':'rgba(15,23,42,.12)';
+    ctx.fill();
+    ctx.strokeStyle=isReach?'#6366f1':isWall?'#ef4444':'rgba(99,102,241,.15)';
+    ctx.lineWidth=isReach?1.5:.6; ctx.stroke();
+
+    if(hoverHex&&hoverHex.q===q&&hoverHex.r===r){
+      drawHexPath(p.x,p.y,S-1);
+      ctx.strokeStyle=movingMode&&isReach?'#a5b4fc':'#64748b';
+      ctx.lineWidth=2; ctx.stroke();
+    }
+  }
+
+  // Tokens (only visible)
+  const tokens=sessionState?.tokens||[];
+  for(const tok of tokens){
+    const k=hexKey(tok.q,tok.r);
+    if(!visSet.has(k)) continue;
+    const el=elementLib.find(e=>e.element_id===tok.element_id)||{};
+    const col=el.color||'#6366f1';
+    const p=hexToPixel(tok.q,tok.r);
+    const r2=S*0.62;
+    const isMe=tok.token_id===myToken?.token_id;
+
+    if(el.image_url&&imageCache[el.image_url]){
+      ctx.save();
+      ctx.beginPath(); ctx.arc(p.x,p.y,r2,0,Math.PI*2); ctx.clip();
+      ctx.drawImage(imageCache[el.image_url],p.x-r2,p.y-r2,r2*2,r2*2);
+      ctx.restore();
+    } else {
+      if(el.image_url) loadImg(el.image_url,()=>render());
+      ctx.beginPath(); ctx.arc(p.x,p.y,r2,0,Math.PI*2);
+      ctx.fillStyle=col+'aa'; ctx.fill();
+    }
+
+    ctx.beginPath(); ctx.arc(p.x,p.y,r2,0,Math.PI*2);
+    ctx.strokeStyle=isMe?'#fbbf24':col; ctx.lineWidth=isMe?3:2; ctx.stroke();
+
+    ctx.fillStyle=isMe?'#fef08a':'#e2e8f0';
+    ctx.font=`bold ${Math.max(10,S*0.26)}px 'Segoe UI',sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    const lbl=tok.name||'?';
+    ctx.fillText(lbl.length>8?lbl.slice(0,7)+'…':lbl,p.x,p.y);
+
+    if(el.hp_max>0){
+      const bw=r2*1.6, bh=3, bx=p.x-bw/2, by=p.y+r2+3;
+      ctx.fillStyle='#1e293b'; ctx.fillRect(bx,by,bw,bh);
+      const pct=Math.max(0,tok.hp/el.hp_max);
+      ctx.fillStyle=pct>.5?'#22c55e':pct>.25?'#f59e0b':'#ef4444';
+      ctx.fillRect(bx,by,bw*pct,bh);
+    }
+  }
+
+  ctx.restore();
+
+  // Smooth fog overlay on top of everything
+  renderFogOverlay(visSet);
+
+  renderInitiativeList();
+  renderFieldList();
+  renderMyCard();
+}
+
+// ── CAMERA / INPUT ────────────────────────────────────────────────────────────
+let isPanning=false, panStart=null, panOrigin=null;
+
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const f=e.deltaY<0?1.1:.909;
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  camera.x=mx-(mx-camera.x)*f; camera.y=my-(my-camera.y)*f;
+  camera.zoom*=f; camera.zoom=Math.min(4,Math.max(.2,camera.zoom));
+  render();
+},{passive:false});
+
+canvas.addEventListener('mousedown',e=>{
+  if(e.button!==0) return;
+  const rect=canvas.getBoundingClientRect();
+  const wx=(e.clientX-rect.left-camera.x)/camera.zoom;
+  const wy=(e.clientY-rect.top-camera.y)/camera.zoom;
+  const hex=mapData?pixelToHex(wx,wy):null;
+
+  if(movingMode&&hex){
+    const k=hexKey(hex.q,hex.r);
+    if(reachableHexes instanceof Map&&reachableHexes.has(k)) commitMove(hex.q,hex.r);
+    else toast('Hex fora do alcance.');
+    return;
+  }
+
+  const tok=(sessionState?.tokens||[]).find(t=>t.q===hex?.q&&t.r===hex?.r);
+  if(tok){selectedTokenOnMap=tok; renderFieldList(); return;}
+  selectedTokenOnMap=null;
+
+  isPanning=true; panStart={x:e.clientX,y:e.clientY}; panOrigin={...camera};
+  canvas.style.cursor='grabbing';
+});
+
+canvas.addEventListener('mousemove',e=>{
+  const rect=canvas.getBoundingClientRect();
+  const wx=(e.clientX-rect.left-camera.x)/camera.zoom;
+  const wy=(e.clientY-rect.top-camera.y)/camera.zoom;
+  hoverHex=mapData?pixelToHex(wx,wy):null;
+  if(hoverHex) document.getElementById('coord-label').textContent=`q:${hoverHex.q} r:${hoverHex.r}`;
+  if(isPanning&&panStart){
+    camera.x=panOrigin.x+(e.clientX-panStart.x);
+    camera.y=panOrigin.y+(e.clientY-panStart.y);
+  }
+  render();
+});
+
+canvas.addEventListener('mouseup',()=>{isPanning=false; canvas.style.cursor='default';});
+canvas.addEventListener('mouseleave',()=>{isPanning=false; hoverHex=null; render();});
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&movingMode) cancelMove();});
+
+// ── MOVEMENT ──────────────────────────────────────────────────────────────────
+function startMove(){
+  if(!myToken||!mapData){toast('Token não encontrado.');return}
+  movingMode=true;
+  reachableHexes=computeReachable(myToken.q,myToken.r,myToken.movement||3,mapData.collision||{});
+  document.getElementById('move-hint').classList.remove('hidden');
+  canvas.style.cursor='crosshair';
+  render();
+}
+
+function cancelMove(){
+  movingMode=false; reachableHexes=[];
+  document.getElementById('move-hint').classList.add('hidden');
+  canvas.style.cursor='default';
+  render();
+}
+
+async function commitMove(q,r){
+  cancelMove();
+  playMoveSound();
+  myToken.q=q; myToken.r=r;
+  render();
+  try{
+    const res=await apiFetch(`/tb/session/${sessionId}/update`,'POST',{
+      token_id:myToken.token_id, q, r, player_name:playerName
+    });
+    if(res.message&&res.message.includes('ovido')) toast('✓ Movimento salvo.');
+    else if(res.message) toast('Aviso: '+res.message);
+  }catch(e){toast('Erro de conexão ao mover.');}
+}
+
+// ── SESSION JOIN ──────────────────────────────────────────────────────────────
+async function joinSession(){
+  const sid=document.getElementById('join-session-id').value.trim();
+  const pname=document.getElementById('join-player-name').value.trim();
+  if(!sid||!pname){showJoinError('Preencha os dois campos.');return}
+  document.getElementById('join-error').classList.add('hidden');
+
+  const data=await apiFetch(`/tb/session/${sid}`).catch(()=>null);
+  if(!data||!data.session_id){showJoinError('Sessão não encontrada. Verifique o código.');return}
+
+  sessionId=sid; playerName=pname; sessionState=data;
+
+  const tokens=data.tokens||[];
+  myToken=tokens.find(t=>(t.owner||'').toLowerCase()===pname.toLowerCase())||
+           tokens.find(t=>(t.name||'').toLowerCase()===pname.toLowerCase())||null;
+
+  if(data.map_id){
+    const m=await apiFetch(`/tb/map/${data.map_id}`).catch(()=>null);
+    if(m&&m.map_id){
+      mapData=m;
+      if(m.bg_url) loadImg(m.bg_url,img=>{bgImage=img;render();});
+      centerOnMyToken();
+    }
+  }
+
+  const els=await apiFetch('/tb/elements').catch(()=>[]);
+  if(Array.isArray(els)){
+    elementLib=els;
+    elementLib.forEach(e=>{if(e.image_url)loadImg(e.image_url,()=>render())});
+  }
+
+  document.getElementById('join-screen').style.display='none';
+  document.getElementById('topbar').classList.remove('hidden');
+  document.getElementById('main-layout').classList.remove('hidden');
+  document.getElementById('tb-session-name').textContent=data.name||sid;
+  document.getElementById('tb-my-name').textContent=pname;
+  if(myToken){
+    document.getElementById('btn-move').classList.remove('hidden');
+  } else {
+    const available=(data.tokens||[]).map(t=>t.owner||t.name).filter(Boolean).join(', ');
+    toast(`⚠️ Token não encontrado para "${pname}". Tokens disponíveis: ${available||'nenhum'}`);
+  }
+
+  startPolling();
+  render();
+  if(myToken) toast(`Bem-vindo, ${pname}!`);
+}
+
+function showJoinError(msg){
+  const el=document.getElementById('join-error');
+  el.textContent=msg; el.classList.remove('hidden');
+}
+
+function leaveSession(){
+  stopPolling();
+  sessionId=null; playerName=null; myToken=null; sessionState=null; mapData=null; bgImage=null;
+  document.getElementById('join-screen').style.display='flex';
+  document.getElementById('topbar').classList.add('hidden');
+  document.getElementById('main-layout').classList.add('hidden');
+}
+
+function centerOnMyToken(){
+  if(!myToken||!mapData) return;
+  const p=hexToPixel(myToken.q,myToken.r);
+  camera.x=canvas.width/2-p.x*camera.zoom;
+  camera.y=canvas.height/2-p.y*camera.zoom;
+}
+
+// ── POLLING ───────────────────────────────────────────────────────────────────
+function startPolling(){
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer=setInterval(poll,POLL_MS);
+}
+function stopPolling(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
+
+let lastTurn=-1;
+
+async function poll(){
+  if(!sessionId) return;
+  const dot=document.getElementById('sync-indicator');
+  try{
+    const data=await apiFetch(`/tb/session/${sessionId}`);
+    if(!data||!data.session_id) return;
+    dot.style.background='#22c55e';
+
+    const prevPaused=sessionState?.paused;
+    const prevTurn=Number(sessionState?.current_turn??-1);
+    sessionState=data;
+
+    if(myToken){
+      const fresh=data.tokens?.find(t=>t.token_id===myToken.token_id);
+      if(fresh) myToken=fresh;
+    }
+
+    if(data.map_id&&data.map_id!==mapData?.map_id){
+      const m=await apiFetch(`/tb/map/${data.map_id}`).catch(()=>null);
+      if(m&&m.map_id){mapData=m;bgImage=null;if(m.bg_url)loadImg(m.bg_url,img=>{bgImage=img;render();});}
+    }
+
+    // Paused notifications
+    if(data.paused&&!prevPaused) toast('⏸ GM pausou a sessão.');
+    if(!data.paused&&prevPaused) toast('▶ Sessão retomada!');
+    document.getElementById('tb-paused-badge').classList.toggle('hidden',!data.paused);
+
+    // Turn change sound
+    const newTurn=Number(data.current_turn??0);
+    if(newTurn!==prevTurn&&data.initiative_order?.length){
+      playSyncSound();
+    }
+
+    render();
+    setTimeout(()=>dot.style.background='#334155',500);
+  }catch(e){dot.style.background='#ef4444';}
+}
+
+// ── RIGHT PANEL ───────────────────────────────────────────────────────────────
+function renderMyCard(){
+  const el=document.getElementById('my-token-card');
+  if(!myToken){el.innerHTML='<div class="text-xs text-slate-400 italic">Nenhum token vinculado ao seu nome.</div>';return}
+  const elem=elementLib.find(e=>e.element_id===myToken.element_id)||{};
+  const hpPct=elem.hp_max?Math.max(0,myToken.hp/elem.hp_max):0;
+  el.innerHTML=`
+    <div class="flex items-center gap-2">
+      <div style="width:2.4rem;height:2.4rem;border-radius:50%;background:${elem.color||'#6366f1'};flex-shrink:0;
+           ${elem.image_url?`background-image:url(${elem.image_url});background-size:cover`:''};border:2px solid #fbbf24"></div>
+      <div>
+        <div class="font-bold text-sm">${esc(myToken.name)}</div>
+        <div class="text-xs text-slate-400">q:${myToken.q} r:${myToken.r} · Mov ${myToken.movement||3}</div>
+      </div>
+    </div>
+    <div class="text-xs text-slate-400 mt-1">HP</div>
+    <div class="rounded overflow-hidden h-2 bg-slate-700"><div style="width:${(hpPct*100).toFixed(1)}%;height:100%;background:${hpPct>.5?'#22c55e':hpPct>.25?'#f59e0b':'#ef4444'};transition:width .3s"></div></div>
+    <div class="text-right text-xs text-slate-400">${myToken.hp} / ${elem.hp_max||'?'}</div>
+    ${myToken.effects?.length?`<div class="text-xs text-yellow-400">${myToken.effects.join(' · ')}</div>`:''}
+  `;
+}
+
+function renderFieldList(){
+  const tokens=(sessionState?.tokens||[]).filter(t=>t.token_id!==myToken?.token_id);
+  const vis=buildFogVisible();
+  const visTokens=tokens.filter(t=>vis.has(hexKey(t.q,t.r)));
+  let h='';
+  for(const tok of visTokens){
+    const elem=elementLib.find(e=>e.element_id===tok.element_id)||{};
+    const hpPct=elem.hp_max?Math.max(0,tok.hp/elem.hp_max):0;
+    const isSel=selectedTokenOnMap?.token_id===tok.token_id;
+    h+=`<div class="flex items-center gap-2 p-1.5 rounded border cursor-pointer transition-colors ${isSel?'border-indigo-500 bg-slate-800':'border-slate-700 bg-slate-900 hover:border-slate-500'}" onclick="selectFieldToken('${tok.token_id}')">
+      <div style="width:1.6rem;height:1.6rem;border-radius:50%;background:${elem.color||'#6366f1'};flex-shrink:0;
+           ${elem.image_url?`background-image:url(${elem.image_url});background-size:cover`:''};border:1.5px solid ${elem.color||'#6366f1'}"></div>
+      <div class="flex-1 min-w-0">
+        <div class="text-xs font-semibold truncate">${esc(tok.name)}</div>
+        <div class="h-1.5 rounded bg-slate-700 mt-0.5"><div style="width:${(hpPct*100).toFixed(1)}%;height:100%;background:${hpPct>.5?'#22c55e':hpPct>.25?'#f59e0b':'#ef4444'};border-radius:inherit"></div></div>
+      </div>
+    </div>`;
+  }
+  if(!h) h='<div class="text-xs text-slate-500 italic text-center py-2">Nenhum visível.</div>';
+  document.getElementById('field-list').innerHTML=h;
+}
+
+function selectFieldToken(id){
+  const tok=(sessionState?.tokens||[]).find(t=>t.token_id===id);
+  selectedTokenOnMap=selectedTokenOnMap?.token_id===id?null:tok;
+  render();
+}
+
+function renderInitiativeList(){
+  const order=sessionState?.initiative_order||[];
+  const current=Number(sessionState?.current_turn||0);
+
+  // Side panel
+  let h='';
+  order.forEach((entry,i)=>{
+    h+=`<div class="initiative-row${i===current?' active-turn':''}">
+      <span class="font-bold text-indigo-400" style="min-width:1.5rem">${entry.value||'—'}</span>
+      <span class="flex-1 truncate">${esc(entry.name)}</span>
+      ${i===current?'<span class="text-yellow-400 text-xs">▶</span>':''}
+    </div>`;
+  });
+  if(!h) h='<div class="text-slate-500 text-xs italic text-center py-2">Sem iniciativa.</div>';
+  document.getElementById('initiative-list').innerHTML=h;
+
+  // Top bar overlay
+  const bar=document.getElementById('init-bar');
+  if(!order.length){bar.innerHTML='';return}
+  let bh='';
+  order.forEach((entry,i)=>{
+    const active=i===current;
+    bh+=`<div class="init-entry${active?' active':''}">
+      ${active?'<span style="color:#fbbf24">▶</span>':''}
+      <span style="color:#818cf8;font-weight:700">${entry.value}</span>
+      <span style="color:${active?'#f1f5f9':'#94a3b8'};font-weight:${active?700:400}">${esc(entry.name)}</span>
+    </div>`;
+  });
+  bar.innerHTML=bh;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('resize',resize);
+resize();
+const params=new URLSearchParams(location.search);
+if(params.get('session')) document.getElementById('join-session-id').value=params.get('session');
+if(params.get('name'))    document.getElementById('join-player-name').value=params.get('name');
+</script>
+</body>
+</html>

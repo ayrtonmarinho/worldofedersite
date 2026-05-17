@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WOE – Tabletop Builder (GM)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0f172a;color:#e2e8f0;font-family:'Segoe UI',sans-serif;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+  #canvas-wrap{position:relative;flex:1;overflow:hidden;cursor:crosshair}
+  canvas{display:block;width:100%;height:100%}
+  .glass{background:rgba(15,23,42,.85);border:1px solid rgba(99,102,241,.25);backdrop-filter:blur(8px)}
+  .btn{padding:.35rem .85rem;border-radius:.4rem;font-size:.8rem;cursor:pointer;border:1px solid transparent;transition:all .15s}
+  .btn-primary{background:#4f46e5;color:#fff;border-color:#6366f1}
+  .btn-primary:hover{background:#6366f1}
+  .btn-ghost{background:transparent;color:#94a3b8;border-color:#334155}
+  .btn-ghost:hover{background:#1e293b;color:#e2e8f0}
+  .btn-danger{background:#7f1d1d;color:#fca5a5;border-color:#ef4444}
+  .btn-danger:hover{background:#ef4444;color:#fff}
+  .btn-warn{background:#78350f;color:#fcd34d;border-color:#f59e0b}
+  .btn-warn:hover{background:#f59e0b;color:#fff}
+  input,select,textarea{background:#1e293b;border:1px solid #334155;color:#e2e8f0;border-radius:.4rem;padding:.35rem .6rem;font-size:.8rem;width:100%}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:#6366f1}
+  .tool-btn{width:2.2rem;height:2.2rem;display:flex;align-items:center;justify-content:center;border-radius:.4rem;cursor:pointer;border:1px solid #334155;background:#1e293b;color:#94a3b8;transition:all .15s;font-size:.85rem}
+  .tool-btn:hover,.tool-btn.active{background:#4f46e5;border-color:#6366f1;color:#fff}
+  .panel-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6366f1;margin-bottom:.5rem}
+  ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0f172a}::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
+  .initiative-row{display:flex;align-items:center;gap:.4rem;padding:.3rem .5rem;border-radius:.35rem;border:1px solid #334155;background:#1e293b;font-size:.78rem}
+  .initiative-row.active-turn{border-color:#6366f1;background:#1e1b4b}
+  .token-chip{display:flex;align-items:center;gap:.4rem;padding:.25rem .5rem;border-radius:.35rem;border:1px solid #334155;background:#1e293b;font-size:.75rem;cursor:pointer}
+  .token-chip:hover{border-color:#6366f1}
+  #toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid #334155;padding:.5rem 1.2rem;border-radius:.5rem;font-size:.8rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+  #toast.show{opacity:1}
+  #init-bar{position:absolute;top:0;left:0;right:0;z-index:5;pointer-events:none;display:flex;gap:.3rem;padding:.4rem .5rem;background:linear-gradient(to bottom,rgba(5,7,15,.88) 55%,transparent 100%);min-height:3rem;align-items:center;overflow:hidden;flex-wrap:nowrap}
+  .init-entry{display:flex;align-items:center;gap:.3rem;padding:.2rem .55rem;border-radius:.4rem;border:1px solid #334155;background:rgba(15,23,42,.75);font-size:.72rem;white-space:nowrap;flex-shrink:0;transition:all .25s}
+  .init-entry.active{border-color:#6366f1;background:rgba(79,70,229,.38);box-shadow:0 0 10px rgba(99,102,241,.45)}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="glass flex items-center gap-3 px-4 py-2 border-b border-slate-700/50 z-20 flex-shrink-0">
+  <span class="text-indigo-400 font-bold text-sm tracking-widest uppercase">WOE · Tabletop Builder</span>
+  <div class="flex-1"></div>
+  <select id="map-select" style="width:180px" onchange="onMapSelectChange()"><option value="">— Selecionar Mapa —</option></select>
+  <button class="btn btn-primary" onclick="openMapModal()">+ Novo Mapa</button>
+  <button class="btn btn-ghost" onclick="openSessionModal()">Sessões</button>
+  <button class="btn btn-ghost" onclick="openElemLibModal()">Biblioteca</button>
+  <div class="w-px h-6 bg-slate-600"></div>
+  <span class="text-xs text-slate-500">Admin:</span>
+  <input id="admin-pass" type="password" placeholder="senha" style="width:120px" />
+</div>
+
+<!-- MAIN -->
+<div class="flex flex-1 overflow-hidden">
+
+  <!-- LEFT TOOLBAR -->
+  <div class="glass flex flex-col items-center gap-2 p-2 border-r border-slate-700/50 z-10 flex-shrink-0" style="width:3rem">
+    <div class="tool-btn active" id="tool-pan"    onclick="setTool('pan')"    title="Pan (P)">✥</div>
+    <div class="tool-btn"        id="tool-wall"   onclick="setTool('wall')"   title="Colisão (W)">🧱</div>
+    <div class="tool-btn"        id="tool-fog"    onclick="setTool('fog')"    title="Névoa (F)">🌫</div>
+    <div class="tool-btn"        id="tool-reveal" onclick="setTool('reveal')" title="Revelar (R)">👁</div>
+    <div class="tool-btn"        id="tool-token"  onclick="setTool('token')"  title="Token (T)">🪄</div>
+    <div class="tool-btn"        id="tool-erase"  onclick="setTool('erase')"  title="Apagar (E)">✕</div>
+    <div class="mt-auto text-xs text-slate-600 rotate-90 whitespace-nowrap" style="font-size:.55rem">WOE</div>
+  </div>
+
+  <!-- CANVAS -->
+  <div id="canvas-wrap">
+    <canvas id="canvas"></canvas>
+    <!-- Initiative bar at top -->
+    <div id="init-bar"></div>
+    <!-- Hover coord -->
+    <div id="coord-label" style="position:absolute;bottom:.5rem;left:.5rem;font-size:.7rem;color:#475569;pointer-events:none;background:#0f172a88;padding:.15rem .4rem;border-radius:.25rem;"></div>
+    <!-- Drag hint -->
+    <div id="drag-hint" class="hidden" style="position:absolute;bottom:.5rem;left:50%;transform:translateX(-50%);background:#1e1b4b;border:1px solid #6366f1;color:#a5b4fc;font-size:.72rem;padding:.25rem .7rem;border-radius:.35rem;pointer-events:none">Arrastando token — solte no hex destino</div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="glass flex flex-col border-l border-slate-700/50 overflow-y-auto flex-shrink-0" style="width:240px;padding:.75rem .65rem;gap:.75rem">
+
+    <div>
+      <div class="panel-title">Mapa Atual</div>
+      <div id="map-info" class="text-xs text-slate-400 italic">Nenhum mapa carregado.</div>
+      <div class="flex gap-1 mt-2">
+        <button class="btn btn-primary text-xs flex-1" onclick="saveMapToCloud()">💾 Salvar</button>
+        <button class="btn btn-danger text-xs" onclick="deleteCurrentMap()">🗑</button>
+      </div>
+    </div>
+
+    <div class="border-t border-slate-700/50"></div>
+
+    <div>
+      <div class="panel-title flex items-center justify-between">
+        <span>Tokens no Mapa</span>
+        <button class="tool-btn" onclick="openAddTokenModal()" title="Adicionar Token" style="width:1.6rem;height:1.6rem;font-size:.7rem">+</button>
+      </div>
+      <div id="token-list" class="flex flex-col gap-1"></div>
+    </div>
+
+    <div class="border-t border-slate-700/50"></div>
+
+    <div>
+      <div class="panel-title flex items-center justify-between">
+        <span>Iniciativa</span>
+        <div class="flex gap-1">
+          <button class="btn btn-ghost text-xs" onclick="rollInitiative()">🎲</button>
+          <button class="btn btn-ghost text-xs" onclick="nextTurn()">▶</button>
+        </div>
+      </div>
+      <div id="initiative-list" class="flex flex-col gap-1"></div>
+    </div>
+
+    <div class="border-t border-slate-700/50"></div>
+
+    <div>
+      <div class="panel-title">Sessão Ativa</div>
+      <div id="session-status" class="text-xs text-slate-400 italic">Nenhuma sessão.</div>
+      <div class="flex gap-1 mt-2">
+        <button class="btn btn-primary text-xs flex-1" onclick="pushSessionState()">📡 Sincronizar</button>
+        <button class="btn btn-warn text-xs" onclick="togglePause()">⏸</button>
+      </div>
+      <div class="mt-1">
+        <div class="text-xs text-slate-500 mb-1">Código para jogadores:</div>
+        <div id="session-code" class="text-center text-lg font-bold text-indigo-400 tracking-widest select-all">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+
+<div id="map-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+  <div class="glass rounded-xl p-6 w-96 flex flex-col gap-3">
+    <div class="text-indigo-400 font-bold text-sm uppercase tracking-widest">Novo Mapa</div>
+    <label class="text-xs text-slate-400">Nome</label>
+    <input id="m-name" placeholder="Nome do mapa" />
+    <label class="text-xs text-slate-400">URL de Imagem de Fundo (opcional)</label>
+    <input id="m-bg" placeholder="https://..." />
+    <div class="grid grid-cols-3 gap-2">
+      <div><label class="text-xs text-slate-400">Colunas</label><input id="m-cols" type="number" value="22" min="5" max="60"/></div>
+      <div><label class="text-xs text-slate-400">Linhas</label><input id="m-rows" type="number" value="16" min="4" max="40"/></div>
+      <div><label class="text-xs text-slate-400">Hex Size</label><input id="m-hsize" type="number" value="48" min="20" max="100"/></div>
+    </div>
+    <div class="flex gap-2 mt-1">
+      <button class="btn btn-primary flex-1" onclick="createMap()">Criar</button>
+      <button class="btn btn-ghost flex-1" onclick="closeModal('map-modal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="elem-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+  <div class="glass rounded-xl p-6 w-[520px] flex flex-col gap-3 max-h-[85vh]">
+    <div class="flex items-center justify-between">
+      <div id="elem-modal-title" class="text-indigo-400 font-bold text-sm uppercase tracking-widest">Biblioteca de Elementos</div>
+      <button class="text-slate-500 hover:text-white text-lg" onclick="closeModal('elem-modal')">✕</button>
+    </div>
+    <div class="glass rounded-lg p-3 flex flex-col gap-2">
+      <input type="hidden" id="el-id" value=""/>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label class="text-xs text-slate-400">Nome</label><input id="el-name" placeholder="Goblin Guerreiro"/></div>
+        <div><label class="text-xs text-slate-400">Tipo</label>
+          <select id="el-type"><option value="npc">NPC</option><option value="player">Jogador</option><option value="obstacle">Obstáculo</option></select>
+        </div>
+      </div>
+      <div><label class="text-xs text-slate-400">URL da Imagem (exibida redonda)</label><input id="el-img" placeholder="https://..."/></div>
+      <div class="grid grid-cols-4 gap-2">
+        <div><label class="text-xs text-slate-400">HP</label><input id="el-hp" type="number" value="10" min="0"/></div>
+        <div><label class="text-xs text-slate-400">Mana</label><input id="el-mana" type="number" value="0" min="0"/></div>
+        <div><label class="text-xs text-slate-400">Mov</label><input id="el-mov" type="number" value="3" min="1" max="20"/></div>
+        <div><label class="text-xs text-slate-400">Init</label><input id="el-init" type="number" value="0"/></div>
+      </div>
+      <div><label class="text-xs text-slate-400">Cor (fallback)</label><input id="el-color" type="color" value="#6366f1" style="height:2rem;padding:.1rem .3rem"/></div>
+      <div class="flex gap-1">
+        <button class="btn btn-primary flex-1" onclick="saveElement()">💾 Salvar</button>
+        <button class="btn btn-ghost text-xs" onclick="clearElemForm()" title="Novo elemento">+ Novo</button>
+      </div>
+    </div>
+    <div class="overflow-y-auto flex flex-col gap-1" id="elem-list" style="max-height:260px"></div>
+  </div>
+</div>
+
+<div id="add-token-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+  <div class="glass rounded-xl p-6 w-80 flex flex-col gap-3">
+    <div class="text-indigo-400 font-bold text-sm uppercase tracking-widest">Adicionar Token</div>
+    <label class="text-xs text-slate-400">Elemento</label>
+    <select id="token-elem-select"></select>
+    <label class="text-xs text-slate-400">Nome (pode sobrescrever)</label>
+    <input id="token-name-input" placeholder="Nome no mapa"/>
+    <label class="text-xs text-slate-400">Player code (opcional, para fog pessoal)</label>
+    <input id="token-owner-input" placeholder="ex: faera"/>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="text-xs text-slate-400">Col q</label><input id="token-q" type="number" value="0"/></div>
+      <div><label class="text-xs text-slate-400">Lin r</label><input id="token-r" type="number" value="0"/></div>
+    </div>
+    <div class="flex gap-2 mt-1">
+      <button class="btn btn-primary flex-1" onclick="addTokenToMap()">Adicionar</button>
+      <button class="btn btn-ghost flex-1" onclick="closeModal('add-token-modal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="session-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+  <div class="glass rounded-xl p-6 w-[500px] flex flex-col gap-3 max-h-[85vh]">
+    <div class="flex items-center justify-between">
+      <div class="text-indigo-400 font-bold text-sm uppercase tracking-widest">Sessões</div>
+      <button class="text-slate-500 hover:text-white text-lg" onclick="closeModal('session-modal')">✕</button>
+    </div>
+    <div class="flex gap-2">
+      <input id="sess-name" placeholder="Nome da sessão" class="flex-1"/>
+      <button class="btn btn-primary whitespace-nowrap" onclick="createSession()">+ Criar</button>
+    </div>
+    <div class="overflow-y-auto flex flex-col gap-1" id="session-list" style="max-height:340px"></div>
+  </div>
+</div>
+
+<div id="token-edit-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+  <div class="glass rounded-xl p-6 w-80 flex flex-col gap-3">
+    <div class="text-indigo-400 font-bold text-sm uppercase tracking-widest">Editar Token</div>
+    <input type="hidden" id="te-token-id"/>
+    <label class="text-xs text-slate-400">Nome</label><input id="te-name"/>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label class="text-xs text-slate-400">HP atual</label><input id="te-hp" type="number"/></div>
+      <div><label class="text-xs text-slate-400">Mana atual</label><input id="te-mana" type="number"/></div>
+    </div>
+    <label class="text-xs text-slate-400">Efeitos (vírgula)</label>
+    <input id="te-effects" placeholder="envenenado, atordoado..."/>
+    <div class="flex gap-2 mt-1">
+      <button class="btn btn-primary flex-1" onclick="applyTokenEdit()">Aplicar</button>
+      <button class="btn btn-danger" onclick="removeTokenFromMap(document.getElementById('te-token-id').value)">🗑</button>
+      <button class="btn btn-ghost" onclick="closeModal('token-edit-modal')">✕</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = 'https://l6ivu5buke.execute-api.sa-east-1.amazonaws.com/prod';
+
+let currentMap  = null;
+let mapsList    = [];
+let elementLib  = [];
+let sessions    = [];
+let activeSession = null;
+
+let camera  = {x:60,y:60,zoom:1};
+let tool    = 'pan';
+let isPainting  = false;
+let dragStart   = null;
+let dragOrigin  = null;
+let hoverHex    = null;
+let selectedToken = null;
+
+// Token drag state (GM moving tokens)
+let tokenDragToken    = null;
+let tokenDragStartHex = null;
+let tokenDragMoved    = false;
+
+let mapTokens = [];
+let initiativeOrder = [];
+let currentTurn = 0;
+
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+let bgImage  = null;
+let imageCache = {};
+
+// ── SOUNDS ────────────────────────────────────────────────────────────────────
+function playMoveSound(){
+  try{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const buf=ac.createBuffer(1,Math.floor(ac.sampleRate*.12),ac.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.8);
+    const src=ac.createBufferSource(); src.buffer=buf;
+    const bp=ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=750; bp.Q.value=2.5;
+    const g=ac.createGain(); g.gain.setValueAtTime(.3,ac.currentTime); g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.12);
+    src.connect(bp); bp.connect(g); g.connect(ac.destination);
+    src.start(); src.stop(ac.currentTime+.12);
+  }catch(e){}
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function toast(msg,dur=2400){
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
+}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function getPass(){return document.getElementById('admin-pass').value.trim()}
+
+async function apiFetch(path,method='GET',body=null){
+  const opts={method,headers:{'Content-Type':'application/json','Authorization':getPass()}};
+  if(body) opts.body=JSON.stringify(body);
+  const r=await fetch(API+path,opts);
+  return r.json();
+}
+
+// ── HEX MATH ──────────────────────────────────────────────────────────────────
+function hexToPixel(q,r){
+  const S=currentMap?.hex_size??48;
+  return {x:S*Math.sqrt(3)*(q+r/2), y:S*1.5*r};
+}
+function pixelToHex(x,y){
+  const S=currentMap?.hex_size??48;
+  const q=(Math.sqrt(3)/3*x-1/3*y)/S;
+  const r=(2/3*y)/S;
+  return hexRound(q,r);
+}
+function hexRound(q,r){
+  let s=-q-r;
+  let rq=Math.round(q),rr=Math.round(r),rs=Math.round(s);
+  const dq=Math.abs(rq-q),dr=Math.abs(rr-r),ds=Math.abs(rs-s);
+  if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs;
+  return {q:rq,r:rr};
+}
+function hexKey(q,r){return `${q},${r}`}
+function hexDist(q1,r1,q2,r2){return(Math.abs(q1-q2)+Math.abs(q1+r1-q2-r2)+Math.abs(r1-r2))/2}
+
+function allHexes(){
+  if(!currentMap) return [];
+  const list=[];
+  for(let row=0;row<currentMap.rows;row++)
+    for(let col=0;col<currentMap.cols;col++){
+      const q=col-Math.floor(row/2),r=row;
+      list.push({q,r});
+    }
+  return list;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function resize(){
+  const wrap=document.getElementById('canvas-wrap');
+  canvas.width=wrap.clientWidth; canvas.height=wrap.clientHeight;
+  render();
+}
+
+function drawHexPath(cx,cy,S){
+  ctx.beginPath();
+  for(let i=0;i<6;i++){
+    const a=Math.PI/180*(60*i-30);
+    i===0?ctx.moveTo(cx+S*Math.cos(a),cy+S*Math.sin(a)):ctx.lineTo(cx+S*Math.cos(a),cy+S*Math.sin(a));
+  }
+  ctx.closePath();
+}
+
+function loadImg(url,cb){
+  if(!url){cb(null);return}
+  if(imageCache[url]){cb(imageCache[url]);return}
+  const img=new Image(); img.crossOrigin='anonymous';
+  img.onload=()=>{imageCache[url]=img;cb(img);render();};
+  img.onerror=()=>cb(null);
+  img.src=url;
+}
+
+function drawToken(tok, overrideQ, overrideR, alpha){
+  const q = overrideQ ?? tok.q;
+  const r = overrideR ?? tok.r;
+  const p = hexToPixel(q, r);
+  const S = currentMap.hex_size;
+  const el = elementLib.find(e=>e.element_id===tok.element_id)||{};
+  const col = el.color||'#6366f1';
+  const r2 = S*0.62;
+  const isSelected = selectedToken?.token_id===tok.token_id;
+
+  ctx.save();
+  ctx.globalAlpha = alpha ?? 1;
+
+  if(el.image_url && imageCache[el.image_url]){
+    ctx.save();
+    ctx.beginPath(); ctx.arc(p.x,p.y,r2,0,Math.PI*2); ctx.clip();
+    ctx.drawImage(imageCache[el.image_url],p.x-r2,p.y-r2,r2*2,r2*2);
+    ctx.restore();
+  } else {
+    ctx.beginPath(); ctx.arc(p.x,p.y,r2,0,Math.PI*2);
+    ctx.fillStyle=col+'aa'; ctx.fill();
+    if(el.image_url) loadImg(el.image_url,()=>render());
+  }
+
+  ctx.beginPath(); ctx.arc(p.x,p.y,r2,0,Math.PI*2);
+  ctx.strokeStyle=isSelected?'#fff':col;
+  ctx.lineWidth=isSelected?3:2; ctx.stroke();
+
+  ctx.fillStyle='#e2e8f0';
+  ctx.font=`bold ${Math.max(10,S*0.28)}px 'Segoe UI',sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  const lbl=tok.name||(el.name||'?');
+  ctx.fillText(lbl.length>8?lbl.slice(0,7)+'…':lbl, p.x, p.y);
+
+  ctx.restore();
+}
+
+function render(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  if(!currentMap) return;
+
+  const S=currentMap.hex_size;
+  ctx.save();
+  ctx.translate(camera.x,camera.y);
+  ctx.scale(camera.zoom,camera.zoom);
+
+  if(bgImage){
+    const allH=allHexes();
+    if(allH.length){
+      const p0=hexToPixel(allH[0].q,allH[0].r);
+      const p1=hexToPixel(allH[allH.length-1].q,allH[allH.length-1].r);
+      ctx.drawImage(bgImage,p0.x-S,p0.y-S,(p1.x-p0.x)+S*3,(p1.y-p0.y)+S*3);
+    }
+  }
+
+  const fog=currentMap.fog||{};
+  const coll=currentMap.collision||{};
+
+  for(const {q,r} of allHexes()){
+    const p=hexToPixel(q,r);
+    const k=hexKey(q,r);
+    const isFog=fog[k], isWall=coll[k];
+    drawHexPath(p.x,p.y,S-1);
+    ctx.fillStyle=isWall?'rgba(239,68,68,.45)':isFog?'rgba(30,41,59,.78)':'rgba(15,23,42,.18)';
+    ctx.fill();
+    ctx.strokeStyle=isWall?'#ef4444':isFog?'#334155':'rgba(99,102,241,.2)';
+    ctx.lineWidth=isWall?1.5:.8; ctx.stroke();
+  }
+
+  // Tokens — skip dragged token's original position
+  for(const tok of mapTokens){
+    if(tokenDragToken?.token_id===tok.token_id) continue;
+    drawToken(tok);
+  }
+
+  // Ghost of dragged token at hoverHex
+  if(tokenDragToken && hoverHex){
+    const occupied=mapTokens.find(t=>t.token_id!==tokenDragToken.token_id&&t.q===hoverHex.q&&t.r===hoverHex.r);
+    // highlight destination hex
+    const p=hexToPixel(hoverHex.q,hoverHex.r);
+    drawHexPath(p.x,p.y,S-1);
+    ctx.strokeStyle=occupied?'#ef4444':'#22c55e'; ctx.lineWidth=2; ctx.stroke();
+    drawToken(tokenDragToken, hoverHex.q, hoverHex.r, occupied?0.35:0.75);
+  }
+
+  // Hover hex
+  if(hoverHex && !tokenDragToken){
+    const p=hexToPixel(hoverHex.q,hoverHex.r);
+    drawHexPath(p.x,p.y,S-1);
+    ctx.strokeStyle='#a5b4fc'; ctx.lineWidth=2; ctx.stroke();
+  }
+
+  ctx.restore();
+  renderTokenList();
+  renderInitiativeList();
+}
+
+// ── TOOL / INPUT ──────────────────────────────────────────────────────────────
+function setTool(t){
+  tool=t;
+  document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById(`tool-${t}`);
+  if(el) el.classList.add('active');
+  canvas.style.cursor=t==='pan'?'grab':'crosshair';
+}
+
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const f=e.deltaY<0?1.1:.909;
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  camera.x=mx-(mx-camera.x)*f; camera.y=my-(my-camera.y)*f;
+  camera.zoom*=f; camera.zoom=Math.min(4,Math.max(.2,camera.zoom));
+  render();
+},{passive:false});
+
+canvas.addEventListener('mousedown',e=>{
+  if(e.button!==0) return;
+  isPainting=true;
+  if(tool==='pan'){
+    dragStart={x:e.clientX,y:e.clientY}; dragOrigin={...camera};
+    canvas.style.cursor='grabbing';
+  } else if(tool==='token'){
+    // Check if there's a token at hover hex to drag
+    if(hoverHex){
+      const tok=mapTokens.find(t=>t.q===hoverHex.q&&t.r===hoverHex.r);
+      if(tok){
+        tokenDragToken=tok;
+        tokenDragStartHex={...hoverHex};
+        tokenDragMoved=false;
+        document.getElementById('drag-hint').classList.remove('hidden');
+        canvas.style.cursor='grabbing';
+      }
+    }
+  } else {
+    handlePaint();
+  }
+});
+
+canvas.addEventListener('mousemove',e=>{
+  const rect=canvas.getBoundingClientRect();
+  const wx=(e.clientX-rect.left-camera.x)/camera.zoom;
+  const wy=(e.clientY-rect.top-camera.y)/camera.zoom;
+  hoverHex=currentMap?pixelToHex(wx,wy):null;
+  if(hoverHex) document.getElementById('coord-label').textContent=`q:${hoverHex.q} r:${hoverHex.r}`;
+
+  if(isPainting){
+    if(tool==='pan'&&dragStart){
+      camera.x=dragOrigin.x+(e.clientX-dragStart.x);
+      camera.y=dragOrigin.y+(e.clientY-dragStart.y);
+    } else if(tool==='token'&&tokenDragToken){
+      // Detect actual movement
+      if(hoverHex&&(hoverHex.q!==tokenDragStartHex.q||hoverHex.r!==tokenDragStartHex.r))
+        tokenDragMoved=true;
+    } else if(tool!=='token'){
+      handlePaint();
+    }
+  }
+  render();
+});
+
+canvas.addEventListener('mouseup',e=>{
+  if(tool==='token'&&tokenDragToken){
+    if(tokenDragMoved&&hoverHex){
+      // Drop token at new hex if not occupied
+      const occupied=mapTokens.find(t=>t.token_id!==tokenDragToken.token_id&&t.q===hoverHex.q&&t.r===hoverHex.r);
+      if(!occupied){
+        tokenDragToken.q=hoverHex.q;
+        tokenDragToken.r=hoverHex.r;
+        playMoveSound();
+        if(activeSession) autoSyncTokens();
+      } else {
+        toast('Hex ocupado.');
+      }
+    } else if(!tokenDragMoved){
+      // Clean click — open edit modal
+      openTokenEditModal(tokenDragToken);
+    }
+    tokenDragToken=null; tokenDragStartHex=null; tokenDragMoved=false;
+    document.getElementById('drag-hint').classList.add('hidden');
+    canvas.style.cursor='crosshair';
+  }
+  isPainting=false; dragStart=null;
+  if(tool==='pan') canvas.style.cursor='grab';
+  render();
+});
+
+canvas.addEventListener('mouseleave',()=>{
+  isPainting=false; hoverHex=null;
+  if(tokenDragToken){
+    tokenDragToken=null; tokenDragStartHex=null; tokenDragMoved=false;
+    document.getElementById('drag-hint').classList.add('hidden');
+  }
+  render();
+});
+
+function handlePaint(){
+  if(!currentMap||!hoverHex) return;
+  const k=hexKey(hoverHex.q,hoverHex.r);
+  if(tool==='wall'){currentMap.collision=currentMap.collision||{};currentMap.collision[k]=true;}
+  else if(tool==='fog'){currentMap.fog=currentMap.fog||{};currentMap.fog[k]=true;}
+  else if(tool==='reveal'){delete (currentMap.fog||{})[k];}
+  else if(tool==='erase'){delete (currentMap.collision||{})[k];delete (currentMap.fog||{})[k];}
+}
+
+window.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT') return;
+  const map={'p':'pan','w':'wall','f':'fog','r':'reveal','t':'token','e':'erase'};
+  if(map[e.key.toLowerCase()]) setTool(map[e.key.toLowerCase()]);
+});
+
+// ── MAPS ──────────────────────────────────────────────────────────────────────
+async function loadMapsList(){
+  const data=await apiFetch('/tb/maps');
+  if(!Array.isArray(data)){toast('Erro ao carregar mapas.');return}
+  mapsList=data;
+  const sel=document.getElementById('map-select');
+  sel.innerHTML='<option value="">— Selecionar Mapa —</option>';
+  for(const m of mapsList) sel.innerHTML+=`<option value="${m.map_id}">${esc(m.name)}</option>`;
+}
+
+async function onMapSelectChange(){
+  const id=document.getElementById('map-select').value;
+  if(!id){currentMap=null;bgImage=null;mapTokens=[];render();return}
+  const data=await apiFetch(`/tb/map/${id}`);
+  if(!data.map_id){toast('Erro ao carregar mapa.');return}
+  currentMap=data;
+  currentMap.collision=currentMap.collision||{};
+  currentMap.fog=currentMap.fog||{};
+  bgImage=null;
+  if(currentMap.bg_url) loadImg(currentMap.bg_url,img=>{bgImage=img;render();});
+  mapTokens=[];
+  document.getElementById('map-info').textContent=`${currentMap.name} · ${currentMap.cols}×${currentMap.rows} · hex ${currentMap.hex_size}px`;
+  camera={x:60,y:60,zoom:1};
+  render();
+}
+
+function openMapModal(){document.getElementById('map-modal').classList.remove('hidden')}
+
+async function createMap(){
+  const name=document.getElementById('m-name').value.trim()||'Novo Mapa';
+  const bg=document.getElementById('m-bg').value.trim();
+  const cols=parseInt(document.getElementById('m-cols').value)||22;
+  const rows=parseInt(document.getElementById('m-rows').value)||16;
+  const hs=parseInt(document.getElementById('m-hsize').value)||48;
+  const res=await apiFetch('/tb/map','POST',{name,bg_url:bg,cols,rows,hex_size:hs});
+  if(res.map_id){toast(`Mapa "${name}" criado!`);closeModal('map-modal');await loadMapsList();
+    document.getElementById('map-select').value=res.map_id; onMapSelectChange();}
+  else toast('Erro: '+JSON.stringify(res));
+}
+
+async function saveMapToCloud(){
+  if(!currentMap){toast('Nenhum mapa carregado.');return}
+  const res=await apiFetch('/tb/map','POST',currentMap);
+  toast(res.message||'Salvo!');
+}
+
+async function deleteCurrentMap(){
+  if(!currentMap){toast('Nenhum mapa carregado.');return}
+  if(!confirm(`Deletar "${currentMap.name}"?`)) return;
+  await apiFetch(`/tb/map/${currentMap.map_id}`,'DELETE');
+  currentMap=null;bgImage=null;mapTokens=[];
+  document.getElementById('map-info').textContent='Nenhum mapa carregado.';
+  render(); await loadMapsList();
+}
+
+// ── ELEMENT LIBRARY ───────────────────────────────────────────────────────────
+async function loadElements(){
+  const data=await apiFetch('/tb/elements');
+  if(Array.isArray(data)) elementLib=data;
+}
+
+function openElemLibModal(){
+  clearElemForm();
+  renderElemList();
+  document.getElementById('elem-modal').classList.remove('hidden');
+}
+
+function clearElemForm(){
+  document.getElementById('el-id').value='';
+  document.getElementById('el-name').value='';
+  document.getElementById('el-type').value='npc';
+  document.getElementById('el-img').value='';
+  document.getElementById('el-hp').value='10';
+  document.getElementById('el-mana').value='0';
+  document.getElementById('el-mov').value='3';
+  document.getElementById('el-init').value='0';
+  document.getElementById('el-color').value='#6366f1';
+  document.getElementById('elem-modal-title').textContent='Biblioteca de Elementos';
+}
+
+function editElement(id){
+  const el=elementLib.find(e=>e.element_id===id);
+  if(!el) return;
+  document.getElementById('el-id').value=el.element_id;
+  document.getElementById('el-name').value=el.name||'';
+  document.getElementById('el-type').value=el.type||'npc';
+  document.getElementById('el-img').value=el.image_url||'';
+  document.getElementById('el-hp').value=el.hp_max||10;
+  document.getElementById('el-mana').value=el.mana_max||0;
+  document.getElementById('el-mov').value=el.movement||3;
+  document.getElementById('el-init').value=el.initiative||0;
+  document.getElementById('el-color').value=el.color||'#6366f1';
+  document.getElementById('elem-modal-title').textContent=`Editando: ${el.name}`;
+  document.getElementById('el-name').focus();
+}
+
+function renderElemList(){
+  let h='';
+  for(const el of elementLib){
+    h+=`<div class="flex items-center gap-2 p-2 rounded border border-slate-700 bg-slate-900">
+      <div style="width:2rem;height:2rem;border-radius:50%;background:${el.color||'#6366f1'};flex-shrink:0;
+           ${el.image_url?`background-image:url(${el.image_url});background-size:cover`:''};border:2px solid ${el.color||'#6366f1'}"></div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-semibold truncate">${esc(el.name)}</div>
+        <div class="text-xs text-slate-400">${el.type} · HP ${el.hp_max} · Mov ${el.movement}</div>
+      </div>
+      <button class="btn btn-ghost text-xs px-2" onclick="editElement('${el.element_id}')">✏️</button>
+      <button class="btn btn-danger text-xs px-2" onclick="deleteElement('${el.element_id}')">🗑</button>
+    </div>`;
+  }
+  if(!h) h='<div class="text-slate-500 text-sm italic text-center py-3">Nenhum elemento.</div>';
+  document.getElementById('elem-list').innerHTML=h;
+}
+
+async function saveElement(){
+  const existingId=document.getElementById('el-id').value.trim();
+  const item={
+    name:document.getElementById('el-name').value.trim()||'Elemento',
+    type:document.getElementById('el-type').value,
+    image_url:document.getElementById('el-img').value.trim(),
+    hp_max:parseInt(document.getElementById('el-hp').value)||10,
+    mana_max:parseInt(document.getElementById('el-mana').value)||0,
+    movement:parseInt(document.getElementById('el-mov').value)||3,
+    initiative:parseInt(document.getElementById('el-init').value)||0,
+    color:document.getElementById('el-color').value
+  };
+  if(existingId) item.element_id=existingId;
+  const res=await apiFetch('/tb/element','POST',item);
+  if(res.element_id){
+    toast(existingId?'Elemento atualizado!':'Elemento criado!');
+    clearElemForm();
+    await loadElements();
+    renderElemList();
+  } else toast('Erro: '+JSON.stringify(res));
+}
+
+async function deleteElement(id){
+  if(!confirm('Remover elemento?')) return;
+  await apiFetch(`/tb/element/${id}`,'DELETE');
+  await loadElements(); renderElemList(); toast('Removido.');
+}
+
+// ── TOKENS ON MAP ─────────────────────────────────────────────────────────────
+function openAddTokenModal(){
+  const sel=document.getElementById('token-elem-select');
+  sel.innerHTML='';
+  for(const el of elementLib) sel.innerHTML+=`<option value="${el.element_id}">${esc(el.name)} (${el.type})</option>`;
+  document.getElementById('token-name-input').value='';
+  document.getElementById('token-owner-input').value='';
+  document.getElementById('token-q').value='0';
+  document.getElementById('token-r').value='0';
+  document.getElementById('add-token-modal').classList.remove('hidden');
+}
+
+function addTokenToMap(){
+  const elId=document.getElementById('token-elem-select').value;
+  const el=elementLib.find(e=>e.element_id===elId);
+  if(!el){toast('Selecione um elemento.');return}
+  const name=document.getElementById('token-name-input').value.trim()||el.name;
+  const owner=document.getElementById('token-owner-input').value.trim();
+  const q=parseInt(document.getElementById('token-q').value)||0;
+  const r=parseInt(document.getElementById('token-r').value)||0;
+  mapTokens.push({
+    token_id:'tok_'+Date.now(),
+    element_id:elId, name, owner, q, r,
+    hp:el.hp_max, mana:el.mana_max||0,
+    effects:[], movement:el.movement, initiative:el.initiative||0
+  });
+  closeModal('add-token-modal');
+  render();
+  toast(`Token "${name}" adicionado.`);
+}
+
+function renderTokenList(){
+  let h='';
+  for(const tok of mapTokens){
+    const el=elementLib.find(e=>e.element_id===tok.element_id)||{};
+    h+=`<div class="token-chip" onclick="openTokenEditModal_byId('${tok.token_id}')">
+      <div style="width:1.4rem;height:1.4rem;border-radius:50%;background:${el.color||'#6366f1'};
+           ${el.image_url?`background-image:url(${el.image_url});background-size:cover`:''};flex-shrink:0;border:1.5px solid ${el.color||'#6366f1'}"></div>
+      <div class="flex-1 min-w-0"><div class="truncate">${esc(tok.name)}</div>
+        <div class="text-slate-400" style="font-size:.65rem">HP ${tok.hp}/${el.hp_max||'?'} · q${tok.q} r${tok.r}</div>
+      </div>
+    </div>`;
+  }
+  if(!h) h='<div class="text-slate-500 text-xs italic text-center py-2">Nenhum token.</div>';
+  document.getElementById('token-list').innerHTML=h;
+}
+
+function openTokenEditModal(tok){
+  document.getElementById('te-token-id').value=tok.token_id;
+  document.getElementById('te-name').value=tok.name;
+  document.getElementById('te-hp').value=tok.hp;
+  document.getElementById('te-mana').value=tok.mana;
+  document.getElementById('te-effects').value=(tok.effects||[]).join(', ');
+  document.getElementById('token-edit-modal').classList.remove('hidden');
+}
+function openTokenEditModal_byId(id){
+  const tok=mapTokens.find(t=>t.token_id===id);
+  if(tok) openTokenEditModal(tok);
+}
+function applyTokenEdit(){
+  const id=document.getElementById('te-token-id').value;
+  const tok=mapTokens.find(t=>t.token_id===id);
+  if(!tok) return;
+  tok.name=document.getElementById('te-name').value.trim()||tok.name;
+  tok.hp=parseInt(document.getElementById('te-hp').value)||0;
+  tok.mana=parseInt(document.getElementById('te-mana').value)||0;
+  tok.effects=document.getElementById('te-effects').value.split(',').map(s=>s.trim()).filter(Boolean);
+  closeModal('token-edit-modal');
+  render();
+}
+function removeTokenFromMap(id){
+  mapTokens=mapTokens.filter(t=>t.token_id!==id);
+  selectedToken=null;
+  closeModal('token-edit-modal');
+  render();
+}
+
+// ── INITIATIVE ────────────────────────────────────────────────────────────────
+function rollInitiative(){
+  initiativeOrder=mapTokens.map(tok=>{
+    const roll=Math.ceil(Math.random()*20)+(tok.initiative||0);
+    return {token_id:tok.token_id,name:tok.name,value:roll};
+  });
+  initiativeOrder.sort((a,b)=>b.value-a.value);
+  currentTurn=0;
+  renderInitiativeList();
+  toast('Iniciativa rolada!');
+}
+
+function nextTurn(){
+  if(!initiativeOrder.length) return;
+  currentTurn=(currentTurn+1)%initiativeOrder.length;
+  renderInitiativeList();
+}
+
+function renderInitiativeList(){
+  // Side panel
+  let h='';
+  initiativeOrder.forEach((entry,i)=>{
+    h+=`<div class="initiative-row${i===currentTurn?' active-turn':''}">
+      <span class="font-bold text-indigo-400" style="min-width:1.5rem">${entry.value}</span>
+      <span class="flex-1 truncate">${esc(entry.name)}</span>
+      ${i===currentTurn?'<span class="text-yellow-400 text-xs">▶</span>':''}
+    </div>`;
+  });
+  if(!h) h='<div class="text-slate-500 text-xs italic text-center py-2">Sem iniciativa.</div>';
+  document.getElementById('initiative-list').innerHTML=h;
+
+  // Top bar overlay
+  const bar=document.getElementById('init-bar');
+  if(!initiativeOrder.length){bar.innerHTML='';return}
+  let bh='';
+  initiativeOrder.forEach((entry,i)=>{
+    const active=i===currentTurn;
+    bh+=`<div class="init-entry${active?' active':''}">
+      ${active?'<span style="color:#fbbf24">▶</span>':''}
+      <span style="color:#818cf8;font-weight:700">${entry.value}</span>
+      <span style="color:${active?'#f1f5f9':'#94a3b8'};font-weight:${active?700:400}">${esc(entry.name)}</span>
+    </div>`;
+  });
+  bar.innerHTML=bh;
+}
+
+// ── SESSIONS ──────────────────────────────────────────────────────────────────
+async function loadSessions(){
+  const data=await apiFetch('/tb/sessions');
+  if(Array.isArray(data)) sessions=data;
+}
+
+async function openSessionModal(){await loadSessions();renderSessionList();document.getElementById('session-modal').classList.remove('hidden')}
+
+function renderSessionList(){
+  let h='';
+  for(const s of sessions){
+    h+=`<div class="flex items-center gap-2 p-2 rounded border border-slate-700 bg-slate-900">
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-semibold truncate">${esc(s.name)}</div>
+        <div class="text-xs text-slate-400">ID: ${s.session_id} · ${s.player_count||0} tokens</div>
+      </div>
+      <button class="btn btn-primary text-xs" onclick="activateSession('${s.session_id}')">Ativar</button>
+      <button class="btn btn-danger text-xs" onclick="deleteSession('${s.session_id}')">🗑</button>
+    </div>`;
+  }
+  if(!h) h='<div class="text-slate-500 text-sm italic text-center py-3">Nenhuma sessão.</div>';
+  document.getElementById('session-list').innerHTML=h;
+}
+
+async function createSession(){
+  if(!currentMap){toast('Carregue um mapa primeiro.');return}
+  const name=document.getElementById('sess-name').value.trim()||'Sessão';
+  const res=await apiFetch('/tb/session','POST',{
+    name, map_id:currentMap.map_id,
+    tokens:mapTokens, initiative_order:initiativeOrder,
+    current_turn:currentTurn, fog_revealed:{}
+  });
+  if(res.session_id){
+    toast(`Sessão "${name}" criada! ID: ${res.session_id}`);
+    await loadSessions(); renderSessionList(); activateSession(res.session_id);
+  } else toast('Erro: '+JSON.stringify(res));
+}
+
+async function activateSession(id){
+  const s=sessions.find(s=>s.session_id===id);
+  activeSession=s||{session_id:id};
+  document.getElementById('session-status').textContent=`"${s?.name||id}" ativa`;
+  document.getElementById('session-code').textContent=id;
+  closeModal('session-modal');
+  toast('Sessão ativada. Compartilhe o código com os jogadores.');
+}
+
+async function autoSyncTokens(){
+  if(!activeSession) return;
+  try{
+    const res=await apiFetch(`/tb/session/${activeSession.session_id}/update`,'POST',{tokens:mapTokens});
+    if(res.message&&(res.message.includes('negado')||res.message.includes('Acesso'))){
+      toast('⚠️ Sync falhou — insira a senha admin correta.');
+    }
+  }catch(e){console.error('[autoSync] erro:',e);}
+}
+
+async function pushSessionState(){
+  if(!activeSession){toast('Nenhuma sessão ativa.');return}
+  const res=await apiFetch(`/tb/session/${activeSession.session_id}/update`,'POST',{
+    tokens:mapTokens, initiative_order:initiativeOrder,
+    current_turn:currentTurn, fog_revealed:currentMap?.fog||{}
+  });
+  if(res.message&&(res.message.includes('negado')||res.message.includes('Acesso'))){
+    toast('⚠️ Acesso negado — senha admin incorreta.');
+  } else {
+    toast(res.message||'Sincronizado!');
+  }
+}
+
+async function togglePause(){
+  if(!activeSession){toast('Nenhuma sessão ativa.');return}
+  const paused=!activeSession.paused; activeSession.paused=paused;
+  await apiFetch(`/tb/session/${activeSession.session_id}/update`,'POST',{paused});
+  toast(paused?'Sessão pausada.':'Sessão retomada.');
+}
+
+async function deleteSession(id){
+  if(!confirm('Encerrar sessão?')) return;
+  await apiFetch(`/tb/session/${id}`,'DELETE');
+  if(activeSession?.session_id===id){
+    activeSession=null;
+    document.getElementById('session-status').textContent='Nenhuma sessão.';
+    document.getElementById('session-code').textContent='—';
+  }
+  await loadSessions(); renderSessionList(); toast('Sessão encerrada.');
+}
+
+// ── MISC ──────────────────────────────────────────────────────────────────────
+function closeModal(id){document.getElementById(id).classList.add('hidden')}
+document.querySelectorAll('[id$="-modal"]').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m) m.classList.add('hidden')});
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('resize',resize);
+resize();
+setTool('pan');
+
+(async()=>{
+  await Promise.all([loadMapsList(),loadElements()]);
+  toast('Builder carregado. Selecione ou crie um mapa.');
+})();
+</script>
+</body>
+</html>
