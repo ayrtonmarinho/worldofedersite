@@ -199,7 +199,8 @@
                             <option value="notable">Médio (Passiva)</option>
                             <option value="large">Grande (Habilidade Ativa)</option>
                             <option value="root">Raiz (Nova Classe)</option>
-                            <option value="omega">Portal (Conexão sem linha)</option>
+                            <option value="omega">Omini (Portal comum)</option>
+                            <option value="omegaFonte">Omini Fonte (Estrela 10 pontas)</option>
                         </select>
                     </div>
                     <div class="flex-1">
@@ -228,6 +229,13 @@
                         (Opcional)</label>
                     <input type="text" id="new-img" placeholder="https://..."
                         class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none">
+                </div>
+
+                <div id="ext-fonte" class="hidden">
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">ID do Omini Fonte associado</label>
+                    <input type="text" id="new-fonte" placeholder="ID do nodo omegaFonte"
+                        class="w-full bg-slate-900 border border-cyan-700 rounded px-2 py-1.5 text-sm text-cyan-300 focus:border-cyan-400 outline-none">
+                    <p class="text-[10px] text-slate-500 mt-1">Obrigatório para Omini comum. O Fonte deve existir na árvore.</p>
                 </div>
 
                 <div>
@@ -451,7 +459,7 @@
         function countPointsUsed(allocatedNodes) {
             return allocatedNodes.filter(id => {
                 let n = treeData.nodes[id];
-                return n && n.type !== 'omega';
+                return n && n.type !== 'omega' && n.type !== 'omegaFonte';
             }).length;
         }
 
@@ -633,7 +641,7 @@
         async function saveUserFlow() {
             if (!currentUser) return;
 
-            currentUser.level = countPointsUsed(currentUser.allocatedNodes); // Nível = pontos gastos (omega não conta)
+            currentUser.level = countPointsUsed(currentUser.allocatedNodes); // Nível = pontos gastos (omega/omegaFonte não contam)
 
             let askCloud = confirm("Deseja sincronizar este save com o DynamoDB (Nuvem)?");
 
@@ -782,6 +790,20 @@
             ctx.closePath();
         }
 
+        function drawStar10Path(ctx, x, y, r) {
+            ctx.beginPath();
+            let rot = -Math.PI / 2;
+            let step = Math.PI / 10;
+            ctx.moveTo(x + Math.cos(rot) * r, y + Math.sin(rot) * r);
+            for (let i = 0; i < 10; i++) {
+                rot += step;
+                ctx.lineTo(x + Math.cos(rot) * (r * 0.42), y + Math.sin(rot) * (r * 0.42));
+                rot += step;
+                ctx.lineTo(x + Math.cos(rot) * r, y + Math.sin(rot) * r);
+            }
+            ctx.closePath();
+        }
+
         function drawLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -802,14 +824,14 @@
                 let n2 = treeData.nodes[edge.target];
                 if (!n1 || !n2) continue;
 
-                if (n1.type === "omega" && n2.type === "omega") continue; // Omite a linha de Portal para Portal
+                let isOminiType = (t) => t === "omega" || t === "omegaFonte";
+                if (isOminiType(n1.type) && isOminiType(n2.type)) continue;
 
                 let p1 = worldToScreen(n1.x, n1.y);
                 let p2 = worldToScreen(n2.x, n2.y);
                 let isAllocEdge = allocatedSet.has(n1.id) && allocatedSet.has(n2.id);
 
                 ctx.globalAlpha = hasActiveSearch ? (window.searchedNodes.has(n1.id) || window.searchedNodes.has(n2.id) ? 0.6 : 0.1) : 1.0;
-
                 ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
                 ctx.lineWidth = 3 * camera.zoom;
                 ctx.strokeStyle = isAllocEdge ? "#fbbf24" : "#334155";
@@ -829,7 +851,7 @@
 
                 ctx.globalAlpha = (hasActiveSearch && !isSearched) ? 0.2 : 1.0;
 
-                let baseRadius = node.type === "root" ? 28 : node.type === "large" ? 24 : node.type === "notable" ? 18 : node.type === "omega" ? 16 : 12;
+                let baseRadius = node.type === "root" ? 28 : node.type === "large" ? 24 : node.type === "notable" ? 18 : node.type === "omegaFonte" ? 22 : node.type === "omega" ? 16 : 12;
                 let r = baseRadius * camera.zoom;
                 let colors = ATTR_COLORS[node.attribute] || ATTR_COLORS["none"];
 
@@ -838,6 +860,7 @@
                 if (node.type === "large") pathFn = drawPentagonPath;
                 if (node.type === "root") pathFn = drawHexagonPath;
                 if (node.type === "omega") pathFn = drawStarPath;
+                if (node.type === "omegaFonte") pathFn = drawStar10Path;
 
                 // Preenchimento / Imagem
                 ctx.save();
@@ -920,6 +943,7 @@
                         document.getElementById('new-stat').value = hoveredNode.stats.join(', ');
                         document.getElementById('new-x').value = hoveredNode.x;
                         document.getElementById('new-y').value = hoveredNode.y;
+                        document.getElementById('new-fonte').value = hoveredNode.fonteId || '';
 
                         let parents = treeData.edges.filter(edge => edge.target === hoveredNode.id).map(edge => edge.source);
                         document.getElementById('new-parent').value = parents.join(', ');
@@ -928,6 +952,19 @@
                         toggleFormFields();
 
                         document.getElementById('del-node-id').value = hoveredNode.id;
+                    }
+                    // Navegação ao Omini Fonte: busca via fonteId OU via aresta conectada
+                    if (hoveredNode.type === 'omega') {
+                        let fonteNode = hoveredNode.fonteId ? treeData.nodes[hoveredNode.fonteId] : null;
+                        if (!fonteNode) {
+                            let nbrId = getNeighbors(hoveredNode.id).find(id => treeData.nodes[id] && treeData.nodes[id].type === 'omegaFonte');
+                            if (nbrId) fonteNode = treeData.nodes[nbrId];
+                        }
+                        if (fonteNode) {
+                            camera.x = -fonteNode.x;
+                            camera.y = -fonteNode.y;
+                            camera.zoom = Math.max(camera.zoom, 1);
+                        }
                     }
                     toggleAllocation(hoveredNode.id);
                     return;
@@ -962,7 +999,7 @@
                 hoveredNode = null;
                 for (let key in treeData.nodes) {
                     let n = treeData.nodes[key];
-                    let r = n.type === "root" ? 28 : n.type === "large" ? 24 : n.type === "notable" ? 18 : n.type === "omega" ? 16 : 12;
+                    let r = n.type === "root" ? 28 : n.type === "large" ? 24 : n.type === "notable" ? 18 : n.type === "omegaFonte" ? 22 : n.type === "omega" ? 16 : 12;
                     let dx = wp.x - n.x, dy = wp.y - n.y;
                     if (dx * dx + dy * dy <= r * r) { hoveredNode = n; break; }
                 }
@@ -995,7 +1032,7 @@
 
             let node = treeData.nodes[nodeId];
             let isTargetRoot = node.type === 'root';
-            let isOmega = node.type === 'omega';
+            let isOmega = node.type === 'omega' || node.type === 'omegaFonte';
             let usedPoints = countPointsUsed(Array.from(allocSet));
 
             // Se for tentar alocar um root, verifica se já existe alguma classe (root) escolhida na árvore deste usuário.
@@ -1198,19 +1235,75 @@
         function toggleAllocation(nodeId) {
             if (!currentUser) return alert("Carregue um personagem primeiro.");
             let allocSet = new Set(currentUser.allocatedNodes);
+            let node = treeData.nodes[nodeId];
+            let nodeType = node.type;
 
+            // --- OMINI FONTE já alocado: desaloca em cascata ---
+            if (nodeType === 'omegaFonte' && allocSet.has(nodeId)) {
+                let linkedByEdge = getNeighbors(nodeId).filter(id => treeData.nodes[id] && treeData.nodes[id].type === 'omega' && allocSet.has(id));
+                let linkedByMeta = Object.values(treeData.nodes).filter(n => n.type === 'omega' && n.fonteId === nodeId && allocSet.has(n.id)).map(n => n.id);
+                let primaryRemove = new Set([nodeId, ...new Set([...linkedByEdge, ...linkedByMeta])]);
+
+                // BFS para encontrar nodos que ficam desconectados da raiz após remover o bloco
+                let remaining = new Set(currentUser.allocatedNodes.filter(id => !primaryRemove.has(id)));
+                let roots = Array.from(remaining).filter(id => treeData.nodes[id] && treeData.nodes[id].type === 'root');
+                let reachable = new Set(roots);
+                let queue = [...roots];
+                while (queue.length > 0) {
+                    let curr = queue.shift();
+                    for (let nbr of getNeighbors(curr)) {
+                        if (remaining.has(nbr) && !reachable.has(nbr)) {
+                            reachable.add(nbr);
+                            queue.push(nbr);
+                        }
+                    }
+                }
+                let orphans = Array.from(remaining).filter(id => !reachable.has(id));
+                let totalRemove = new Set([...primaryRemove, ...orphans]);
+
+                let omegaNames = [...primaryRemove].filter(id => id !== nodeId).map(id => treeData.nodes[id]?.name).filter(Boolean);
+                let msg = `Deseja desalocar o Omini Fonte "${node.name}"`;
+                if (omegaNames.length) msg += ` e ${omegaNames.length} Omini associado(s)`;
+                if (orphans.length) msg += ` + ${orphans.length} nodo(s) que ficam desconectados (pontos devolvidos)`;
+                msg += '?';
+                if (!confirm(msg)) return;
+
+                currentUser.allocatedNodes = currentUser.allocatedNodes.filter(id => !totalRemove.has(id));
+                playDeallocateSound();
+                updatePointsUI();
+                updateSummaryUI();
+                return;
+            }
+
+            // --- OMINI COMUM: aloca (e auto-aloca o fonte) ---
+            if (nodeType === 'omega') {
+                if (!allocSet.has(nodeId) && canAllocate(nodeId, allocSet)) {
+                    currentUser.allocatedNodes.push(nodeId);
+                    // Encontra o fonte via fonteId ou via aresta
+                    let fonteId = node.fonteId;
+                    if (!fonteId) {
+                        fonteId = getNeighbors(nodeId).find(id => treeData.nodes[id] && treeData.nodes[id].type === 'omegaFonte');
+                    }
+                    if (fonteId && !allocSet.has(fonteId) && treeData.nodes[fonteId]) {
+                        currentUser.allocatedNodes.push(fonteId);
+                    }
+                    playOmegaSound();
+                    updatePointsUI();
+                    updateSummaryUI();
+                }
+                return;
+            }
+
+            // --- Alocação de outros tipos ---
             if (!allocSet.has(nodeId)) {
-                let nodeType = treeData.nodes[nodeId].type;
                 let hasRoot = Array.from(allocSet).some(id => treeData.nodes[id] && treeData.nodes[id].type === 'root');
-
                 if (nodeType === 'root' && hasRoot) {
                     alert("Você já escolheu uma classe! Para mudar de classe, é necessário resetar todos os seus pontos no painel ao lado.");
                     return;
                 }
-
                 if (canAllocate(nodeId, allocSet)) {
                     currentUser.allocatedNodes.push(nodeId);
-                    if (nodeType === 'omega') playOmegaSound();
+                    if (nodeType === 'omegaFonte') playOmegaSound();
                     else if (nodeType === 'root') playClassSound();
                     else playAllocateSound();
                     updatePointsUI();
@@ -1219,6 +1312,7 @@
                     alert("Sem pontos de atributo disponíveis.");
                 }
             } else {
+                // Desalocação normal para outros tipos
                 if (canDeallocate(nodeId, allocSet)) {
                     currentUser.allocatedNodes = currentUser.allocatedNodes.filter(id => id !== nodeId);
                     playDeallocateSound();
@@ -1244,20 +1338,48 @@
 
         function updateSummaryUI() {
             if (!currentUser) return;
-            let basics = {}, passives = [], actives = [];
+            let basics = {}, passives = [], actives = [], rootNode = null;
 
             for (let id of currentUser.allocatedNodes) {
                 let n = treeData.nodes[id];
-                if (n.type === 'basic' || n.type === 'root' || n.type === 'omega') {
+                if (!n) continue;
+                if (n.type === 'root') rootNode = n;
+                if (n.type === 'basic' || n.type === 'root' || n.type === 'omega' || n.type === 'omegaFonte') {
                     if(n.stats) n.stats.forEach(s => { basics[s] = (basics[s] || 0) + 1; });
                 } else if (n.type === 'notable') {
-                    passives.push(n); // Guardamos o nodo inteiro para usar a descrição
+                    passives.push(n);
                 } else if (n.type === 'large') {
-                    actives.push(n); // Guardamos o nodo inteiro para usar a descrição
+                    actives.push(n);
                 }
             }
 
             let html = '';
+
+            // Card de Classe
+            if (rootNode) {
+                let attrColors = ATTR_COLORS[rootNode.attribute] || ATTR_COLORS['none'];
+                let bgFallback = `background: linear-gradient(135deg, #1e293b 0%, ${attrColors.fill} 100%)`;
+                let statsHtml = rootNode.stats && rootNode.stats.length
+                    ? rootNode.stats.map(s => `<div class="text-xs text-blue-300">• ${escHtml(s)}</div>`).join('')
+                    : '';
+                html += `
+                <div class="rounded-xl overflow-hidden border mb-1" style="border-color: ${attrColors.stroke}40">
+                    <div class="relative h-32" style="${bgFallback}">
+                        ${rootNode.imgUrl ? `<img src="${escHtml(rootNode.imgUrl)}" class="absolute inset-0 w-full h-full object-cover opacity-50" onerror="this.style.display='none'">` : ''}
+                        <div class="absolute inset-0" style="background: linear-gradient(to top, #0f172a 0%, transparent 60%)"></div>
+                        <div class="absolute bottom-0 left-0 right-0 px-3 pb-2">
+                            <div class="text-[10px] uppercase tracking-widest font-black mb-0.5" style="color: ${attrColors.stroke}">Classe Ativa</div>
+                            <div class="text-lg font-black text-white leading-tight drop-shadow-lg">${escHtml(rootNode.name)}</div>
+                        </div>
+                    </div>
+                    ${rootNode.desc || statsHtml ? `
+                    <div class="px-3 py-2.5" style="background: ${attrColors.fill}80">
+                        ${rootNode.desc ? `<p class="text-xs text-slate-300 italic mb-1.5">${escHtml(rootNode.desc)}</p>` : ''}
+                        ${statsHtml}
+                    </div>` : ''}
+                </div>`;
+            }
+
             if (Object.keys(basics).length > 0) {
                 html += `<div class="bg-slate-800 p-3 rounded border border-slate-700">
                     <h4 class="text-xs font-bold text-slate-400 mb-2">Atributos Básicos</h4>`;
@@ -1279,7 +1401,7 @@
                 actives.forEach(a => html += `<div class="text-sm text-amber-200 font-bold cursor-default" data-node-id="${a.id}">⭐ ${escHtml(a.name)}</div>`);
                 html += `</div>`;
             }
-            if (html === '') html = '<div class="text-slate-500 text-sm">Nenhum ponto alocado.</div>';
+            if (!rootNode && html === '') html = '<div class="text-slate-500 text-sm">Nenhum ponto alocado.</div>';
             document.getElementById('summary-container').innerHTML = html;
         }
 
@@ -1301,7 +1423,7 @@
                 if (n.type === 'root') {
                     rootNode = n;
                 }
-                if (n.type === 'basic' || n.type === 'root' || n.type === 'omega') {
+                if (n.type === 'basic' || n.type === 'root' || n.type === 'omega' || n.type === 'omegaFonte') {
                     if(n.stats) n.stats.forEach(s => { basics[s] = (basics[s] || 0) + 1; });
                 } else if (n.type === 'notable') {
                     passives.push(n);
@@ -1376,9 +1498,9 @@
             let n = hoveredNode;
             document.getElementById("tt-name").textContent = n.name;
 
-            let tmap = { basic: "Nodo Pequeno", notable: "Passiva Notável", large: "Habilidade Ativa", root: "Ponto de Partida (Classe)", omega: "Portal de Conexão" };
-            document.getElementById("tt-type").textContent = tmap[n.type];
-            document.getElementById("tt-type").className = `text-xs uppercase tracking-wider mb-2 font-black ${n.type === 'root' ? 'text-rose-400' : n.type === 'large' ? 'text-amber-400' : n.type === 'notable' ? 'text-fuchsia-400' : n.type === 'omega' ? 'text-cyan-400' : 'text-slate-400'
+            let tmap = { basic: "Nodo Pequeno", notable: "Passiva Notável", large: "Habilidade Ativa", root: "Ponto de Partida (Classe)", omega: "Omini (Portal)", omegaFonte: "Omini Fonte" };
+            document.getElementById("tt-type").textContent = tmap[n.type] || n.type;
+            document.getElementById("tt-type").className = `text-xs uppercase tracking-wider mb-2 font-black ${n.type === 'root' ? 'text-rose-400' : n.type === 'large' ? 'text-amber-400' : n.type === 'notable' ? 'text-fuchsia-400' : n.type === 'omegaFonte' ? 'text-yellow-300' : n.type === 'omega' ? 'text-cyan-400' : 'text-slate-400'
                 }`;
 
             let desc = document.getElementById("tt-desc");
@@ -1386,6 +1508,11 @@
             else { desc.classList.add("hidden"); }
 
             document.getElementById("tt-stats").innerHTML = n.stats.map(s => `<div>+ ${s}</div>`).join("");
+            if (n.type === 'omega' && n.fonteId) {
+                let fonteNode = treeData.nodes[n.fonteId];
+                let fonteName = fonteNode ? fonteNode.name : n.fonteId;
+                document.getElementById("tt-stats").innerHTML += `<div class="text-cyan-400 text-xs mt-1">Fonte: ${fonteName} → clique para ir</div>`;
+            }
             document.getElementById("tt-id").textContent = "ID: " + n.id;
 
             let st = document.getElementById("tt-status");
@@ -1450,7 +1577,7 @@
             if (matches.length > 0) {
                 let html = '';
                 matches.slice(0, 15).forEach(m => {
-                    let icon = m.type === 'root' ? '👑' : m.type === 'large' ? '⭐' : m.type === 'notable' ? '🌀' : m.type === 'omega' ? '🌌' : '🔹';
+                    let icon = m.type === 'root' ? '👑' : m.type === 'large' ? '⭐' : m.type === 'notable' ? '🌀' : m.type === 'omegaFonte' ? '✨' : m.type === 'omega' ? '🌌' : '🔹';
                     html += `<div onclick="selectSearchNode('${m.id}')" class="px-4 py-2 hover:bg-slate-700 cursor-pointer text-sm text-slate-200 border-b border-slate-700/50 last:border-0 transition-colors flex items-center gap-2">
                         <span class="text-lg">${icon}</span>
                         <div class="flex flex-col ml-1">
@@ -1580,8 +1707,11 @@
             let t = document.getElementById('new-type').value;
             let d = document.getElementById('ext-desc');
             let i = document.getElementById('ext-img');
+            let f = document.getElementById('ext-fonte');
             if (t === 'basic') { d.classList.add('hidden'); i.classList.add('hidden'); }
             else { d.classList.remove('hidden'); i.classList.remove('hidden'); }
+            if (t === 'omega') f.classList.remove('hidden');
+            else f.classList.add('hidden');
         }
 
         function resetNodeForm() {
@@ -1595,6 +1725,7 @@
             document.getElementById('new-desc').value = '';
             document.getElementById('new-img').value = '';
             document.getElementById('new-stat').value = '';
+            document.getElementById('new-fonte').value = '';
             document.getElementById('submit-node-btn').textContent = "Inserir Nodo";
         }
 
@@ -1605,22 +1736,32 @@
 
             if (!isEdit && treeData.nodes[id]) return alert("ID já existe! Para editar, clique no nodo desejado na árvore.");
 
+            let nodeType = document.getElementById('new-type').value;
+            let fonteId = document.getElementById('new-fonte').value.trim();
+
+            if (nodeType === 'omega') {
+                if (!fonteId) return alert("Nodos Omini comuns precisam de um Omini Fonte associado. Preencha o campo 'ID do Omini Fonte'.");
+                if (!treeData.nodes[fonteId]) return alert(`O Omini Fonte com ID '${fonteId}' não foi encontrado na árvore!`);
+                if (treeData.nodes[fonteId].type !== 'omegaFonte') return alert(`O nodo '${fonteId}' não é do tipo Omini Fonte!`);
+            }
+
             let n = {
                 id: id,
                 name: document.getElementById('new-name').value.trim(),
                 x: parseFloat(document.getElementById('new-x').value),
                 y: parseFloat(document.getElementById('new-y').value),
-                type: document.getElementById('new-type').value,
+                type: nodeType,
                 attribute: document.getElementById('new-attr').value,
                 stats: document.getElementById('new-stat').value.split(',').map(s => s.trim()).filter(s => s),
                 desc: document.getElementById('new-desc').value.trim(),
-                imgUrl: document.getElementById('new-img').value.trim()
+                imgUrl: document.getElementById('new-img').value.trim(),
+                fonteId: nodeType === 'omega' ? fonteId : undefined
             };
 
             let parentStr = document.getElementById('new-parent').value;
             let parents = parentStr.split(',').map(s => s.trim()).filter(s => s);
 
-            if (n.type !== 'root') {
+            if (n.type !== 'root' && n.type !== 'omegaFonte') {
                 if (parents.length === 0) return alert("Especifique pelo menos um pai para nodos não-raiz!");
                 for (let p of parents) {
                     if (!treeData.nodes[p] && p !== id) return alert(`ID do pai '${p}' não encontrado!`);
@@ -2058,8 +2199,8 @@
             let tt = document.getElementById('sidebar-tooltip');
             let colors = ATTR_COLORS[n.attribute] || ATTR_COLORS['none'];
 
-            let tmap = { basic: "Atributo", notable: "Passiva Notável", large: "Habilidade Ativa", root: "Classe", omega: "Portal" };
-            let typeColors = { basic: 'text-slate-400', notable: 'text-fuchsia-400', large: 'text-amber-400', root: 'text-rose-400', omega: 'text-cyan-400' };
+            let tmap = { basic: "Atributo", notable: "Passiva Notável", large: "Habilidade Ativa", root: "Classe", omega: "Omini", omegaFonte: "Omini Fonte" };
+            let typeColors = { basic: 'text-slate-400', notable: 'text-fuchsia-400', large: 'text-amber-400', root: 'text-rose-400', omega: 'text-cyan-400', omegaFonte: 'text-yellow-300' };
 
             let typeEl = document.getElementById('stt-type');
             typeEl.textContent = tmap[n.type] || n.type;
