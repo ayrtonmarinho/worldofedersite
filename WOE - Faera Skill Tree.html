@@ -1080,6 +1080,36 @@
             return blocked;
         }
 
+        function computeBlockedRefund(newNodeIds, prevAllocSet) {
+            let testSet = new Set([...prevAllocSet, ...newNodeIds]);
+            let newBlockedSet = getBlockedNodes(testSet);
+            let blockedAlloc = Array.from(prevAllocSet).filter(id => newBlockedSet.has(id));
+            if (blockedAlloc.length === 0) return new Set();
+
+            // BFS a partir das raízes (sem os bloqueados) para achar orphans
+            let withoutBlocked = new Set(Array.from(testSet).filter(id => !newBlockedSet.has(id)));
+            let roots = Array.from(withoutBlocked).filter(id => treeData.nodes[id]?.type === 'root');
+            let reachable = new Set(roots);
+            let queue = [...roots];
+            while (queue.length > 0) {
+                let curr = queue.shift();
+                for (let nbr of getNeighbors(curr)) {
+                    if (withoutBlocked.has(nbr) && !reachable.has(nbr)) {
+                        reachable.add(nbr);
+                        queue.push(nbr);
+                    }
+                }
+            }
+            let orphans = Array.from(prevAllocSet).filter(id => !newBlockedSet.has(id) && !reachable.has(id));
+            let toRemove = new Set([...blockedAlloc, ...orphans]);
+
+            let names = Array.from(toRemove).map(id => treeData.nodes[id]?.name).filter(Boolean);
+            if (!confirm(`Ativar este nodo bloqueará ${toRemove.size} nodo(s) já alocado(s):\n${names.join(', ')}\n\nOs pontos serão devolvidos. Deseja continuar?`)) {
+                return null;
+            }
+            return toRemove;
+        }
+
         function canAllocate(nodeId, allocSet) {
             if (!currentUser) return false;
             if (allocSet.has(nodeId)) return false;
@@ -1381,15 +1411,16 @@
             // --- OMINI COMUM: aloca (e auto-aloca o fonte) ---
             if (nodeType === 'omega') {
                 if (!allocSet.has(nodeId) && canAllocate(nodeId, allocSet)) {
-                    currentUser.allocatedNodes.push(nodeId);
-                    // Encontra o fonte via fonteId ou via aresta
                     let fonteId = node.fonteId;
                     if (!fonteId) {
                         fonteId = getNeighbors(nodeId).find(id => treeData.nodes[id] && treeData.nodes[id].type === 'omegaFonte');
                     }
-                    if (fonteId && !allocSet.has(fonteId) && treeData.nodes[fonteId]) {
-                        currentUser.allocatedNodes.push(fonteId);
-                    }
+                    let willAdd = [nodeId];
+                    if (fonteId && !allocSet.has(fonteId) && treeData.nodes[fonteId]) willAdd.push(fonteId);
+                    let refund = computeBlockedRefund(willAdd, allocSet);
+                    if (refund === null) return;
+                    for (let id of willAdd) currentUser.allocatedNodes.push(id);
+                    if (refund.size > 0) currentUser.allocatedNodes = currentUser.allocatedNodes.filter(id => !refund.has(id));
                     playOmegaSound();
                     updatePointsUI();
                     updateSummaryUI();
@@ -1405,7 +1436,10 @@
                     return;
                 }
                 if (canAllocate(nodeId, allocSet)) {
+                    let refund = computeBlockedRefund([nodeId], allocSet);
+                    if (refund === null) return;
                     currentUser.allocatedNodes.push(nodeId);
+                    if (refund.size > 0) currentUser.allocatedNodes = currentUser.allocatedNodes.filter(id => !refund.has(id));
                     if (nodeType === 'omegaFonte') playOmegaSound();
                     else if (nodeType === 'root') playClassSound();
                     else if (nodeType === 'especializacao') playEspecializacaoSound();
