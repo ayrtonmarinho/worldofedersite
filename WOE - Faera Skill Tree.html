@@ -170,10 +170,11 @@
             </div>
             <form id="add-node-form" onsubmit="saveNode(event)" class="space-y-3">
                 <div class="flex gap-2">
-                    <div class="flex-1">
+                    <div class="flex-1 relative">
                         <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">ID (único)</label>
-                        <input type="text" id="new-id" required
+                        <input type="text" id="new-id" required autocomplete="off" oninput="handleIdAutocomplete()" onblur="setTimeout(()=>{let d=document.getElementById('id-autocomplete');if(d)d.classList.add('hidden');},150)"
                             class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none">
+                        <div id="id-autocomplete" class="absolute w-full mt-1 bg-slate-800 border border-slate-600 rounded shadow-2xl hidden z-50"></div>
                     </div>
                     <div class="flex-1 relative">
                         <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Conectar a (IDs sep.
@@ -201,6 +202,7 @@
                             <option value="root">Raiz (Nova Classe)</option>
                             <option value="omega">Omini (Portal comum)</option>
                             <option value="omegaFonte">Omini Fonte (Estrela 10 pontas)</option>
+                            <option value="especializacao">Especialização (Triângulo)</option>
                         </select>
                     </div>
                     <div class="flex-1">
@@ -243,6 +245,22 @@
                         por vírgula)</label>
                     <input type="text" id="new-stat" placeholder="+10 Força, +5 Vida"
                         class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none">
+                </div>
+
+                <div class="relative">
+                    <label class="block text-[10px] text-red-400 uppercase font-bold mb-1">Bloqueios (IDs sep. por vírgula)</label>
+                    <input type="text" id="new-blocks" placeholder="id_nodo1, id_nodo2" autocomplete="off" oninput="handleBlocksAutocomplete()"
+                        class="w-full bg-slate-900 border border-red-900 rounded px-2 py-1.5 text-sm text-red-300 focus:border-red-500 outline-none">
+                    <div id="blocks-autocomplete" class="absolute w-full mt-1 bg-slate-800 border border-red-900/60 rounded shadow-2xl max-h-40 overflow-y-auto hidden z-50"></div>
+                    <p class="text-[10px] text-slate-500 mt-1">Nodos listados ficam bloqueados ao alocar este.</p>
+                </div>
+
+                <div id="ext-chain" class="hidden relative">
+                    <label class="block text-[10px] text-amber-400 uppercase font-bold mb-1">Chain (ID da Especialização)</label>
+                    <input type="text" id="new-chain" placeholder="Buscar especialização..." autocomplete="off" oninput="handleChainAutocomplete()" onblur="setTimeout(()=>{let d=document.getElementById('chain-autocomplete');if(d)d.classList.add('hidden');},150)"
+                        class="w-full bg-slate-900 border border-amber-800 rounded px-2 py-1.5 text-sm text-amber-300 focus:border-amber-500 outline-none">
+                    <div id="chain-autocomplete" class="absolute w-full mt-1 bg-slate-800 border border-amber-800/60 rounded shadow-2xl max-h-40 overflow-y-auto hidden z-50"></div>
+                    <p class="text-[10px] text-slate-500 mt-1">Este nodo herda os bloqueios da especialização indicada.</p>
                 </div>
 
                 <div class="flex gap-2">
@@ -804,6 +822,14 @@
             ctx.closePath();
         }
 
+        function drawTrianglePath(ctx, x, y, r) {
+            ctx.beginPath();
+            ctx.moveTo(x, y - r);
+            ctx.lineTo(x + r * 0.866, y + r * 0.5);
+            ctx.lineTo(x - r * 0.866, y + r * 0.5);
+            ctx.closePath();
+        }
+
         function drawLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -841,17 +867,19 @@
             ctx.globalAlpha = 1.0;
 
             // Nodos
+            let blockedSet = getBlockedNodes(allocatedSet);
             for (let key in treeData.nodes) {
                 let node = treeData.nodes[key];
                 let pos = worldToScreen(node.x, node.y);
                 let isAlloc = allocatedSet.has(node.id);
                 let isHov = hoveredNode === node;
-                let canAlloc = canAllocate(node.id, allocatedSet);
+                let isBlocked = !isAlloc && blockedSet.has(node.id);
+                let canAlloc = !isBlocked && canAllocate(node.id, allocatedSet);
                 let isSearched = hasActiveSearch && window.searchedNodes.has(node.id);
 
                 ctx.globalAlpha = (hasActiveSearch && !isSearched) ? 0.2 : 1.0;
 
-                let baseRadius = node.type === "root" ? 28 : node.type === "large" ? 24 : node.type === "notable" ? 18 : node.type === "omegaFonte" ? 22 : node.type === "omega" ? 16 : 12;
+                let baseRadius = node.type === "root" ? 28 : node.type === "large" ? 24 : node.type === "notable" ? 18 : node.type === "omegaFonte" ? 22 : node.type === "omega" ? 16 : node.type === "especializacao" ? 20 : 12;
                 let r = baseRadius * camera.zoom;
                 let colors = ATTR_COLORS[node.attribute] || ATTR_COLORS["none"];
 
@@ -861,6 +889,7 @@
                 if (node.type === "root") pathFn = drawHexagonPath;
                 if (node.type === "omega") pathFn = drawStarPath;
                 if (node.type === "omegaFonte") pathFn = drawStar10Path;
+                if (node.type === "especializacao") pathFn = drawTrianglePath;
 
                 // Preenchimento / Imagem
                 ctx.save();
@@ -877,6 +906,10 @@
                 } else {
                     ctx.fillStyle = isAlloc ? colors.fill : (node.type === "root" ? "#1e293b" : "#0f172a");
                     ctx.fill();
+                    if (isBlocked) {
+                        ctx.fillStyle = "rgba(220, 38, 38, 0.25)";
+                        ctx.fill();
+                    }
                 }
                 ctx.restore();
 
@@ -894,6 +927,11 @@
                     ctx.lineWidth = 2 * camera.zoom;
                     ctx.shadowColor = colors.shadow;
                     ctx.shadowBlur = 10;
+                } else if (isBlocked) {
+                    ctx.strokeStyle = "#ef4444";
+                    ctx.lineWidth = 2 * camera.zoom;
+                    ctx.shadowColor = "#dc2626";
+                    ctx.shadowBlur = 8;
                 } else {
                     ctx.strokeStyle = canAlloc ? "#94a3b8" : "#334155";
                     ctx.lineWidth = (canAlloc ? 2 : 1) * camera.zoom;
@@ -944,6 +982,8 @@
                         document.getElementById('new-x').value = hoveredNode.x;
                         document.getElementById('new-y').value = hoveredNode.y;
                         document.getElementById('new-fonte').value = hoveredNode.fonteId || '';
+                        document.getElementById('new-blocks').value = (hoveredNode.blocks || []).join(', ');
+                        document.getElementById('new-chain').value = hoveredNode.chainId || '';
 
                         let parents = treeData.edges.filter(edge => edge.target === hoveredNode.id).map(edge => edge.source);
                         document.getElementById('new-parent').value = parents.join(', ');
@@ -999,7 +1039,7 @@
                 hoveredNode = null;
                 for (let key in treeData.nodes) {
                     let n = treeData.nodes[key];
-                    let r = n.type === "root" ? 28 : n.type === "large" ? 24 : n.type === "notable" ? 18 : n.type === "omegaFonte" ? 22 : n.type === "omega" ? 16 : 12;
+                    let r = n.type === "root" ? 28 : n.type === "large" ? 24 : n.type === "notable" ? 18 : n.type === "omegaFonte" ? 22 : n.type === "omega" ? 16 : n.type === "especializacao" ? 20 : 12;
                     let dx = wp.x - n.x, dy = wp.y - n.y;
                     if (dx * dx + dy * dy <= r * r) { hoveredNode = n; break; }
                 }
@@ -1026,9 +1066,24 @@
             return ns;
         }
 
+        function getBlockedNodes(allocSet) {
+            let blocked = new Set();
+            for (let allocId of allocSet) {
+                let an = treeData.nodes[allocId];
+                if (!an) continue;
+                if (an.blocks && an.blocks.length) an.blocks.forEach(b => blocked.add(b));
+                if (an.chainId) {
+                    let spec = treeData.nodes[an.chainId];
+                    if (spec && spec.blocks && spec.blocks.length) spec.blocks.forEach(b => blocked.add(b));
+                }
+            }
+            return blocked;
+        }
+
         function canAllocate(nodeId, allocSet) {
             if (!currentUser) return false;
             if (allocSet.has(nodeId)) return false;
+            if (getBlockedNodes(allocSet).has(nodeId)) return false;
 
             let node = treeData.nodes[nodeId];
             let isTargetRoot = node.type === 'root';
@@ -1232,6 +1287,54 @@
             } catch (e) {}
         }
 
+        // Som: ESPECIALIZAÇÃO — expansão metálica (metal sob pressão, clic e reverb metálico)
+        function playEspecializacaoSound() {
+            try {
+                let ctx = _ac(), t = ctx.currentTime;
+                // Impacto metálico grave inicial
+                let imp = ctx.createOscillator(), impG = ctx.createGain();
+                imp.type = 'sawtooth'; imp.frequency.setValueAtTime(80, t);
+                imp.frequency.exponentialRampToValueAtTime(200, t + 0.08);
+                imp.frequency.exponentialRampToValueAtTime(55, t + 0.25);
+                impG.gain.setValueAtTime(0.5, t);
+                impG.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+                imp.connect(impG); impG.connect(ctx.destination);
+                imp.start(t); imp.stop(t + 0.3);
+                // Expansão — ruído filtrado que sobe e abre (metal se expandindo)
+                let len = Math.floor(ctx.sampleRate * 0.6);
+                let buf = ctx.createBuffer(1, len, ctx.sampleRate);
+                let d = buf.getChannelData(0);
+                for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+                let src = ctx.createBufferSource(); src.buffer = buf;
+                let hp = ctx.createBiquadFilter(); hp.type = 'highpass';
+                hp.frequency.setValueAtTime(800, t + 0.05);
+                hp.frequency.exponentialRampToValueAtTime(4000, t + 0.55);
+                let expG = ctx.createGain();
+                expG.gain.setValueAtTime(0, t + 0.04);
+                expG.gain.linearRampToValueAtTime(0.3, t + 0.15);
+                expG.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+                src.connect(hp); hp.connect(expG); expG.connect(ctx.destination);
+                src.start(t + 0.04);
+                // Ping ressonante agudo (armadura batendo)
+                [3800, 5200, 7100].forEach((freq, i) => {
+                    let o = ctx.createOscillator(), g = ctx.createGain();
+                    o.type = 'sine'; o.frequency.value = freq;
+                    g.gain.setValueAtTime(0.06 - i * 0.012, t + 0.06 + i * 0.03);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+                    o.connect(g); g.connect(ctx.destination);
+                    o.start(t + 0.06 + i * 0.03); o.stop(t + 0.75);
+                });
+                // Sustain grave que fecha (contração final)
+                let sub = ctx.createOscillator(), subG = ctx.createGain();
+                sub.type = 'triangle'; sub.frequency.setValueAtTime(140, t + 0.2);
+                sub.frequency.exponentialRampToValueAtTime(70, t + 0.65);
+                subG.gain.setValueAtTime(0, t + 0.18); subG.gain.linearRampToValueAtTime(0.22, t + 0.35);
+                subG.gain.exponentialRampToValueAtTime(0.0001, t + 0.68);
+                sub.connect(subG); subG.connect(ctx.destination);
+                sub.start(t + 0.18); sub.stop(t + 0.7);
+            } catch (e) {}
+        }
+
         function toggleAllocation(nodeId) {
             if (!currentUser) return alert("Carregue um personagem primeiro.");
             let allocSet = new Set(currentUser.allocatedNodes);
@@ -1305,6 +1408,7 @@
                     currentUser.allocatedNodes.push(nodeId);
                     if (nodeType === 'omegaFonte') playOmegaSound();
                     else if (nodeType === 'root') playClassSound();
+                    else if (nodeType === 'especializacao') playEspecializacaoSound();
                     else playAllocateSound();
                     updatePointsUI();
                     updateSummaryUI();
@@ -1336,14 +1440,47 @@
             document.getElementById('lbl-char-level').textContent = `Nvl ${currentUser.level}`;
         }
 
+        function renderSpecChain() {
+            let sel = document.getElementById('spec-dropdown');
+            let container = document.getElementById('spec-chain-nodes');
+            if (!sel || !container || !currentUser) return;
+            let specId = sel.value;
+            if (!specId) { container.innerHTML = ''; container.classList.add('hidden'); return; }
+            let allocSet = new Set(currentUser.allocatedNodes);
+            let chainNodes = Object.values(treeData.nodes).filter(n => n.chainId === specId && allocSet.has(n.id));
+            if (chainNodes.length === 0) {
+                container.innerHTML = '<div class="text-slate-500 text-xs italic">Nenhum nodo desta cadeia alocado.</div>';
+            } else {
+                container.innerHTML = chainNodes.map(n => `
+                    <div data-node-id="${n.id}" class="text-xs text-orange-200 flex items-start gap-1.5 py-1 px-1.5 rounded hover:bg-orange-900/20 cursor-default border-b border-orange-900/20 last:border-0 transition-colors">
+                        <span class="text-orange-500 mt-0.5 shrink-0">▸</span>
+                        <div>
+                            <span class="font-medium">${escHtml(n.name)}</span>
+                            ${n.stats && n.stats.length ? `<div class="text-[10px] text-orange-400/70">↳ ${n.stats.map(escHtml).join(', ')}</div>` : ''}
+                        </div>
+                    </div>`).join('');
+            }
+            container.classList.remove('hidden');
+        }
+
         function updateSummaryUI() {
             if (!currentUser) return;
-            let basics = {}, passives = [], actives = [], rootNode = null;
+            let basics = {}, passives = [], actives = [], rootNode = null, specNodes = [];
+
+            // IDs que pertencem a uma chain de especialização alocada
+            let allocSet = new Set(currentUser.allocatedNodes);
+            let chainNodeIds = new Set(
+                Object.values(treeData.nodes)
+                    .filter(n => n.chainId && allocSet.has(n.chainId) && treeData.nodes[n.chainId] && treeData.nodes[n.chainId].type === 'especializacao')
+                    .map(n => n.id)
+            );
 
             for (let id of currentUser.allocatedNodes) {
                 let n = treeData.nodes[id];
                 if (!n) continue;
                 if (n.type === 'root') rootNode = n;
+                if (n.type === 'especializacao') { specNodes.push(n); continue; }
+                if (chainNodeIds.has(id)) continue; // chain nodes ficam só no dropdown
                 if (n.type === 'basic' || n.type === 'root' || n.type === 'omega' || n.type === 'omegaFonte') {
                     if(n.stats) n.stats.forEach(s => { basics[s] = (basics[s] || 0) + 1; });
                 } else if (n.type === 'notable') {
@@ -1380,6 +1517,20 @@
                 </div>`;
             }
 
+            if (specNodes.length > 0) {
+                let opts = specNodes.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
+                html += `
+                <div class="bg-slate-800 p-3 rounded border border-orange-900/50">
+                    <h4 class="text-xs font-bold text-orange-300 mb-2">⚔ Especializações (${specNodes.length})</h4>
+                    <select id="spec-dropdown" onchange="renderSpecChain()"
+                        class="w-full bg-slate-900 border border-orange-800/50 rounded px-2 py-1.5 text-sm text-orange-200 outline-none cursor-pointer">
+                        <option value="">— selecionar especialização —</option>
+                        ${opts}
+                    </select>
+                    <div id="spec-chain-nodes" class="mt-2 space-y-0.5 hidden"></div>
+                </div>`;
+            }
+
             if (Object.keys(basics).length > 0) {
                 html += `<div class="bg-slate-800 p-3 rounded border border-slate-700">
                     <h4 class="text-xs font-bold text-slate-400 mb-2">Atributos Básicos</h4>`;
@@ -1411,18 +1562,20 @@
             }
 
             // Identificar a raiz/classe atual
-            let rootNode = null;
-            let passives = [];
-            let actives = [];
-            let basics = {};
+            let rootNode = null, passives = [], actives = [], basics = {}, pdfSpecNodes = [];
+            let pdfAllocSet = new Set(currentUser.allocatedNodes);
+            let pdfChainIds = new Set(
+                Object.values(treeData.nodes)
+                    .filter(n => n.chainId && pdfAllocSet.has(n.chainId) && treeData.nodes[n.chainId] && treeData.nodes[n.chainId].type === 'especializacao')
+                    .map(n => n.id)
+            );
 
             for (let id of currentUser.allocatedNodes) {
                 let n = treeData.nodes[id];
                 if (!n) continue;
-
-                if (n.type === 'root') {
-                    rootNode = n;
-                }
+                if (n.type === 'root') rootNode = n;
+                if (n.type === 'especializacao') { pdfSpecNodes.push(n); continue; }
+                if (pdfChainIds.has(id)) continue;
                 if (n.type === 'basic' || n.type === 'root' || n.type === 'omega' || n.type === 'omegaFonte') {
                     if(n.stats) n.stats.forEach(s => { basics[s] = (basics[s] || 0) + 1; });
                 } else if (n.type === 'notable') {
@@ -1447,11 +1600,23 @@
 
             if (rootNode) {
                 html += `
-                    <div style="background-color: #f8fafc; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 30px; border-radius: 4px;">
+                    <div style="background-color: #f8fafc; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 16px; border-radius: 4px;">
                         <h3 style="margin: 0 0 5px 0; color: #b45309;">Classe: ${rootNode.name}</h3>
                         <p style="margin: 0; font-style: italic; color: #475569; font-size: 14px;">${rootNode.desc || 'Sem descrição.'}</p>
                     </div>
                 `;
+            }
+
+            if (pdfSpecNodes.length > 0) {
+                html += `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:24px;">`;
+                pdfSpecNodes.forEach(s => {
+                    html += `<div style="background:#fff7ed; border:2px solid #ea580c; border-radius:6px; padding:8px 14px;">
+                        <div style="font-size:10px; color:#9a3412; text-transform:uppercase; letter-spacing:1px; font-weight:700;">Especialização</div>
+                        <div style="font-size:15px; font-weight:800; color:#c2410c;">${s.name}</div>
+                        ${s.desc ? `<div style="font-size:12px; color:#78716c; font-style:italic;">${s.desc}</div>` : ''}
+                    </div>`;
+                });
+                html += `</div>`;
             }
 
             html += `<h3 style="color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">💪 Atributos Básicos</h3><ul style="line-height: 1.6; font-size: 14px;">`;
@@ -1477,6 +1642,26 @@
                 html += `</ul>`;
             }
 
+            if (pdfSpecNodes.length > 0) {
+                html += `<h3 style="color:#c2410c; border-bottom:2px solid #fed7aa; padding-bottom:5px; margin-top:36px;">⚔ Cadeias de Especialização</h3>`;
+                pdfSpecNodes.forEach(s => {
+                    let chain = Object.values(treeData.nodes).filter(n => n.chainId === s.id && pdfAllocSet.has(n.id));
+                    html += `<div style="margin-top:18px; padding:12px 16px; background:#fff7ed; border-left:4px solid #ea580c; border-radius:4px;">
+                        <h4 style="margin:0 0 10px 0; color:#9a3412; font-size:14px;">${s.name}</h4>`;
+                    if (chain.length === 0) {
+                        html += `<p style="color:#a8a29e; font-size:13px; font-style:italic;">Nenhum nodo da cadeia alocado.</p>`;
+                    } else {
+                        html += `<ul style="margin:0; padding-left:18px; line-height:1.8; font-size:13px;">`;
+                        chain.forEach(n => {
+                            let statsText = n.stats && n.stats.length ? ` <span style="color:#ea580c; font-size:11px;">↳ ${n.stats.join(', ')}</span>` : '';
+                            html += `<li><strong>${n.name}</strong>${n.desc ? ': ' + n.desc : ''}${statsText}</li>`;
+                        });
+                        html += `</ul>`;
+                    }
+                    html += `</div>`;
+                });
+            }
+
             printDiv.innerHTML = html;
 
             // Configuração e geração do PDF
@@ -1498,9 +1683,9 @@
             let n = hoveredNode;
             document.getElementById("tt-name").textContent = n.name;
 
-            let tmap = { basic: "Nodo Pequeno", notable: "Passiva Notável", large: "Habilidade Ativa", root: "Ponto de Partida (Classe)", omega: "Omini (Portal)", omegaFonte: "Omini Fonte" };
+            let tmap = { basic: "Nodo Pequeno", notable: "Passiva Notável", large: "Habilidade Ativa", root: "Ponto de Partida (Classe)", omega: "Omini (Portal)", omegaFonte: "Omini Fonte", especializacao: "Especialização" };
             document.getElementById("tt-type").textContent = tmap[n.type] || n.type;
-            document.getElementById("tt-type").className = `text-xs uppercase tracking-wider mb-2 font-black ${n.type === 'root' ? 'text-rose-400' : n.type === 'large' ? 'text-amber-400' : n.type === 'notable' ? 'text-fuchsia-400' : n.type === 'omegaFonte' ? 'text-yellow-300' : n.type === 'omega' ? 'text-cyan-400' : 'text-slate-400'
+            document.getElementById("tt-type").className = `text-xs uppercase tracking-wider mb-2 font-black ${n.type === 'root' ? 'text-rose-400' : n.type === 'large' ? 'text-amber-400' : n.type === 'notable' ? 'text-fuchsia-400' : n.type === 'omegaFonte' ? 'text-yellow-300' : n.type === 'omega' ? 'text-cyan-400' : n.type === 'especializacao' ? 'text-orange-300' : 'text-slate-400'
                 }`;
 
             let desc = document.getElementById("tt-desc");
@@ -1518,9 +1703,25 @@
             let st = document.getElementById("tt-status");
             let allocSet = currentUser ? new Set(currentUser.allocatedNodes) : new Set();
             let hasRoot = Array.from(allocSet).some(id => treeData.nodes[id] && treeData.nodes[id].type === 'root');
+            let blockedBySet = getBlockedNodes(allocSet);
 
             if (allocSet.has(n.id)) {
                 st.textContent = "ALOCADO"; st.className = "text-xs mt-3 font-bold border-t border-slate-700 pt-2 text-green-400";
+            } else if (blockedBySet.has(n.id)) {
+                let blockerName = (() => {
+                    for (let aid of allocSet) {
+                        let an = treeData.nodes[aid];
+                        if (!an) continue;
+                        if (an.blocks && an.blocks.includes(n.id)) return an.name;
+                        if (an.chainId) {
+                            let spec = treeData.nodes[an.chainId];
+                            if (spec && spec.blocks && spec.blocks.includes(n.id)) return `${an.name} (via ${spec.name})`;
+                        }
+                    }
+                    return "outro nodo";
+                })();
+                st.innerHTML = `BLOQUEADO por <span class="text-red-300">${blockerName}</span>`;
+                st.className = "text-xs mt-3 font-bold border-t border-slate-700 pt-2 text-red-500";
             } else if (canAllocate(n.id, allocSet)) {
                 st.textContent = "Clique para alocar"; st.className = "text-xs mt-3 font-bold border-t border-slate-700 pt-2 text-amber-400 cursor-pointer";
             } else {
@@ -1659,6 +1860,131 @@
             input.focus();
         }
 
+        function handleBlocksAutocomplete() {
+            let input = document.getElementById('new-blocks');
+            let dropdown = document.getElementById('blocks-autocomplete');
+            if (!input || !dropdown) return;
+
+            let parts = input.value.split(',');
+            let lastPart = parts[parts.length - 1].trim().toLowerCase();
+            let already = parts.slice(0, -1).map(s => s.trim());
+
+            if (lastPart.length < 1) { dropdown.classList.add('hidden'); return; }
+
+            let matches = Object.values(treeData.nodes).filter(n =>
+                !already.includes(n.id) &&
+                (n.id.toLowerCase().includes(lastPart) || n.name.toLowerCase().includes(lastPart))
+            );
+
+            if (matches.length > 0) {
+                dropdown.innerHTML = matches.slice(0, 10).map(m =>
+                    `<div onmousedown="selectBlocksAutocomplete('${m.id}')" class="px-2 py-1.5 hover:bg-red-900/40 cursor-pointer text-xs border-b border-slate-700/50 last:border-0 transition-colors flex items-center justify-between">
+                        <span class="text-red-300 font-mono">${m.id}</span>
+                        <span class="text-slate-400 truncate ml-2 max-w-[120px]">${m.name}</span>
+                    </div>`
+                ).join('');
+                dropdown.classList.remove('hidden');
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        function selectBlocksAutocomplete(id) {
+            let input = document.getElementById('new-blocks');
+            let parts = input.value.split(',');
+            parts[parts.length - 1] = ' ' + id;
+            input.value = parts.join(',').trimStart() + ', ';
+            document.getElementById('blocks-autocomplete').classList.add('hidden');
+            input.focus();
+        }
+
+        function handleChainAutocomplete() {
+            let input = document.getElementById('new-chain');
+            let dropdown = document.getElementById('chain-autocomplete');
+            if (!input || !dropdown) return;
+
+            let val = input.value.trim().toLowerCase();
+            if (!val) { dropdown.classList.add('hidden'); return; }
+
+            let specs = Object.values(treeData.nodes).filter(n =>
+                n.type === 'especializacao' &&
+                (n.id.toLowerCase().includes(val) || n.name.toLowerCase().includes(val))
+            );
+
+            if (specs.length === 0) { dropdown.classList.add('hidden'); return; }
+
+            dropdown.innerHTML = specs.slice(0, 10).map(s =>
+                `<div onmousedown="selectChainAutocomplete('${s.id}')" class="px-2 py-1.5 hover:bg-amber-900/40 cursor-pointer text-xs border-b border-slate-700/50 last:border-0 transition-colors flex items-center justify-between">
+                    <span class="text-amber-300 font-mono">${s.id}</span>
+                    <span class="text-slate-400 truncate ml-2 max-w-[130px]">${escHtml(s.name)}</span>
+                </div>`
+            ).join('');
+            dropdown.classList.remove('hidden');
+        }
+
+        function selectChainAutocomplete(id) {
+            document.getElementById('new-chain').value = id;
+            document.getElementById('chain-autocomplete').classList.add('hidden');
+            document.getElementById('new-chain').focus();
+        }
+
+        function handleIdAutocomplete() {
+            let input = document.getElementById('new-id');
+            let dropdown = document.getElementById('id-autocomplete');
+            if (!input || !dropdown || input.readOnly) { if (dropdown) dropdown.classList.add('hidden'); return; }
+
+            let val = input.value.trim().toLowerCase();
+            if (!val) { dropdown.classList.add('hidden'); return; }
+
+            let allIds = Object.keys(treeData.nodes);
+            let matches = allIds.filter(id => id.toLowerCase().includes(val));
+
+            if (!matches.length) { dropdown.classList.add('hidden'); return; }
+
+            let exactMatch = treeData.nodes[input.value.trim()];
+            let html = matches.slice(0, 12).map(id => {
+                let node = treeData.nodes[id];
+                let isExact = id === input.value.trim();
+                let badge = isExact
+                    ? `<span class="ml-1 text-[9px] bg-amber-700/60 text-amber-200 px-1 rounded">já existe</span>`
+                    : '';
+                return `<div onmousedown="selectIdAutocomplete('${id}')" class="px-2 py-1.5 hover:bg-slate-700 cursor-pointer text-xs border-b border-slate-700/50 last:border-0 transition-colors flex items-center justify-between">
+                    <span class="text-fuchsia-300 font-mono">${id}</span>
+                    <span class="text-slate-400 truncate ml-2 max-w-[100px]">${node.name}${badge}</span>
+                </div>`;
+            }).join('');
+
+            if (exactMatch) {
+                let suggested = suggestNextId(input.value.trim());
+                html += `<div onmousedown="selectIdAutocomplete('${suggested}')" class="px-2 py-1.5 hover:bg-slate-700/80 cursor-pointer text-xs text-amber-300 border-t border-slate-600 transition-colors">
+                    + Criar como <span class="font-bold text-fuchsia-300">${suggested}</span>
+                </div>`;
+            }
+
+            dropdown.innerHTML = html;
+            dropdown.classList.remove('hidden');
+        }
+
+        function suggestNextId(baseId) {
+            let match = baseId.match(/^(.*?)(_(\d+))?$/);
+            let base = match[1];
+            let num = match[3] ? parseInt(match[3]) : 0;
+            let candidate;
+            do {
+                num++;
+                candidate = base + '_' + String(num).padStart(3, '0');
+            } while (treeData.nodes[candidate]);
+            return candidate;
+        }
+
+        function selectIdAutocomplete(id) {
+            let input = document.getElementById('new-id');
+            let dropdown = document.getElementById('id-autocomplete');
+            if (dropdown) dropdown.classList.add('hidden');
+            input.value = id;
+            input.focus();
+        }
+
         // ================= ADMIN FUNCTIONS =================
         function checkAdminAuth(tab) {
             if (isAdmin) { switchTab(tab); return; }
@@ -1708,10 +2034,14 @@
             let d = document.getElementById('ext-desc');
             let i = document.getElementById('ext-img');
             let f = document.getElementById('ext-fonte');
+            let ch = document.getElementById('ext-chain');
             if (t === 'basic') { d.classList.add('hidden'); i.classList.add('hidden'); }
             else { d.classList.remove('hidden'); i.classList.remove('hidden'); }
             if (t === 'omega') f.classList.remove('hidden');
             else f.classList.add('hidden');
+            // chain só faz sentido em nodos que NÃO são a própria especialização nem raiz
+            if (t === 'especializacao' || t === 'root' || t === 'omegaFonte') ch.classList.add('hidden');
+            else ch.classList.remove('hidden');
         }
 
         function resetNodeForm() {
@@ -1726,6 +2056,8 @@
             document.getElementById('new-img').value = '';
             document.getElementById('new-stat').value = '';
             document.getElementById('new-fonte').value = '';
+            document.getElementById('new-blocks').value = '';
+            document.getElementById('new-chain').value = '';
             document.getElementById('submit-node-btn').textContent = "Inserir Nodo";
         }
 
@@ -1755,7 +2087,9 @@
                 stats: document.getElementById('new-stat').value.split(',').map(s => s.trim()).filter(s => s),
                 desc: document.getElementById('new-desc').value.trim(),
                 imgUrl: document.getElementById('new-img').value.trim(),
-                fonteId: nodeType === 'omega' ? fonteId : undefined
+                fonteId: nodeType === 'omega' ? fonteId : undefined,
+                blocks: document.getElementById('new-blocks').value.split(',').map(s => s.trim()).filter(s => s),
+                chainId: document.getElementById('new-chain').value.trim() || undefined
             };
 
             let parentStr = document.getElementById('new-parent').value;
@@ -2199,8 +2533,8 @@
             let tt = document.getElementById('sidebar-tooltip');
             let colors = ATTR_COLORS[n.attribute] || ATTR_COLORS['none'];
 
-            let tmap = { basic: "Atributo", notable: "Passiva Notável", large: "Habilidade Ativa", root: "Classe", omega: "Omini", omegaFonte: "Omini Fonte" };
-            let typeColors = { basic: 'text-slate-400', notable: 'text-fuchsia-400', large: 'text-amber-400', root: 'text-rose-400', omega: 'text-cyan-400', omegaFonte: 'text-yellow-300' };
+            let tmap = { basic: "Atributo", notable: "Passiva Notável", large: "Habilidade Ativa", root: "Classe", omega: "Omini", omegaFonte: "Omini Fonte", especializacao: "Especialização" };
+            let typeColors = { basic: 'text-slate-400', notable: 'text-fuchsia-400', large: 'text-amber-400', root: 'text-rose-400', omega: 'text-cyan-400', omegaFonte: 'text-yellow-300', especializacao: 'text-orange-300' };
 
             let typeEl = document.getElementById('stt-type');
             typeEl.textContent = tmap[n.type] || n.type;
