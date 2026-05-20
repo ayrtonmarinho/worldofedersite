@@ -45,6 +45,42 @@
             background: rgba(30, 41, 59, 0.95);
             backdrop-filter: blur(10px);
         }
+
+        .orb-vida {
+            background: radial-gradient(circle at 35% 35%, #ff8080, #c0002a 58%, #6e000f);
+            box-shadow: 0 0 14px 4px rgba(220, 20, 60, 0.75), inset 0 0 5px 1px rgba(255, 120, 120, 0.35);
+        }
+        .orb-mana {
+            background: radial-gradient(circle at 35% 35%, #93c5fd, #2563eb 58%, #1e3a8a);
+            box-shadow: 0 0 14px 4px rgba(59, 130, 246, 0.8), inset 0 0 5px 1px rgba(147, 197, 253, 0.35);
+        }
+        .vm-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #c0002a, #1e3a8a);
+            outline: none;
+        }
+        .vm-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #f1f5f9, #94a3b8 65%, #475569);
+            box-shadow: 0 0 8px 3px rgba(255,255,255,0.25);
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.15);
+        }
+        .vm-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #f1f5f9, #94a3b8 65%, #475569);
+            box-shadow: 0 0 8px 3px rgba(255,255,255,0.25);
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.15);
+        }
     </style>
 </head>
 
@@ -129,6 +165,27 @@
                     <div class="text-center flex-1">
                         <div class="text-slate-400 text-xs uppercase mb-1">Pontos Usados</div>
                         <div class="text-2xl font-bold text-red-400" id="lbl-pts-used">0</div>
+                    </div>
+                </div>
+
+                <!-- DISTRIBUIÇÃO VIDA / MANA -->
+                <div class="bg-slate-900 border border-slate-700 rounded-lg p-3">
+                    <div class="flex justify-between items-center mb-2.5">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Vida / Mana</span>
+                        <span class="text-[10px] text-slate-500" id="vm-total-label">— pts</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="flex flex-col items-center shrink-0 w-10">
+                            <div class="orb-vida w-7 h-7 rounded-full"></div>
+                            <span id="vm-vida-val" class="text-red-400 font-bold text-sm mt-1">0</span>
+                        </div>
+                        <input type="range" id="vm-slider" min="0" max="0" value="0"
+                            oninput="onVitaManaSlide()"
+                            class="vm-slider flex-1">
+                        <div class="flex flex-col items-center shrink-0 w-10">
+                            <div class="orb-mana w-7 h-7 rounded-full"></div>
+                            <span id="vm-mana-val" class="text-blue-400 font-bold text-sm mt-1">0</span>
+                        </div>
                     </div>
                 </div>
 
@@ -1472,6 +1529,41 @@
             document.getElementById('lbl-pts-used').textContent = used;
             document.getElementById('lbl-pts-avail').textContent = avail;
             document.getElementById('lbl-char-level').textContent = `Nvl ${currentUser.level}`;
+            updateVitaManaSlider();
+        }
+
+        function updateVitaManaSlider() {
+            if (!currentUser) return;
+            let total = Math.floor(currentUser.level / 2);
+            let slider = document.getElementById('vm-slider');
+            if (!slider) return;
+
+            slider.max = total;
+
+            let savedMana = currentUser.manaPoints ?? Math.floor(total / 2);
+            let mana = Math.min(savedMana, total);
+            slider.value = mana;
+
+            document.getElementById('vm-total-label').textContent = `${total} pts disponíveis`;
+            document.getElementById('vm-vida-val').textContent = total - mana;
+            document.getElementById('vm-mana-val').textContent = mana;
+
+            currentUser.vidaPoints = total - mana;
+            currentUser.manaPoints = mana;
+        }
+
+        function onVitaManaSlide() {
+            if (!currentUser) return;
+            let slider = document.getElementById('vm-slider');
+            let total = parseInt(slider.max) || 0;
+            let mana = parseInt(slider.value) || 0;
+            let vida = total - mana;
+
+            document.getElementById('vm-vida-val').textContent = vida;
+            document.getElementById('vm-mana-val').textContent = mana;
+
+            currentUser.vidaPoints = vida;
+            currentUser.manaPoints = mana;
         }
 
         function renderSpecChain() {
