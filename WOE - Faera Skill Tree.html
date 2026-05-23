@@ -108,6 +108,45 @@
             color: #c4b5fd;
             border-bottom: 2px solid #7c3aed;
         }
+
+        /* ===== MOBILE ===== */
+        @media (max-width: 768px) {
+            body { overflow: hidden; touch-action: none; }
+            #sidebar {
+                position: fixed !important;
+                bottom: 0 !important; left: 0 !important; right: 0 !important;
+                width: 100% !important;
+                height: 78vh !important;
+                max-height: 78vh !important;
+                border-left: none !important;
+                border-top: 1px solid #334155;
+                border-radius: 18px 18px 0 0;
+                transform: translateY(110%);
+                transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+                z-index: 45 !important;
+            }
+            #sidebar.mobile-open { transform: translateY(0) !important; }
+            #mobile-handle { display: flex !important; }
+            #mobile-bottom-bar { display: flex !important; }
+            #coord-hud { display: none !important; }
+            #admin-secret-btn { bottom: 68px !important; }
+            /* Impede zoom de input no iOS */
+            input, select, textarea { font-size: 16px !important; }
+            /* Tooltip desativado no mobile (usa painel próprio) */
+            #tooltip { display: none !important; }
+            /* Search bar adaptada */
+            #search-bar-wrap { left: 8px !important; right: 8px !important; transform: none !important; width: auto !important; max-width: calc(100% - 16px) !important; }
+            .tab-btn { font-size: 9px !important; }
+            /* Modal mais largo */
+            #points-modal > div { width: 94vw !important; max-height: 90vh; overflow-y: auto; }
+            #admin-modal > div { width: 94vw !important; }
+            /* Canvas ocupa tela toda */
+            #canvas-container { width: 100vw !important; }
+            /* Node info panel fica acima da bottom bar */
+            #mobile-node-info { bottom: 72px !important; }
+            /* Sidebar tooltip desativado no mobile */
+            #sidebar-tooltip { display: none !important; }
+        }
     </style>
 </head>
 
@@ -119,7 +158,7 @@
         <canvas id="treeCanvas"></canvas>
 
         <!-- Barra de Busca Avançada -->
-        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 w-80 max-w-[90%]">
+        <div id="search-bar-wrap" class="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 w-80 max-w-[90%]">
             <div class="relative">
                 <input type="text" id="search-nodes" placeholder="Buscar habilidades, atributos..." oninput="handleSearchInput()" onkeydown="handleSearchKey(event)"
                     class="w-full bg-slate-900/95 border border-slate-600 rounded-full px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500 shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md transition-colors">
@@ -144,14 +183,19 @@
         </div>
 
         <!-- Coordenadas HUD -->
-        <div
+        <div id="coord-hud"
             class="absolute bottom-4 left-4 bg-slate-800/80 px-3 py-1 rounded text-xs text-slate-400 pointer-events-none border border-slate-700">
             X <span id="world-x" class="text-white">0</span> | Y <span id="world-y" class="text-white">0</span>
         </div>
     </div>
 
     <!-- BARRA LATERAL -->
-    <div class="w-96 glass-panel border-l border-slate-700 flex flex-col h-full shadow-2xl z-20">
+    <div id="sidebar" class="w-96 glass-panel border-l border-slate-700 flex flex-col h-full shadow-2xl z-20">
+
+        <!-- Mobile drag handle (hidden on desktop) -->
+        <div id="mobile-handle" class="hidden items-center justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing" ontouchstart="onHandleTouchStart(event)">
+            <div class="w-10 h-1 bg-slate-600 rounded-full"></div>
+        </div>
 
         <!-- Abas -->
         <div class="flex border-b border-slate-700 shrink-0">
@@ -471,8 +515,42 @@
         </div>
     </div>
 
+    <!-- MOBILE BACKDROP -->
+    <div id="mobile-backdrop" class="fixed inset-0 bg-black/50 z-40 hidden" onclick="closeMobileSidebar()"></div>
+
+    <!-- MOBILE BOTTOM BAR (hidden on desktop) -->
+    <div id="mobile-bottom-bar" class="hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 border-t border-slate-700 backdrop-blur-sm px-4 py-2 items-center justify-between">
+        <div class="flex gap-4 items-center">
+            <div class="text-center">
+                <div class="text-[9px] text-slate-400 uppercase">Restantes</div>
+                <div class="text-lg font-bold text-green-400" id="mobile-pts-avail">0</div>
+            </div>
+            <div class="text-center">
+                <div class="text-[9px] text-slate-400 uppercase">Usados</div>
+                <div class="text-lg font-bold text-red-400" id="mobile-pts-used">0</div>
+            </div>
+        </div>
+        <button onclick="toggleMobileSidebar()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-full text-sm font-bold shadow-lg">
+            Menu
+        </button>
+    </div>
+
+    <!-- MOBILE NODE INFO PANEL -->
+    <div id="mobile-node-info" class="hidden fixed bottom-16 left-3 right-3 z-50 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-4 max-h-[45vh] overflow-y-auto">
+        <button onclick="hideMobileNodeInfo()" class="absolute top-3 right-3 text-slate-400 text-lg leading-none">✕</button>
+        <p id="mni-type" class="text-[10px] uppercase tracking-widest font-black text-slate-500 mb-0.5"></p>
+        <h3 id="mni-name" class="font-bold text-lg text-white leading-tight mb-1"></h3>
+        <p id="mni-desc" class="text-sm text-slate-300 italic mb-2 hidden"></p>
+        <div id="mni-stats" class="text-sm text-blue-300 font-medium mb-2"></div>
+        <div id="mni-status" class="text-xs font-bold text-slate-400 border-t border-slate-700 pt-2 mb-3"></div>
+        <div class="flex gap-2">
+            <button id="mni-action-btn" onclick="mniAction()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-bold hidden"></button>
+            <button id="mni-mythic-btn" onclick="mniMythicActivate()" class="flex-1 bg-purple-700 hover:bg-purple-600 text-white py-2.5 rounded-xl text-sm font-bold hidden">Ativar Classe</button>
+        </div>
+    </div>
+
     <!-- BOTÃO SECRETO ADMIN -->
-    <button onclick="checkAdminAuth('editor')"
+    <button id="admin-secret-btn" onclick="checkAdminAuth('editor')"
         class="fixed bottom-2 right-2 w-8 h-8 flex items-center justify-center bg-slate-800/50 hover:bg-slate-700 rounded-full opacity-0 hover:opacity-100 transition-opacity z-50 group">
         <span class="text-[10px] text-slate-500 group-hover:text-slate-300">⚙️</span>
     </button>
@@ -1644,6 +1722,10 @@
             document.getElementById('lbl-pts-used').textContent = used;
             document.getElementById('lbl-pts-avail').textContent = avail;
             document.getElementById('lbl-char-level').textContent = `Nvl ${currentUser.level}`;
+            let mAvail = document.getElementById('mobile-pts-avail');
+            let mUsed = document.getElementById('mobile-pts-used');
+            if (mAvail) mAvail.textContent = avail;
+            if (mUsed) mUsed.textContent = used;
             updateVitaManaSlider();
         }
 
@@ -3082,12 +3164,212 @@
         }
 
         // ================= INIT =================
+        // ================= MOBILE =================
+        function isMobile() {
+            return window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+        }
+
+        let _mobileSidebarOpen = false;
+
+        function toggleMobileSidebar() {
+            _mobileSidebarOpen ? closeMobileSidebar() : openMobileSidebar();
+        }
+
+        function openMobileSidebar() {
+            _mobileSidebarOpen = true;
+            document.getElementById('sidebar').classList.add('mobile-open');
+            document.getElementById('mobile-backdrop').classList.remove('hidden');
+        }
+
+        function closeMobileSidebar() {
+            _mobileSidebarOpen = false;
+            document.getElementById('sidebar').classList.remove('mobile-open');
+            document.getElementById('mobile-backdrop').classList.add('hidden');
+        }
+
+        // Drag handle: swipe down closes sidebar
+        let _handleTouchStartY = 0;
+        function onHandleTouchStart(e) {
+            _handleTouchStartY = e.touches[0].clientY;
+            function onMove(ev) {
+                if (ev.touches[0].clientY - _handleTouchStartY > 60) {
+                    closeMobileSidebar();
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onEnd);
+                }
+            }
+            function onEnd() {
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend', onEnd);
+            }
+            document.addEventListener('touchmove', onMove, { passive: true });
+            document.addEventListener('touchend', onEnd, { passive: true });
+        }
+
+        let _mniNode = null;
+        function showMobileNodeInfo(node) {
+            _mniNode = node;
+            let panel = document.getElementById('mobile-node-info');
+            let allocSet = getEffectiveAllocSet();
+            let blockedBySet = getBlockedNodes(allocSet);
+            let tmap = { basic: "Nodo Pequeno", notable: "Passiva Notável", large: "Habilidade Ativa", root: node.isMythic ? "Classe Mítica" : "Classe Base", omega: "Omini (Portal)", omegaFonte: "Omini Fonte", especializacao: "Especialização" };
+            document.getElementById('mni-type').textContent = tmap[node.type] || node.type;
+            document.getElementById('mni-name').textContent = node.name;
+            let descEl = document.getElementById('mni-desc');
+            if (node.desc) { descEl.textContent = node.desc; descEl.classList.remove('hidden'); }
+            else { descEl.classList.add('hidden'); }
+            document.getElementById('mni-stats').innerHTML = node.stats.map(s => `<div>+ ${s}</div>`).join('');
+            let st = document.getElementById('mni-status');
+            let actionBtn = document.getElementById('mni-action-btn');
+            let mythicBtn = document.getElementById('mni-mythic-btn');
+            actionBtn.classList.add('hidden');
+            mythicBtn.classList.add('hidden');
+            if (allocSet.has(node.id)) {
+                st.textContent = 'ALOCADO';
+                st.className = 'text-xs font-bold text-green-400 border-t border-slate-700 pt-2 mb-3';
+                if (node.type !== 'root') { actionBtn.textContent = 'Desalocar'; actionBtn.classList.remove('hidden'); }
+            } else if (blockedBySet.has(node.id)) {
+                st.textContent = 'BLOQUEADO';
+                st.className = 'text-xs font-bold text-red-500 border-t border-slate-700 pt-2 mb-3';
+            } else if (node.isMythic) {
+                let unlocked = (currentUser?.unlockedMythicClasses || []).includes(node.id);
+                if (unlocked) {
+                    st.textContent = 'Classe Mítica Desbloqueada';
+                    st.className = 'text-xs font-bold text-purple-400 border-t border-slate-700 pt-2 mb-3';
+                    let isActive = currentUser?.mythicClassId === node.id;
+                    mythicBtn.textContent = isActive ? 'Classe Ativa ✓' : 'Ativar Classe';
+                    mythicBtn.classList.remove('hidden');
+                } else {
+                    st.textContent = 'Classe Mítica — ativada pelo administrador';
+                    st.className = 'text-xs font-bold text-purple-400 border-t border-slate-700 pt-2 mb-3';
+                }
+            } else if (canAllocate(node.id, allocSet)) {
+                st.textContent = 'Disponível para alocar';
+                st.className = 'text-xs font-bold text-amber-400 border-t border-slate-700 pt-2 mb-3';
+                actionBtn.textContent = 'Alocar'; actionBtn.classList.remove('hidden');
+            } else {
+                st.textContent = 'Não conectado ou sem pontos';
+                st.className = 'text-xs font-bold text-red-500 border-t border-slate-700 pt-2 mb-3';
+            }
+            panel.classList.remove('hidden');
+        }
+
+        function hideMobileNodeInfo() {
+            document.getElementById('mobile-node-info').classList.add('hidden');
+            _mniNode = null;
+        }
+
+        function mniAction() {
+            if (!_mniNode) return;
+            hideMobileNodeInfo();
+            toggleAllocation(_mniNode.id);
+        }
+
+        function mniMythicActivate() {
+            if (!_mniNode) return;
+            hideMobileNodeInfo();
+            playerActivateMythicClass(_mniNode.id);
+        }
+
+        function setupMobileInput() {
+            let c = canvas;
+            let lastTouches = [];
+            let lastDist = null;
+            let tapTimeout = null;
+            let tapNode = null;
+
+            c.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                hideMobileNodeInfo();
+                lastTouches = Array.from(e.touches);
+                if (e.touches.length === 1) {
+                    lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                    isDragging = false;
+                    // detect tap on node
+                    let rect = c.getBoundingClientRect();
+                    let mx = e.touches[0].clientX - rect.left;
+                    let my = e.touches[0].clientY - rect.top;
+                    let wp = screenToWorld(mx, my);
+                    tapNode = null;
+                    for (let key in treeData.nodes) {
+                        let n = treeData.nodes[key];
+                        if (!isMythicNodeVisible(n)) continue;
+                        let r = n.type === "root" ? 28 : n.type === "large" ? 24 : n.type === "notable" ? 18 : n.type === "omegaFonte" ? 22 : n.type === "omega" ? 16 : n.type === "especializacao" ? 20 : 12;
+                        let dx = wp.x - n.x, dy = wp.y - n.y;
+                        if (dx * dx + dy * dy <= (r + 8) * (r + 8)) { tapNode = n; break; }
+                    }
+                    tapTimeout = setTimeout(() => { tapNode = null; }, 300);
+                } else if (e.touches.length === 2) {
+                    isDragging = false;
+                    let dx = e.touches[0].clientX - e.touches[1].clientX;
+                    let dy = e.touches[0].clientY - e.touches[1].clientY;
+                    lastDist = Math.sqrt(dx * dx + dy * dy);
+                }
+            }, { passive: false });
+
+            c.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                    let cx = e.touches[0].clientX, cy = e.touches[0].clientY;
+                    let dx = cx - lastMouse.x, dy = cy - lastMouse.y;
+                    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                        isDragging = true;
+                        tapNode = null;
+                    }
+                    if (isDragging) {
+                        camera.x += dx / camera.zoom;
+                        camera.y += dy / camera.zoom;
+                    }
+                    lastMouse = { x: cx, y: cy };
+                } else if (e.touches.length === 2) {
+                    let dx = e.touches[0].clientX - e.touches[1].clientX;
+                    let dy = e.touches[0].clientY - e.touches[1].clientY;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (lastDist !== null) {
+                        let rect = c.getBoundingClientRect();
+                        let cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+                        let cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+                        let wb = screenToWorld(cx, cy);
+                        camera.zoom *= dist / lastDist;
+                        camera.zoom = Math.max(0.2, Math.min(camera.zoom, 3));
+                        let wa = screenToWorld(cx, cy);
+                        camera.x += wa.x - wb.x;
+                        camera.y += wa.y - wb.y;
+                    }
+                    lastDist = dist;
+                }
+            }, { passive: false });
+
+            c.addEventListener('touchend', (e) => {
+                if (e.touches.length < 2) lastDist = null;
+                if (e.touches.length === 0 && !isDragging && tapNode) {
+                    clearTimeout(tapTimeout);
+                    if (currentUser) {
+                        showMobileNodeInfo(tapNode);
+                    }
+                }
+                if (e.touches.length === 0) isDragging = false;
+            }, { passive: true });
+        }
+
+        function applyMobileLayout() {
+            let bottomBar = document.getElementById('mobile-bottom-bar');
+            if (bottomBar) bottomBar.style.display = 'flex';
+        }
+
         async function init() {
             resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+            });
             await initTreeSystem();
             initDefaultUser();
-            setupInput();
+            if (isMobile()) {
+                setupMobileInput();
+                applyMobileLayout();
+            } else {
+                setupInput();
+            }
             setupSidebarTooltip();
             requestAnimationFrame(drawLoop);
         }
