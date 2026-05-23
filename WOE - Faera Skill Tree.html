@@ -155,7 +155,7 @@
     <!-- ÁREA DO CANVAS -->
     <div class="flex-1 relative cursor-grab active:cursor-grabbing bg-cover bg-center" id="canvas-container"
         style="background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=2048&q=80');">
-        <canvas id="treeCanvas"></canvas>
+        <canvas id="treeCanvas" style="touch-action: none;"></canvas>
 
         <!-- Barra de Busca Avançada -->
         <div id="search-bar-wrap" class="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 w-80 max-w-[90%]">
@@ -3273,82 +3273,97 @@
 
         function setupMobileInput() {
             let c = canvas;
-            let lastTouches = [];
-            let lastDist = null;
-            let tapTimeout = null;
-            let tapNode = null;
+            let touchLastPos = null;
+            let touchLastDist = null;
+            let touchMoved = false;
+            let touchStartNode = null;
+            let touchActive = false;
 
             c.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                touchActive = true;
+                isDragging = false; // block mouse pan while touch is active
                 hideMobileNodeInfo();
-                lastTouches = Array.from(e.touches);
                 if (e.touches.length === 1) {
-                    lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                    isDragging = false;
-                    // detect tap on node
+                    let t = e.touches[0];
+                    touchLastPos = { x: t.clientX, y: t.clientY };
+                    touchMoved = false;
+                    // record node under finger for tap detection
                     let rect = c.getBoundingClientRect();
-                    let mx = e.touches[0].clientX - rect.left;
-                    let my = e.touches[0].clientY - rect.top;
-                    let wp = screenToWorld(mx, my);
-                    tapNode = null;
+                    let wp = screenToWorld(t.clientX - rect.left, t.clientY - rect.top);
+                    touchStartNode = null;
                     for (let key in treeData.nodes) {
                         let n = treeData.nodes[key];
                         if (!isMythicNodeVisible(n)) continue;
                         let r = n.type === "root" ? 28 : n.type === "large" ? 24 : n.type === "notable" ? 18 : n.type === "omegaFonte" ? 22 : n.type === "omega" ? 16 : n.type === "especializacao" ? 20 : 12;
                         let dx = wp.x - n.x, dy = wp.y - n.y;
-                        if (dx * dx + dy * dy <= (r + 8) * (r + 8)) { tapNode = n; break; }
+                        if (dx * dx + dy * dy <= (r + 10) * (r + 10)) { touchStartNode = n; break; }
                     }
-                    tapTimeout = setTimeout(() => { tapNode = null; }, 300);
                 } else if (e.touches.length === 2) {
-                    isDragging = false;
+                    touchStartNode = null;
                     let dx = e.touches[0].clientX - e.touches[1].clientX;
                     let dy = e.touches[0].clientY - e.touches[1].clientY;
-                    lastDist = Math.sqrt(dx * dx + dy * dy);
+                    touchLastDist = Math.sqrt(dx * dx + dy * dy);
+                    touchLastPos = {
+                        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+                        y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+                    };
                 }
             }, { passive: false });
 
             c.addEventListener('touchmove', (e) => {
                 e.preventDefault();
-                if (e.touches.length === 1) {
-                    let cx = e.touches[0].clientX, cy = e.touches[0].clientY;
-                    let dx = cx - lastMouse.x, dy = cy - lastMouse.y;
-                    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-                        isDragging = true;
-                        tapNode = null;
-                    }
-                    if (isDragging) {
-                        camera.x += dx / camera.zoom;
-                        camera.y += dy / camera.zoom;
-                    }
-                    lastMouse = { x: cx, y: cy };
+                if (e.touches.length === 1 && touchLastPos) {
+                    let t = e.touches[0];
+                    let dx = t.clientX - touchLastPos.x;
+                    let dy = t.clientY - touchLastPos.y;
+                    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) touchMoved = true;
+                    camera.x += dx / camera.zoom;
+                    camera.y += dy / camera.zoom;
+                    touchLastPos = { x: t.clientX, y: t.clientY };
                 } else if (e.touches.length === 2) {
                     let dx = e.touches[0].clientX - e.touches[1].clientX;
                     let dy = e.touches[0].clientY - e.touches[1].clientY;
                     let dist = Math.sqrt(dx * dx + dy * dy);
-                    if (lastDist !== null) {
-                        let rect = c.getBoundingClientRect();
-                        let cx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
-                        let cy = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+                    let midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                    let midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                    let rect = c.getBoundingClientRect();
+                    let cx = midX - rect.left, cy = midY - rect.top;
+                    if (touchLastDist !== null) {
                         let wb = screenToWorld(cx, cy);
-                        camera.zoom *= dist / lastDist;
+                        camera.zoom *= dist / touchLastDist;
                         camera.zoom = Math.max(0.2, Math.min(camera.zoom, 3));
                         let wa = screenToWorld(cx, cy);
                         camera.x += wa.x - wb.x;
                         camera.y += wa.y - wb.y;
                     }
-                    lastDist = dist;
+                    // pan with two fingers simultaneously
+                    if (touchLastPos) {
+                        camera.x += (midX - touchLastPos.x) / camera.zoom;
+                        camera.y += (midY - touchLastPos.y) / camera.zoom;
+                    }
+                    touchLastDist = dist;
+                    touchLastPos = { x: midX, y: midY };
+                    touchMoved = true;
                 }
             }, { passive: false });
 
             c.addEventListener('touchend', (e) => {
-                if (e.touches.length < 2) lastDist = null;
-                if (e.touches.length === 0 && !isDragging && tapNode) {
-                    clearTimeout(tapTimeout);
-                    if (currentUser) {
-                        showMobileNodeInfo(tapNode);
+                if (e.touches.length === 0) {
+                    // tap detection: finger lifted without moving
+                    if (!touchMoved && touchStartNode && currentUser) {
+                        showMobileNodeInfo(touchStartNode);
                     }
+                    touchActive = false;
+                    touchLastPos = null;
+                    touchLastDist = null;
+                    touchStartNode = null;
+                    touchMoved = false;
+                } else if (e.touches.length === 1) {
+                    // went from 2 fingers to 1 — reset single-touch tracking
+                    touchLastDist = null;
+                    touchLastPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
                 }
-                if (e.touches.length === 0) isDragging = false;
             }, { passive: true });
         }
 
@@ -3359,17 +3374,12 @@
 
         async function init() {
             resizeCanvas();
-            window.addEventListener('resize', () => {
-                resizeCanvas();
-            });
+            window.addEventListener('resize', resizeCanvas);
             await initTreeSystem();
             initDefaultUser();
-            if (isMobile()) {
-                setupMobileInput();
-                applyMobileLayout();
-            } else {
-                setupInput();
-            }
+            setupInput();
+            setupMobileInput();
+            if (isMobile()) applyMobileLayout();
             setupSidebarTooltip();
             requestAnimationFrame(drawLoop);
         }
