@@ -207,6 +207,8 @@
                 class="tab-btn flex-1 py-3 text-[10px] font-bold uppercase border-b-2 border-transparent hover:text-white transition-colors hidden">Árvores</button>
             <button onclick="switchTab('usuarios'); renderAdminUserList();" id="tab-usuarios"
                 class="tab-btn flex-1 py-3 text-[10px] font-bold uppercase border-b-2 border-transparent hover:text-white transition-colors hidden">Users</button>
+            <button onclick="switchTab('racas'); renderAdminRaceList();" id="tab-racas"
+                class="tab-btn flex-1 py-3 text-[10px] font-bold uppercase border-b-2 border-transparent hover:text-white transition-colors hidden">Raças</button>
         </div>
 
         <!-- ================= PAINEL: PERSONAGEM ================= -->
@@ -221,7 +223,7 @@
                 </div>
             </div>
 
-            <div id="player-info" class="hidden flex-col gap-3 mb-5">
+            <div id="player-info" class="hidden flex flex-col gap-5 mb-5">
                 <h2 class="text-2xl font-black text-amber-500 flex justify-between items-center" id="lbl-char-name">
                     <span>Nome</span>
                     <span class="text-sm bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700"
@@ -233,9 +235,13 @@
                         <div class="text-slate-400 text-xs uppercase mb-1">Pontos Restantes</div>
                         <div class="text-2xl font-bold text-green-400" id="lbl-pts-avail">0</div>
                     </div>
-                    <div class="text-center flex-1">
+                    <div class="text-center flex-1 border-r border-slate-700">
                         <div class="text-slate-400 text-xs uppercase mb-1">Pontos Usados</div>
                         <div class="text-2xl font-bold text-red-400" id="lbl-pts-used">0</div>
+                    </div>
+                    <div class="text-center flex-1">
+                        <div class="text-slate-400 text-xs uppercase mb-1">Proficiência</div>
+                        <div class="text-2xl font-bold text-amber-400" id="lbl-proficiency">1</div>
                     </div>
                 </div>
 
@@ -275,6 +281,33 @@
                 <button onclick="exportToPDF()"
                     class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 text-sm rounded transition-colors font-bold shadow-lg shadow-indigo-900/50 mt-2">📄
                     Exportar Ficha (PDF)</button>
+            </div>
+
+            <!-- SEÇÃO DE RAÇA DO JOGADOR -->
+            <div id="race-section" class="hidden mb-4">
+                <!-- Antes de escolher -->
+                <div id="race-pick-panel">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-2 mb-3">Escolher Raça</h3>
+                    <div id="race-pick-list" class="space-y-1.5 mb-3">
+                        <!-- Preenchido via JS -->
+                    </div>
+                    <button onclick="playerConfirmRace()" id="race-confirm-btn" disabled
+                        class="w-full bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed text-white py-2 text-xs rounded font-bold transition-colors shadow-lg shadow-amber-900/40">
+                        Confirmar Raça
+                    </button>
+                </div>
+                <!-- Após escolha -->
+                <div id="race-chosen-panel" class="hidden">
+                    <button onclick="toggleRaceExpand()"
+                        class="w-full text-left flex justify-between items-center text-sm font-bold text-amber-400 border-b border-slate-700 pb-2 mb-2 hover:text-amber-300 transition-colors">
+                        <span>Raça — <span id="race-chosen-name"></span></span>
+                        <span id="race-expand-icon" class="text-slate-500">▸</span>
+                    </button>
+                    <div id="race-chosen-body" class="hidden pt-1 space-y-2">
+                        <p id="race-chosen-desc" class="text-xs text-slate-300 italic"></p>
+                        <div id="race-chosen-passives" class="space-y-2"></div>
+                    </div>
+                </div>
             </div>
 
             <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-2 mb-3">
@@ -513,6 +546,41 @@
                 <!-- Preenchido via JS -->
             </div>
         </div>
+        <!-- ================= PAINEL: ADMIN RAÇAS ================= -->
+        <div id="panel-racas" class="flex-1 overflow-y-auto p-5 flex flex-col hidden">
+            <h2 class="text-lg font-black text-amber-500 mb-4 border-b border-slate-700 pb-2">🧬 Gerenciar Raças</h2>
+
+            <div class="bg-slate-800 p-4 rounded-lg border border-slate-600 mb-4 space-y-2">
+                <h3 class="text-sm font-bold text-white mb-2" id="race-form-title">Cadastrar Raça</h3>
+                <input type="text" id="race-form-id" placeholder="ID único (ex: race_elfo)"
+                    class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-amber-500 outline-none">
+                <input type="text" id="race-form-name" placeholder="Nome da Raça"
+                    class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-amber-500 outline-none">
+                <textarea id="race-form-desc" rows="2" placeholder="Descrição da Raça"
+                    class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-amber-500 outline-none resize-none"></textarea>
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold">Passivas (até 5)</label>
+                        <button type="button" onclick="addPassiveField()" id="race-add-passive-btn"
+                            class="text-[10px] bg-amber-700/50 hover:bg-amber-700 text-amber-300 px-2 py-0.5 rounded font-bold transition-colors">+ Adicionar</button>
+                    </div>
+                    <div id="race-passives-list" class="space-y-2">
+                        <!-- Preenchido via JS -->
+                    </div>
+                    <p id="race-passives-empty" class="text-[10px] text-slate-500 italic">Nenhuma passiva adicionada.</p>
+                </div>
+                <div class="flex gap-2 pt-1">
+                    <button onclick="adminClearRaceForm()" class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 rounded font-bold text-xs transition-colors">Limpar</button>
+                    <button onclick="adminSaveRace()" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white py-2 rounded font-bold text-xs shadow-lg shadow-amber-900/50 transition-colors">Salvar Raça</button>
+                </div>
+            </div>
+
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-2 mb-3">
+                Raças Cadastradas</h3>
+            <div id="admin-race-list" class="space-y-2 text-sm">
+                <!-- Preenchido via JS -->
+            </div>
+        </div>
     </div>
 
     <!-- MOBILE BACKDROP -->
@@ -565,6 +633,19 @@
         <div class="px-4 pb-3 space-y-1.5">
             <p id="stt-desc" class="text-sm text-slate-300 italic hidden border-t border-slate-700/50 pt-2"></p>
             <div id="stt-stats" class="text-sm text-blue-300 font-medium space-y-0.5"></div>
+        </div>
+    </div>
+
+    <!-- TOOLTIP DE RAÇA -->
+    <div id="race-tooltip" class="fixed hidden bg-slate-900 border border-amber-700/40 rounded-lg shadow-2xl pointer-events-none z-50 w-64 overflow-hidden">
+        <div class="h-0.5 w-full bg-amber-500"></div>
+        <div class="px-4 pt-2.5 pb-1">
+            <p class="text-[10px] uppercase tracking-widest font-black text-amber-400 mb-0.5">Raça</p>
+            <h3 id="rt-name" class="font-bold text-base text-white leading-tight"></h3>
+        </div>
+        <div class="px-4 pb-3 space-y-1.5">
+            <p id="rt-desc" class="text-xs text-slate-300 italic hidden border-t border-slate-700/50 pt-2"></p>
+            <div id="rt-passives" class="text-xs text-blue-300 font-medium space-y-0.5"></div>
         </div>
     </div>
 
@@ -626,6 +707,16 @@
                 <div id="pm-mythic-list" class="space-y-1.5 max-h-44 overflow-y-auto pr-0.5">
                     <!-- Preenchido via JS -->
                 </div>
+            </div>
+
+            <!-- Seção de Raça (Admin) -->
+            <div id="pm-race-section" class="hidden border-t border-amber-900/30 pt-4 mt-1">
+                <h3 class="text-xs font-bold text-amber-400 mb-2 uppercase tracking-wider">🧬 Raça do Jogador</h3>
+                <p id="pm-race-name" class="text-sm text-white mb-3 italic">—</p>
+                <button onclick="adminResetPlayerRace()"
+                    class="w-full bg-red-900/40 hover:bg-red-800/60 border border-red-800/50 text-red-300 py-1.5 rounded text-xs font-bold transition-colors">
+                    Resetar Raça
+                </button>
             </div>
 
         </div>
@@ -889,6 +980,7 @@
 
             updatePointsUI();
             updateSummaryUI();
+            updateRaceUI();
             alert(`Personagem ${currentUser.name} carregado!`);
         }
 
@@ -1719,8 +1811,10 @@
             currentUser.level = used;
 
             let avail = currentUser.totalPoints - used;
+            let proficiency = 1 + Math.floor(used / 10);
             document.getElementById('lbl-pts-used').textContent = used;
             document.getElementById('lbl-pts-avail').textContent = avail;
+            document.getElementById('lbl-proficiency').textContent = proficiency;
             document.getElementById('lbl-char-level').textContent = `Nvl ${currentUser.level}`;
             let mAvail = document.getElementById('mobile-pts-avail');
             let mUsed = document.getElementById('mobile-pts-used');
@@ -2506,12 +2600,14 @@
                 document.getElementById('tab-editor').classList.remove('hidden');
                 document.getElementById('tab-usuarios').classList.remove('hidden');
                 document.getElementById('tab-arvores').classList.remove('hidden');
+                document.getElementById('tab-racas').classList.remove('hidden');
 
                 switchTab(intendedTab || 'editor');
 
                 // Pré-carrega as listas logo ao logar, garantindo dados instantâneos do banco de dados na aba
                 renderAdminUserList();
                 renderAdminTreeList();
+                renderAdminRaceList();
             } else {
                 alert("Senha incorreta.");
             }
@@ -2522,7 +2618,7 @@
             let activeBtn = document.getElementById('tab-' + tabName);
             if (activeBtn) activeBtn.classList.add('active');
 
-            ['personagem', 'editor', 'arvores', 'usuarios'].forEach(p => {
+            ['personagem', 'editor', 'arvores', 'usuarios', 'racas'].forEach(p => {
                 let pnl = document.getElementById('panel-' + p);
                 if (pnl) pnl.classList.add('hidden');
             });
@@ -2957,6 +3053,7 @@
             document.getElementById('pm-confirm-panel').classList.add('hidden');
 
             renderMythicClassesForModal(code);
+            renderRaceForModal(code);
 
             document.getElementById('points-modal').classList.remove('hidden');
             setTimeout(() => input.focus(), 50);
@@ -2987,6 +3084,16 @@
 
             mythicList.innerHTML = html;
             mythicSection.classList.remove('hidden');
+        }
+
+        function renderRaceForModal(userCode) {
+            let section = document.getElementById('pm-race-section');
+            if (!section) return;
+            let u = adminUserCache[userCode] || getLocalUsers()[userCode];
+            let raceId = u ? u.raceId : null;
+            let raceName = (raceId && racesData[raceId]) ? racesData[raceId].name : '—';
+            document.getElementById('pm-race-name').textContent = raceName;
+            section.classList.remove('hidden');
         }
 
         async function adminToggleMythicClass(userCode, nodeId, unlock) {
@@ -3164,6 +3271,315 @@
         }
 
         // ================= INIT =================
+        // ================= SISTEMA DE RAÇAS =================
+        let racesData = {};
+
+        function getLocalRaces() {
+            let r = localStorage.getItem("poe2_races_db");
+            return r ? JSON.parse(r) : {};
+        }
+
+        function saveLocalRaces(db) {
+            localStorage.setItem("poe2_races_db", JSON.stringify(db));
+        }
+
+        async function initRacesSystem() {
+            // Races are stored inside treeData.races (synced via /tree endpoint)
+            if (treeData.races) {
+                racesData = treeData.races;
+            } else {
+                // Fallback: migrate from legacy poe2_races_db if it exists
+                racesData = getLocalRaces();
+                if (Object.keys(racesData).length > 0) {
+                    treeData.races = racesData;
+                } else {
+                    racesData = {};
+                }
+            }
+        }
+
+        function persistRaces() {
+            // Write back into treeData and save tree locally + to cloud
+            treeData.races = racesData;
+            let trees = getLocalTrees();
+            if (trees[currentTreeId]) {
+                trees[currentTreeId].data = treeData;
+                saveLocalTrees(trees);
+            }
+            saveLocalRaces(racesData); // legacy fallback copy
+            // Sync to API (same endpoint the tree uses)
+            apiFetch('/tree', 'POST', { ...trees[currentTreeId], data: treeData });
+        }
+
+        // ---- Admin ----
+        function addPassiveField(title = '', desc = '') {
+            let list = document.getElementById('race-passives-list');
+            let empty = document.getElementById('race-passives-empty');
+            let btn = document.getElementById('race-add-passive-btn');
+            if (!list) return;
+            if (list.children.length >= 5) { alert('Máximo de 5 passivas.'); return; }
+            empty.classList.add('hidden');
+            let idx = Date.now();
+            let row = document.createElement('div');
+            row.className = 'passive-row bg-slate-900/60 border border-slate-700 rounded-lg p-2.5 space-y-1.5';
+            row.dataset.idx = idx;
+            row.innerHTML = `
+                <div class="flex items-center gap-1.5">
+                    <input type="text" placeholder="Título da Passiva" value="${escHtml(title)}"
+                        class="passive-title flex-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-xs text-white focus:border-amber-500 outline-none font-bold">
+                    <button type="button" onclick="removePassiveField(this)" class="text-slate-500 hover:text-red-400 transition-colors shrink-0 text-base leading-none px-1">✕</button>
+                </div>
+                <textarea placeholder="Descrição da passiva" rows="2"
+                    class="passive-desc w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-xs text-slate-300 focus:border-amber-500 outline-none resize-none">${escHtml(desc)}</textarea>
+            `;
+            list.appendChild(row);
+            if (list.children.length >= 5 && btn) btn.disabled = true;
+        }
+
+        function removePassiveField(btn) {
+            let row = btn.closest('.passive-row');
+            if (row) row.remove();
+            let list = document.getElementById('race-passives-list');
+            let empty = document.getElementById('race-passives-empty');
+            let addBtn = document.getElementById('race-add-passive-btn');
+            if (list && list.children.length === 0) empty.classList.remove('hidden');
+            if (addBtn) addBtn.disabled = false;
+        }
+
+        function getPassivesFromForm() {
+            let rows = document.querySelectorAll('#race-passives-list .passive-row');
+            let passives = [];
+            rows.forEach(row => {
+                let title = row.querySelector('.passive-title').value.trim();
+                let desc = row.querySelector('.passive-desc').value.trim();
+                if (title) passives.push({ title, desc });
+            });
+            return passives;
+        }
+
+        async function adminSaveRace() {
+            let id = document.getElementById('race-form-id').value.trim();
+            let name = document.getElementById('race-form-name').value.trim();
+            let desc = document.getElementById('race-form-desc').value.trim();
+            if (!id || !name) { alert("Preencha ID e Nome da Raça."); return; }
+            let passives = getPassivesFromForm();
+            racesData[id] = { id, name, desc, passives };
+            persistRaces();
+            renderAdminRaceList();
+            adminClearRaceForm();
+            alert(`Raça "${name}" salva!`);
+        }
+
+        function adminClearRaceForm() {
+            document.getElementById('race-form-id').value = '';
+            document.getElementById('race-form-name').value = '';
+            document.getElementById('race-form-desc').value = '';
+            document.getElementById('race-form-id').readOnly = false;
+            let list = document.getElementById('race-passives-list');
+            if (list) list.innerHTML = '';
+            document.getElementById('race-passives-empty').classList.remove('hidden');
+            let addBtn = document.getElementById('race-add-passive-btn');
+            if (addBtn) addBtn.disabled = false;
+            let title = document.getElementById('race-form-title');
+            if (title) title.textContent = 'Cadastrar Raça';
+        }
+
+        function adminEditRace(id) {
+            let r = racesData[id];
+            if (!r) return;
+            adminClearRaceForm();
+            let idInput = document.getElementById('race-form-id');
+            idInput.value = r.id;
+            idInput.readOnly = true;
+            document.getElementById('race-form-name').value = r.name;
+            document.getElementById('race-form-desc').value = r.desc || '';
+            (r.passives || []).forEach(p => {
+                let title = typeof p === 'string' ? p : (p.title || '');
+                let desc = typeof p === 'string' ? '' : (p.desc || '');
+                addPassiveField(title, desc);
+            });
+            let formTitle = document.getElementById('race-form-title');
+            if (formTitle) formTitle.textContent = 'Editar Raça';
+            switchTab('racas');
+        }
+
+        async function adminDeleteRace(id) {
+            let r = racesData[id];
+            if (!r) return;
+            if (!confirm(`Excluir a raça "${r.name}"?`)) return;
+            delete racesData[id];
+            persistRaces();
+            renderAdminRaceList();
+        }
+
+        function renderAdminRaceList() {
+            let list = document.getElementById('admin-race-list');
+            if (!list) return;
+            let races = Object.values(racesData);
+            if (races.length === 0) {
+                list.innerHTML = '<p class="text-slate-500 text-xs italic">Nenhuma raça cadastrada ainda.</p>';
+                return;
+            }
+            list.innerHTML = races.map(r => `
+                <div class="bg-slate-800 border border-slate-700 rounded-lg p-3">
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="min-w-0 flex-1">
+                            <p class="font-bold text-amber-400 text-sm">${r.name}</p>
+                            <p class="text-[10px] text-slate-500 font-mono">${r.id}</p>
+                            ${r.desc ? `<p class="text-xs text-slate-400 italic mt-1">${r.desc}</p>` : ''}
+                            <div class="mt-1.5 space-y-1">${(r.passives||[]).map(p => {
+                                let t = typeof p === 'string' ? p : p.title;
+                                let d = typeof p === 'string' ? '' : p.desc;
+                                return `<div class="text-xs"><span class="text-blue-300 font-semibold">${escHtml(t)}</span>${d ? `<span class="text-slate-400"> — ${escHtml(d)}</span>` : ''}</div>`;
+                            }).join('')}</div>
+                        </div>
+                        <div class="flex flex-col gap-1 shrink-0">
+                            <button onclick="adminEditRace('${r.id}')" class="text-[10px] bg-slate-600 hover:bg-slate-500 px-2 py-1 rounded font-bold transition-colors">Editar</button>
+                            <button onclick="adminDeleteRace('${r.id}')" class="text-[10px] bg-red-900/50 hover:bg-red-800/70 text-red-300 px-2 py-1 rounded font-bold transition-colors">Excluir</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ---- Player ----
+        let _pendingRaceId = null;
+
+        function updateRaceUI() {
+            let section = document.getElementById('race-section');
+            if (!section || !currentUser) return;
+            section.classList.remove('hidden');
+            let pickPanel = document.getElementById('race-pick-panel');
+            let chosenPanel = document.getElementById('race-chosen-panel');
+            if (currentUser.raceId && racesData[currentUser.raceId]) {
+                pickPanel.classList.add('hidden');
+                chosenPanel.classList.remove('hidden');
+                let r = racesData[currentUser.raceId];
+                document.getElementById('race-chosen-name').textContent = r.name;
+                let descEl = document.getElementById('race-chosen-desc');
+                descEl.textContent = r.desc || '';
+                descEl.classList.toggle('hidden', !r.desc);
+                document.getElementById('race-chosen-passives').innerHTML = (r.passives||[]).map(p => {
+                    let t = typeof p === 'string' ? p : p.title;
+                    let d = typeof p === 'string' ? '' : p.desc;
+                    return `<div class="text-xs leading-snug"><span class="text-blue-300 font-semibold">${escHtml(t)}</span>${d ? `<br><span class="text-slate-400">${escHtml(d)}</span>` : ''}</div>`;
+                }).join('');
+                document.getElementById('race-chosen-body').classList.add('hidden');
+                document.getElementById('race-expand-icon').textContent = '▸';
+            } else {
+                pickPanel.classList.remove('hidden');
+                chosenPanel.classList.add('hidden');
+                _pendingRaceId = null;
+                renderRacePickList();
+            }
+        }
+
+        function renderRacePickList() {
+            let list = document.getElementById('race-pick-list');
+            if (!list) return;
+            let races = Object.values(racesData);
+            if (races.length === 0) {
+                list.innerHTML = '<p class="text-slate-500 text-xs italic">Nenhuma raça disponível.</p>';
+                document.getElementById('race-confirm-btn').disabled = true;
+                return;
+            }
+            list.innerHTML = races.map(r => `
+                <div class="race-pick-item flex items-center gap-2.5 px-3 py-2 rounded-lg border border-slate-700/60 bg-slate-900/60 cursor-pointer hover:border-amber-600/50 hover:bg-amber-900/10 transition-colors"
+                    data-race-id="${r.id}"
+                    onclick="selectRaceItem('${r.id}')"
+                    onmouseenter="showRaceTooltip(event,'${r.id}')"
+                    onmouseleave="hideRaceTooltip()">
+                    <div class="w-3.5 h-3.5 rounded-full border-2 border-slate-500 shrink-0 transition-colors" id="race-radio-${r.id}"></div>
+                    <span class="text-sm text-slate-200">${r.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectRaceItem(id) {
+            _pendingRaceId = id;
+            document.querySelectorAll('.race-pick-item').forEach(el => {
+                let rid = el.dataset.raceId;
+                let radio = document.getElementById('race-radio-' + rid);
+                let selected = rid === id;
+                el.classList.toggle('border-amber-500/70', selected);
+                el.classList.toggle('bg-amber-900/20', selected);
+                el.classList.toggle('border-slate-700/60', !selected);
+                el.classList.toggle('bg-slate-900/60', !selected);
+                if (radio) {
+                    radio.style.background = selected ? '#f59e0b' : '';
+                    radio.style.borderColor = selected ? '#f59e0b' : '';
+                }
+            });
+            document.getElementById('race-confirm-btn').disabled = false;
+        }
+
+        function playerConfirmRace() {
+            if (!_pendingRaceId || !currentUser) return;
+            let r = racesData[_pendingRaceId];
+            if (!r) return;
+            if (!confirm(`Você está escolhendo "${r.name}" como sua raça.\n\nAtenção: esta escolha é permanente e não poderá ser alterada sem a intervenção do administrador.\n\nDeseja confirmar?`)) return;
+            currentUser.raceId = _pendingRaceId;
+            updateRaceUI();
+            saveUserFlow();
+        }
+
+        function toggleRaceExpand() {
+            let body = document.getElementById('race-chosen-body');
+            let icon = document.getElementById('race-expand-icon');
+            if (!body) return;
+            let nowHidden = body.classList.toggle('hidden');
+            if (icon) icon.textContent = nowHidden ? '▸' : '▾';
+        }
+
+        // ---- Race tooltip ----
+        function showRaceTooltip(e, raceId) {
+            let r = racesData[raceId];
+            if (!r) return;
+            let tt = document.getElementById('race-tooltip');
+            if (!tt) return;
+            document.getElementById('rt-name').textContent = r.name;
+            let descEl = document.getElementById('rt-desc');
+            if (r.desc) { descEl.textContent = r.desc; descEl.classList.remove('hidden'); }
+            else { descEl.classList.add('hidden'); }
+            document.getElementById('rt-passives').innerHTML = (r.passives||[]).map(p => {
+                let t = typeof p === 'string' ? p : p.title;
+                let d = typeof p === 'string' ? '' : p.desc;
+                return `<div class="mb-1"><span class="font-semibold">${escHtml(t)}</span>${d ? `<br><span class="text-slate-400">${escHtml(d)}</span>` : ''}</div>`;
+            }).join('');
+            tt.classList.remove('hidden');
+            let tw = tt.offsetWidth, th = tt.offsetHeight;
+            let px = e.clientX + 18, py = e.clientY - 20;
+            if (px + tw > window.innerWidth - 8) px = e.clientX - tw - 18;
+            if (py + th > window.innerHeight - 8) py = window.innerHeight - th - 8;
+            if (py < 8) py = 8;
+            tt.style.left = px + 'px';
+            tt.style.top = py + 'px';
+        }
+
+        function hideRaceTooltip() {
+            let tt = document.getElementById('race-tooltip');
+            if (tt) tt.classList.add('hidden');
+        }
+
+        // ---- Admin: reset player race ----
+        async function adminResetPlayerRace() {
+            let code = document.getElementById('pm-code').textContent;
+            if (!code) return;
+            if (!confirm(`Resetar a raça do jogador "${code}"? Ele poderá escolher uma nova raça.`)) return;
+            let db = getLocalUsers();
+            let u = db[code];
+            if (!u) return;
+            u.raceId = null;
+            saveLocalUsers(db);
+            if (currentUser && currentUser.code === code) {
+                currentUser.raceId = null;
+                updateRaceUI();
+            }
+            await apiFetch('/user', 'POST', { ...u, raceId: null });
+            document.getElementById('pm-race-name').textContent = '—';
+            alert('Raça resetada com sucesso.');
+        }
+
         // ================= MOBILE =================
         function isMobile() {
             return window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -3376,6 +3792,7 @@
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
             await initTreeSystem();
+            await initRacesSystem();
             initDefaultUser();
             setupInput();
             setupMobileInput();
