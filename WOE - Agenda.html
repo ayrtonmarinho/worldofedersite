@@ -31,23 +31,59 @@
      VOTING PUBLIC CARD  (hash: #vote/SESSION_ID)
 ============================================================ -->
 <div id="screen-vote" class="hidden min-h-screen flex items-center justify-center p-4">
-    <div class="glass rounded-2xl p-6 w-full max-w-md fade-in">
-        <div class="text-center mb-6">
-            <p class="text-[10px] text-amber-400 uppercase tracking-widest font-black mb-1">World of Eder — Agenda</p>
-            <h1 class="text-xl font-black text-white">Votação de Data</h1>
-            <p id="vote-session-title" class="text-sm text-slate-400 mt-1"></p>
+    <div class="w-full max-w-md space-y-3 fade-in">
+
+        <!-- Mesa info -->
+        <div id="vote-mesa-card" class="hidden glass rounded-2xl overflow-hidden">
+            <div id="vote-mesa-banner" class="h-24 bg-slate-800 flex items-end p-4"
+                style="background-size:cover;background-position:center;">
+                <div class="bg-slate-950/70 rounded-xl px-3 py-1.5 backdrop-blur-sm">
+                    <p class="text-[10px] text-amber-400 uppercase font-black tracking-widest" id="vote-mesa-system"></p>
+                    <h2 class="text-white font-black text-base leading-tight" id="vote-mesa-name"></h2>
+                </div>
+            </div>
+            <div class="px-4 py-3 space-y-1">
+                <p class="text-xs text-slate-400" id="vote-mesa-desc"></p>
+                <p class="text-[10px] text-slate-600" id="vote-mesa-master"></p>
+            </div>
         </div>
-        <div class="mb-4">
-            <label class="text-[10px] text-slate-400 uppercase font-bold block mb-1">Seu Código de Jogador</label>
-            <input type="text" id="vote-player-code" placeholder="ex: user_001" autocomplete="off"
-                class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white focus:border-amber-500 outline-none">
+
+        <!-- Voting card -->
+        <div class="glass rounded-2xl p-6">
+            <div class="text-center mb-5">
+                <p class="text-[10px] text-amber-400 uppercase tracking-widest font-black mb-1">World of Eder — Agenda</p>
+                <h1 class="text-xl font-black text-white">Votação de Data</h1>
+                <p id="vote-session-title" class="text-sm text-slate-400 mt-1"></p>
+            </div>
+
+            <!-- Key points -->
+            <div id="vote-keypoints-wrap" class="hidden mb-4 bg-slate-900/60 border border-slate-700/50 rounded-xl p-3">
+                <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">📋 Sobre esta sessão</p>
+                <p id="vote-keypoints" class="text-xs text-slate-300 leading-relaxed"></p>
+            </div>
+
+            <div class="mb-4">
+                <label class="text-[10px] text-slate-400 uppercase font-bold block mb-1.5">Seu Código de Jogador</label>
+                <input type="text" id="vote-player-code" placeholder="ex: user_001" autocomplete="off"
+                    class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white focus:border-amber-500 outline-none">
+            </div>
+
+            <div id="vote-already" class="hidden mb-4 bg-emerald-900/30 border border-emerald-700/40 rounded-xl p-3 text-center">
+                <p class="text-emerald-400 text-sm font-bold">✅ Voto já registrado</p>
+                <p id="vote-already-choice" class="text-xs text-slate-400 mt-0.5"></p>
+                <button onclick="clearVoteAlready()" class="mt-2 text-[10px] text-slate-500 hover:text-slate-300 transition-colors">Mudar voto</button>
+            </div>
+
+            <div id="vote-form">
+                <div id="vote-options" class="space-y-2 mb-5"></div>
+                <p id="vote-msg" class="text-xs text-center text-slate-500 mb-3 min-h-[1rem]"></p>
+                <button onclick="submitVote()" id="vote-submit-btn"
+                    class="w-full bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl font-bold text-sm transition-colors">Confirmar Voto</button>
+            </div>
+
+            <button onclick="location.hash=''; location.reload()"
+                class="w-full mt-3 text-xs text-slate-500 hover:text-slate-300 transition-colors py-1">← Voltar ao início</button>
         </div>
-        <div id="vote-options" class="space-y-2 mb-5"></div>
-        <p id="vote-msg" class="text-xs text-center text-slate-500 mb-3 min-h-[1rem]"></p>
-        <button onclick="submitVote()" id="vote-submit-btn"
-            class="w-full bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl font-bold text-sm transition-colors">Confirmar Voto</button>
-        <button onclick="location.hash=''; location.reload()"
-            class="w-full mt-2 text-xs text-slate-500 hover:text-slate-300 transition-colors py-1">← Voltar ao início</button>
     </div>
 </div>
 
@@ -275,11 +311,23 @@
                 <textarea id="sf-keypoints" rows="3" class="inp resize-none" placeholder="Objetivos, NPCs, local..."></textarea></div>
             <div><label class="lbl">Recompensa (opcional)</label>
                 <input type="text" id="sf-reward" placeholder="ex: 200 XP, tesouro..." class="inp"></div>
+            <div><label class="lbl">Mensagem ao votar (opcional)</label>
+                <input type="text" id="sf-votemsg" placeholder="Obrigado por votar!" class="inp"></div>
         </div>
         <div class="flex gap-2 mt-5">
             <button onclick="closeModal('modal-session')" class="btn-cancel flex-1">Cancelar</button>
             <button onclick="saveSession()" class="flex-1 bg-sky-700 hover:bg-sky-600 text-white py-2 rounded-xl font-bold text-sm transition-colors">Salvar Sessão</button>
         </div>
+    </div>
+</div>
+
+<!-- Vote Success Popup -->
+<div id="popup-vote" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 modal-bg">
+    <div class="glass rounded-2xl p-8 w-full max-w-sm text-center fade-in">
+        <div class="text-5xl mb-4">🗳️</div>
+        <h2 id="popup-vote-msg" class="text-xl font-black text-white mb-2 leading-snug"></h2>
+        <p class="text-xs text-slate-500 mb-6">Seu voto foi registrado com sucesso.</p>
+        <button onclick="closeVotePopup()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl font-bold transition-colors">Fechar</button>
     </div>
 </div>
 
@@ -625,14 +673,42 @@ function renderSessionsList() {
     if (!sessions.length) { list.innerHTML=''; empty.classList.remove('hidden'); return; }
     empty.classList.add('hidden');
 
-    list.innerHTML = sessions.map(s => {
+    // Pendências do jogador
+    let pendenciasHtml = '';
+    if (currentUser.role === 'player') {
+        let upcoming = sessions.filter(s => s.status === 'upcoming');
+        let votesPending  = upcoming.filter(s => s.type === 'voting' && !s.votes?.[currentUser.code]);
+        let confirmPending = upcoming.filter(s => s.type !== 'voting' && !s.confirmations?.[currentUser.code]?.playerConfirmed);
+        if (votesPending.length || confirmPending.length) {
+            let items = [
+                ...votesPending.map(s => `<li onclick="navigate('session',{sessionId:'${s.id}',mesaId:'${s.mesaId}'})" class="cursor-pointer hover:text-sky-300 transition-colors">🗳 Sessão ${s.number}${s.title?' — '+esc(s.title):''} — <span class="font-bold">voto pendente</span></li>`),
+                ...confirmPending.map(s => `<li onclick="navigate('session',{sessionId:'${s.id}',mesaId:'${s.mesaId}'})" class="cursor-pointer hover:text-amber-300 transition-colors">📋 Sessão ${s.number}${s.title?' — '+esc(s.title):''} — <span class="font-bold">confirmar presença</span></li>`),
+            ].join('');
+            pendenciasHtml = `<div class="mb-4 bg-amber-900/20 border border-amber-700/40 rounded-2xl px-4 py-3">
+                <p class="text-[10px] text-amber-400 uppercase font-black mb-2">⚠ Suas Pendências</p>
+                <ul class="text-xs text-amber-200/80 space-y-1.5">${items}</ul>
+            </div>`;
+        }
+    }
+
+    list.innerHTML = pendenciasHtml + sessions.map(s => {
         let statusColor = {done:'text-emerald-400', cancelled:'text-red-400', upcoming:'text-sky-400'}[s.status]||'text-slate-400';
         let statusLabel = {done:'Concluída', cancelled:'Cancelada', upcoming:'Agendada'}[s.status]||s.status;
         let dateInfo = s.type==='voting' ? '🗳 Votação' : (s.date ? fmtDT(s.date,s.time) : 'Data a definir');
         let myC = s.confirmations?.[currentUser.code];
-        let badge = currentUser.role==='player'
-            ? (myC?.playerConfirmed ? '<span class="text-[10px] bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded-full font-bold">✅ Confirmado</span>' : '<span class="text-[10px] bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full">Pendente</span>')
-            : '';
+        let badge = '';
+        if (currentUser.role === 'player' && s.status === 'upcoming') {
+            if (s.type === 'voting') {
+                let voted = s.votes?.[currentUser.code];
+                badge = voted
+                    ? '<span class="text-[10px] bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded-full font-bold">🗳 Votado</span>'
+                    : '<span class="text-[10px] bg-sky-900/60 text-sky-300 px-2 py-0.5 rounded-full font-bold">🗳 Vote agora!</span>';
+            } else {
+                badge = myC?.playerConfirmed
+                    ? '<span class="text-[10px] bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded-full font-bold">✅ Confirmado</span>'
+                    : '<span class="text-[10px] bg-amber-900/40 text-amber-400 px-2 py-0.5 rounded-full font-bold">Confirmar presença</span>';
+            }
+        }
         let adminBtns = ok && s.status==='upcoming' ? `
             <div class="flex flex-col gap-1 shrink-0" onclick="event.stopPropagation()">
                 <button onclick="openModalAttendance('${s.id}')" class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded-lg font-bold transition-colors whitespace-nowrap">✅ Presença</button>
@@ -738,26 +814,80 @@ function renderSession() {
             }).join('')
         ).join('');
         let voteLink = `${location.href.split('#')[0]}#vote/${s.id}`;
+
+        // Per-player vote breakdown (admin only)
+        let playerVoteBreakdown = '';
+        if (ok) {
+            let rows = m.playerCodes.map(code => {
+                let p = players[code] || {name: code};
+                let v = s.votes?.[code];
+                let vLabel = v
+                    ? `<span class="text-emerald-400 font-bold">${fmtDate(v.date)} às ${v.time}</span>`
+                    : `<span class="text-slate-600 italic">Não votou</span>`;
+                return `<div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-800/60 last:border-0">
+                    <span class="text-slate-300 truncate mr-2">${esc(p.name)}</span>
+                    ${vLabel}
+                </div>`;
+            }).join('');
+            playerVoteBreakdown = `<div class="mt-3 bg-slate-900/50 rounded-xl px-3 py-1">
+                <p class="text-[10px] text-slate-500 uppercase font-bold pt-2 pb-1">Votos dos Jogadores</p>
+                ${rows}
+            </div>`;
+        }
+
         schedHtml = `<div>
             <div class="flex items-center gap-2 mb-3">
                 <span class="text-xl">🗳</span>
                 <div><p class="font-bold text-white">Votação</p>
-                <p class="text-xs text-slate-500">${Object.keys(s.votes||{}).length} voto(s)</p></div>
+                <p class="text-xs text-slate-500">${Object.keys(s.votes||{}).length} de ${m.playerCodes.length} voto(s)</p></div>
             </div>
-            <div class="space-y-1 mb-3">${optsHtml}</div>
-            <div class="flex flex-wrap gap-2">
+            <div class="space-y-1 mb-2">${optsHtml}</div>
+            ${playerVoteBreakdown}
+            <div class="flex flex-wrap gap-2 mt-3">
                 <button onclick="copyLink('${esc(voteLink)}')" class="text-xs bg-sky-900/50 hover:bg-sky-800/70 text-sky-300 px-3 py-1.5 rounded-xl font-bold transition-colors">🔗 Copiar Link</button>
                 ${ok?`<button onclick="openModalFixDate('${s.id}')" class="text-xs bg-amber-900/50 hover:bg-amber-800/70 text-amber-300 px-3 py-1.5 rounded-xl font-bold transition-colors">📌 Definir Data</button>`:''}
             </div></div>`;
     }
 
-    // Player confirm
+    // Player confirm + inline voting
     let myC = s.confirmations?.[currentUser.code];
-    let confirmBtn = (currentUser.role==='player' && s.status==='upcoming')
-        ? (myC?.playerConfirmed
+    let confirmBtn = '';
+    let playerVoteHtml = '';
+
+    if (currentUser.role === 'player' && s.status === 'upcoming') {
+        // Voting session — show inline vote UI
+        if (s.type === 'voting') {
+            let myVote = s.votes?.[currentUser.code];
+            if (myVote) {
+                playerVoteHtml = `<div class="card rounded-2xl p-4 border-l-2 border-emerald-500">
+                    <p class="text-[10px] text-emerald-400 uppercase font-bold mb-2">🗳 Seu Voto</p>
+                    <p class="text-sm text-white font-bold">${fmtDate(myVote.date)} às ${myVote.time}</p>
+                    <button onclick="clearInlineVote('${s.id}')" class="mt-2 text-[10px] text-slate-500 hover:text-slate-300 transition-colors">Mudar voto</button>
+                </div>`;
+            } else {
+                let optsHtml = (s.votingDays||[]).map(day =>
+                    day.times.map(t => `
+                    <label class="vote-option flex items-center gap-3 bg-slate-900/80 border border-slate-700 rounded-2xl px-4 py-3 cursor-pointer hover:border-sky-500 transition-colors"
+                        onclick="document.querySelectorAll('#inline-vote-opts .vote-option').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')">
+                        <input type="radio" name="inline-vote" value="${day.date}|${t}" class="accent-sky-500 shrink-0">
+                        <div><span class="text-sm text-slate-200 font-medium">${fmtDate(day.date)}</span>
+                        <span class="text-slate-400 text-sm"> às ${t}</span></div>
+                    </label>`).join('')
+                ).join('');
+                playerVoteHtml = `<div class="card rounded-2xl p-4">
+                    <p class="text-[10px] text-sky-400 uppercase font-bold mb-3">🗳 Votação — Escolha sua data</p>
+                    <div id="inline-vote-opts" class="space-y-2 mb-4">${optsHtml}</div>
+                    <button onclick="submitInlineVote('${s.id}')"
+                        class="w-full bg-sky-700 hover:bg-sky-600 text-white py-2.5 rounded-xl font-bold text-sm transition-colors">Confirmar Voto</button>
+                    <p id="inline-vote-msg" class="text-xs text-center text-slate-500 mt-2 min-h-[1rem]"></p>
+                </div>`;
+            }
+        }
+        // Attendance confirmation
+        confirmBtn = myC?.playerConfirmed
             ? `<div class="flex items-center gap-2 text-emerald-400 text-sm font-bold"><span>✅</span>Presença Confirmada</div>`
-            : `<button onclick="playerConfirm('${s.id}')" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm transition-colors">✅ Confirmar Presença</button>`)
-        : '';
+            : `<button onclick="playerConfirm('${s.id}')" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm transition-colors">✅ Confirmar Presença</button>`;
+    }
 
     // Confirmations table
     let confTable = m.playerCodes.map(code=>{
@@ -798,6 +928,7 @@ function renderSession() {
             ${s.reward ? `<div class="mt-3 text-sm text-amber-400 flex items-center gap-2"><span>🏆</span>${esc(s.reward)}</div>` : ''}
         </div>
 
+        ${playerVoteHtml}
         ${confirmBtn ? `<div class="card rounded-2xl p-4">${confirmBtn}</div>` : ''}
 
         ${s.keyPoints ? `<div class="card rounded-2xl p-4">
@@ -831,9 +962,32 @@ function renderVotingScreen(sessionId) {
         return;
     }
     let m = LS.mesas()[s.mesaId];
-    document.getElementById('vote-session-title').textContent =
-        `${m?.title||''} — Sessão ${s.number}${s.title?' — '+s.title:''}`;
+    let admins = LS.admins();
 
+    // Session title
+    document.getElementById('vote-session-title').textContent =
+        `Sessão ${s.number}${s.title?' — '+s.title:''}`;
+
+    // Mesa info card
+    if (m) {
+        let mc = document.getElementById('vote-mesa-card');
+        mc.classList.remove('hidden');
+        document.getElementById('vote-mesa-name').textContent = m.title||'';
+        document.getElementById('vote-mesa-system').textContent = m.system||'';
+        document.getElementById('vote-mesa-desc').textContent = m.desc||'';
+        let masterName = admins[m.masterId]?.name || m.masterId || '';
+        document.getElementById('vote-mesa-master').textContent = masterName ? `Mestre: ${masterName}` : '';
+        let banner = document.getElementById('vote-mesa-banner');
+        if (m.images?.[0]) banner.style.backgroundImage = `url('${m.images[0]}')`;
+    }
+
+    // Key points
+    if (s.keyPoints) {
+        document.getElementById('vote-keypoints-wrap').classList.remove('hidden');
+        document.getElementById('vote-keypoints').textContent = s.keyPoints;
+    }
+
+    // Build options
     let html = (s.votingDays||[]).map(day => `
         <div class="mb-3">
             <p class="text-[10px] text-slate-500 font-bold uppercase mb-2">${fmtDate(day.date)}</p>
@@ -841,7 +995,8 @@ function renderVotingScreen(sessionId) {
             ${day.times.map(t=>`
                 <label class="vote-option flex items-center gap-3 bg-slate-900/80 border border-slate-700 rounded-2xl px-4 py-3 cursor-pointer hover:border-sky-500 transition-colors">
                     <input type="radio" name="vote-pick" value="${day.date}|${t}" class="accent-sky-500 shrink-0">
-                    <span class="text-sm text-slate-200">${t}</span>
+                    <div><span class="text-sm text-slate-200 font-medium">${fmtDate(day.date)}</span>
+                    <span class="text-slate-400 text-sm"> às ${t}</span></div>
                 </label>`).join('')}
             </div>
         </div>`).join('');
@@ -849,10 +1004,35 @@ function renderVotingScreen(sessionId) {
 
     document.querySelectorAll('input[name="vote-pick"]').forEach(r => {
         r.addEventListener('change', () => {
-            document.querySelectorAll('.vote-option').forEach(el=>el.classList.remove('selected'));
+            document.querySelectorAll('#vote-options .vote-option').forEach(el=>el.classList.remove('selected'));
             r.closest('.vote-option').classList.add('selected');
         });
     });
+
+    // Show existing vote if player code already filled
+    document.getElementById('vote-player-code').addEventListener('input', checkExistingVote);
+}
+
+function checkExistingVote() {
+    let code = document.getElementById('vote-player-code').value.trim().toLowerCase();
+    let sessId = location.hash.replace('#vote/','');
+    let s = LS.sessions()[sessId];
+    let existing = s?.votes?.[code];
+    let alreadyEl = document.getElementById('vote-already');
+    let formEl = document.getElementById('vote-form');
+    if (existing) {
+        alreadyEl.classList.remove('hidden');
+        formEl.classList.add('hidden');
+        document.getElementById('vote-already-choice').textContent = `${fmtDate(existing.date)} às ${existing.time}`;
+    } else {
+        alreadyEl.classList.add('hidden');
+        formEl.classList.remove('hidden');
+    }
+}
+
+function clearVoteAlready() {
+    document.getElementById('vote-already').classList.add('hidden');
+    document.getElementById('vote-form').classList.remove('hidden');
 }
 
 function submitVote() {
@@ -873,10 +1053,12 @@ function submitVote() {
     sessions[sessId] = s;
     LS.saveSessions(sessions);
     apiFetch('/agenda/vote', 'POST', {sessionId: sessId, playerCode: code, date, time});
-    let pname = LS.players()[code]?.name||code;
-    msg.textContent = `✅ Voto de ${pname} registrado!`;
-    msg.className = 'text-xs text-center text-emerald-400 mb-3';
+    showVotePopup(s.voteMessage || 'Obrigado por votar!');
+    msg.textContent = '';
     document.getElementById('vote-submit-btn').disabled = true;
+    document.getElementById('vote-form').classList.add('hidden');
+    document.getElementById('vote-already').classList.remove('hidden');
+    document.getElementById('vote-already-choice').textContent = `${fmtDate(date)} às ${time}`;
 }
 
 function copyLink(url) {
@@ -1039,9 +1221,10 @@ function openModalSession(id=null) {
         document.getElementById('sf-time').value=s.time||'';
         document.getElementById('sf-keypoints').value=s.keyPoints||'';
         document.getElementById('sf-reward').value=s.reward||'';
+        document.getElementById('sf-votemsg').value=s.voteMessage||'';
         if (s.type==='voting') (s.votingDays||[]).forEach(d=>addVDay(d.date, d.times));
     } else {
-        ['sf-title','sf-date','sf-time','sf-keypoints','sf-reward'].forEach(id=>document.getElementById(id).value='');
+        ['sf-title','sf-date','sf-time','sf-keypoints','sf-reward','sf-votemsg'].forEach(id=>document.getElementById(id).value='');
         document.querySelector('input[name="sf-type"][value="fixed"]').checked=true;
     }
     toggleSessType();
@@ -1119,6 +1302,7 @@ function saveSession() {
         votes: ex.votes||{},
         keyPoints: document.getElementById('sf-keypoints').value.trim(),
         reward: document.getElementById('sf-reward').value.trim(),
+        voteMessage: document.getElementById('sf-votemsg').value.trim(),
         status: ex.status||'upcoming',
         confirmations: ex.confirmations||{},
         recap: ex.recap||'',
@@ -1216,6 +1400,36 @@ function saveFixDate() {
 }
 
 // ====================  PLAYER ACTIONS  =========================
+function submitInlineVote(sessId) {
+    let picked = document.querySelector('input[name="inline-vote"]:checked');
+    let msg = document.getElementById('inline-vote-msg');
+    if (!picked) {
+        if (msg) { msg.textContent = 'Selecione uma data.'; msg.className = 'text-xs text-center text-red-400 mt-2 min-h-[1rem]'; }
+        return;
+    }
+    let [date, time] = picked.value.split('|');
+    let sessions = LS.sessions();
+    let s = sessions[sessId];
+    if (!s) return;
+    s.votes = s.votes || {};
+    s.votes[currentUser.code] = {date, time};
+    sessions[sessId] = s;
+    LS.saveSessions(sessions);
+    apiFetch('/agenda/vote', 'POST', {sessionId: sessId, playerCode: currentUser.code, date, time});
+    showVotePopup(s.voteMessage || 'Obrigado por votar!');
+    renderSession();
+}
+
+function clearInlineVote(sessId) {
+    let sessions = LS.sessions();
+    let s = sessions[sessId];
+    if (!s || !s.votes) return;
+    delete s.votes[currentUser.code];
+    sessions[sessId] = s;
+    LS.saveSessions(sessions);
+    renderSession();
+}
+
 function playerConfirm(sessId) {
     if (!confirm('Confirmar presença nesta sessão?')) return;
     let sessions=LS.sessions(); let s=sessions[sessId];
@@ -1229,6 +1443,14 @@ function playerConfirm(sessId) {
 
 // ==========================  UTIL  =============================
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function showVotePopup(msg) {
+    document.getElementById('popup-vote-msg').textContent = msg || 'Obrigado por votar!';
+    document.getElementById('popup-vote').classList.remove('hidden');
+}
+function closeVotePopup() {
+    document.getElementById('popup-vote').classList.add('hidden');
+}
 
 // ==========================  INIT  =============================
 async function init() {
