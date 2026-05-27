@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World of Eder — Agenda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #080d1a; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        .glass { background: rgba(15,23,42,0.92); border: 1px solid rgba(51,65,85,0.55); }
+        .card { background: rgba(15,23,42,0.85); border: 1px solid rgba(30,41,59,0.9); border-radius: 14px; }
+        .card-hover { transition: border-color .2s, box-shadow .2s, transform .15s; cursor: pointer; }
+        .card-hover:hover { border-color: #475569; box-shadow: 0 6px 28px rgba(0,0,0,.45); transform: translateY(-1px); }
+        .strike-dot { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 2px; }
+        .tab-pill { padding: 6px 14px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; transition: background .15s, color .15s; color: #64748b; }
+        .tab-pill.active { background: rgba(245,158,11,.15); color: #f59e0b; }
+        .vote-option { transition: border-color .15s, background .15s; }
+        .vote-option.selected { border-color: #22c55e !important; background: rgba(34,197,94,.09) !important; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        .fade-in { animation: fadeUp .22s ease-out; }
+        .modal-bg { background: rgba(0,0,0,.75); backdrop-filter: blur(5px); }
+        input[type="date"], input[type="time"] { color-scheme: dark; }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen font-sans">
+
+<!-- ============================================================
+     VOTING PUBLIC CARD  (hash: #vote/SESSION_ID)
+============================================================ -->
+<div id="screen-vote" class="hidden min-h-screen flex items-center justify-center p-4">
+    <div class="glass rounded-2xl p-6 w-full max-w-md fade-in">
+        <div class="text-center mb-6">
+            <p class="text-[10px] text-amber-400 uppercase tracking-widest font-black mb-1">World of Eder — Agenda</p>
+            <h1 class="text-xl font-black text-white">Votação de Data</h1>
+            <p id="vote-session-title" class="text-sm text-slate-400 mt-1"></p>
+        </div>
+        <div class="mb-4">
+            <label class="text-[10px] text-slate-400 uppercase font-bold block mb-1">Seu Código de Jogador</label>
+            <input type="text" id="vote-player-code" placeholder="ex: user_001" autocomplete="off"
+                class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white focus:border-amber-500 outline-none">
+        </div>
+        <div id="vote-options" class="space-y-2 mb-5"></div>
+        <p id="vote-msg" class="text-xs text-center text-slate-500 mb-3 min-h-[1rem]"></p>
+        <button onclick="submitVote()" id="vote-submit-btn"
+            class="w-full bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl font-bold text-sm transition-colors">Confirmar Voto</button>
+        <button onclick="location.hash=''; location.reload()"
+            class="w-full mt-2 text-xs text-slate-500 hover:text-slate-300 transition-colors py-1">← Voltar ao início</button>
+    </div>
+</div>
+
+<!-- ============================================================
+     AUTH SCREEN
+============================================================ -->
+<div id="screen-auth" class="hidden min-h-screen flex items-center justify-center p-4">
+    <div class="glass rounded-2xl p-8 w-full max-w-sm fade-in text-center">
+        <p class="text-[10px] text-amber-400 uppercase tracking-widest font-black mb-2">World of Eder</p>
+        <h1 class="text-3xl font-black text-white mb-1">Agenda</h1>
+        <p class="text-sm text-slate-500 mb-7">Mesas · Sessões · Aventuras</p>
+
+        <div id="auth-step-code">
+            <label class="text-[10px] text-slate-400 uppercase font-bold block text-left mb-1.5">Seu Código</label>
+            <input type="text" id="auth-code" placeholder="código de jogador ou admin" autocomplete="off"
+                class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white text-sm mb-3 focus:border-amber-500 outline-none"
+                onkeydown="if(event.key==='Enter') authNext()">
+            <button onclick="authNext()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl font-bold transition-colors">Continuar</button>
+        </div>
+
+        <div id="auth-step-pwd" class="hidden">
+            <p class="text-sm text-slate-300 mb-4">Olá, <strong id="auth-greeting" class="text-amber-400"></strong>. Digite sua senha.</p>
+            <input type="password" id="auth-pwd" placeholder="senha" autocomplete="current-password"
+                class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white text-sm mb-3 focus:border-amber-500 outline-none"
+                onkeydown="if(event.key==='Enter') authLogin()">
+            <button onclick="authLogin()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl font-bold mb-2 transition-colors">Entrar</button>
+            <button onclick="authBack()" class="w-full text-xs text-slate-500 hover:text-slate-300 transition-colors py-1">← Voltar</button>
+        </div>
+
+        <p id="auth-error" class="text-xs text-red-400 mt-3 hidden"></p>
+    </div>
+</div>
+
+<!-- ============================================================
+     APP
+============================================================ -->
+<div id="screen-app" class="hidden min-h-screen flex flex-col">
+
+    <!-- HEADER -->
+    <header class="glass border-b border-slate-800/80 sticky top-0 z-30 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2 min-w-0">
+            <button onclick="navigate('mesas')" class="text-amber-400 font-black text-sm tracking-wide hover:text-amber-300 transition-colors shrink-0">⚔ WoE</button>
+            <div id="breadcrumb" class="flex items-center gap-1.5 text-xs text-slate-500 min-w-0 overflow-hidden"></div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+            <span id="header-user" class="text-xs text-slate-400 hidden sm:block"></span>
+            <button onclick="logout()" class="text-xs text-slate-500 hover:text-red-400 transition-colors">Sair</button>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="flex-1 p-4 max-w-3xl mx-auto w-full pb-10">
+
+        <!-- VIEW: MESAS LIST -->
+        <div id="view-mesas" class="hidden fade-in">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-xl font-black text-white">Mesas</h2>
+                <button id="btn-create-mesa" onclick="openModalMesa()" class="hidden bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors">+ Nova Mesa</button>
+            </div>
+
+            <!-- Omega admin panel -->
+            <div id="omega-panel" class="hidden mb-5 glass rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-black text-purple-400">⚡ Painel Omega — Administradores</h3>
+                    <div class="flex gap-2">
+                        <button onclick="openModalAdmin()" class="bg-purple-700 hover:bg-purple-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">+ Admin</button>
+                        <button onclick="changeOmegaPwd()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">🔑 Senha</button>
+                    </div>
+                </div>
+                <div id="admin-list" class="space-y-1.5"></div>
+            </div>
+
+            <div id="mesas-grid" class="grid gap-4 sm:grid-cols-2"></div>
+            <p id="mesas-empty" class="hidden text-center text-slate-500 py-16 text-sm">Nenhuma mesa encontrada.</p>
+        </div>
+
+        <!-- VIEW: MESA DETAIL -->
+        <div id="view-mesa" class="hidden fade-in">
+            <div id="mesa-banner-wrap" class="card rounded-2xl overflow-hidden mb-4">
+                <div id="mesa-banner" class="h-40 bg-slate-800 relative">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent flex items-end p-4 gap-3">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[10px] text-amber-400 uppercase font-black tracking-wider mb-0.5">Mesa</p>
+                            <h2 id="mesa-title" class="text-2xl font-black text-white leading-tight truncate"></h2>
+                            <p id="mesa-master-label" class="text-xs text-slate-400 mt-0.5"></p>
+                        </div>
+                        <div id="mesa-admin-btns" class="hidden flex-col gap-1.5 shrink-0">
+                            <button onclick="openModalMesa(currentMesaId)" class="bg-slate-700/80 hover:bg-slate-600 backdrop-blur text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">✏ Editar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-1 px-4 py-2 border-t border-slate-800/60">
+                    <button onclick="mesaTab('sessoes')" id="tab-sessoes" class="tab-pill active">Sessões</button>
+                    <button onclick="mesaTab('jogadores')" id="tab-jogadores" class="tab-pill">Jogadores</button>
+                    <button onclick="mesaTab('info')" id="tab-info" class="tab-pill">Info</button>
+                </div>
+            </div>
+
+            <!-- Tab bodies -->
+            <div id="mesa-tab-sessoes">
+                <div class="flex justify-between items-center mb-3">
+                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Sessões</p>
+                    <button id="btn-new-session" onclick="openModalSession()" class="hidden bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">+ Nova Sessão</button>
+                </div>
+                <div id="sessions-list" class="space-y-3"></div>
+                <p id="sessions-empty" class="hidden text-center text-slate-500 py-10 text-sm">Nenhuma sessão cadastrada.</p>
+            </div>
+
+            <div id="mesa-tab-jogadores" class="hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Jogadores</p>
+                    <button id="btn-add-player" onclick="openModalPlayer()" class="hidden bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">+ Jogador</button>
+                </div>
+                <div id="players-list" class="space-y-2"></div>
+                <p id="players-empty" class="hidden text-center text-slate-500 py-10 text-sm">Nenhum jogador cadastrado.</p>
+            </div>
+
+            <div id="mesa-tab-info" class="hidden">
+                <div class="card rounded-2xl p-5 space-y-4">
+                    <div><p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Sistema</p><p id="info-system" class="text-sm text-slate-300">—</p></div>
+                    <div><p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Descrição</p><p id="info-desc" class="text-sm text-slate-300 whitespace-pre-wrap">—</p></div>
+                    <div><p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Strike</p><p id="info-strike" class="text-sm text-slate-300">—</p></div>
+                    <div id="info-images-wrap" class="hidden"><p class="text-[10px] text-slate-500 uppercase font-bold mb-2">Imagens</p><div id="info-images" class="flex gap-2 flex-wrap"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: SESSION DETAIL -->
+        <div id="view-session" class="hidden fade-in">
+            <div id="session-content"></div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ============================================================
+     MODALS
+============================================================ -->
+
+<!-- Modal Mesa -->
+<div id="modal-mesa" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
+    <div class="glass rounded-2xl p-6 w-full max-w-lg max-h-[92vh] overflow-y-auto">
+        <h2 class="text-lg font-black text-amber-400 mb-4" id="modal-mesa-title">Nova Mesa</h2>
+        <div class="space-y-3">
+            <div><label class="lbl">Título *</label>
+                <input type="text" id="mf-title" placeholder="Nome da campanha" class="inp"></div>
+            <div><label class="lbl">Sistema</label>
+                <input type="text" id="mf-system" placeholder="ex: D&D 5e, Pathfinder..." class="inp"></div>
+            <div><label class="lbl">Descrição</label>
+                <textarea id="mf-desc" rows="3" class="inp resize-none" placeholder="Sobre a campanha..."></textarea></div>
+            <div><label class="lbl">Mestre (admin) *</label>
+                <select id="mf-master" class="inp"><option value="">— Selecione —</option></select></div>
+            <div><label class="lbl">Faltas para gerar 1 Strike</label>
+                <input type="number" id="mf-strike" value="3" min="1" max="20" class="inp"></div>
+            <div><label class="lbl">URLs de Imagem (uma por linha)</label>
+                <textarea id="mf-images" rows="2" class="inp resize-none" placeholder="https://..."></textarea></div>
+        </div>
+        <div class="flex gap-2 mt-5">
+            <button onclick="closeModal('modal-mesa')" class="btn-cancel flex-1">Cancelar</button>
+            <button onclick="saveMesa()" class="btn-amber flex-1">Salvar Mesa</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Admin (omega) -->
+<div id="modal-admin" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
+    <div class="glass rounded-2xl p-6 w-full max-w-sm">
+        <h2 class="text-lg font-black text-purple-400 mb-4" id="modal-admin-title">Novo Administrador</h2>
+        <div class="space-y-3">
+            <div><label class="lbl">Código único *</label><input type="text" id="af-code" placeholder="ex: mestre_joao" class="inp"></div>
+            <div><label class="lbl">Nome *</label><input type="text" id="af-name" placeholder="Nome de exibição" class="inp"></div>
+            <div><label class="lbl">Senha *</label><input type="password" id="af-pwd" placeholder="senha" class="inp"></div>
+        </div>
+        <div class="flex gap-2 mt-5">
+            <button onclick="closeModal('modal-admin')" class="btn-cancel flex-1">Cancelar</button>
+            <button onclick="saveAdmin()" class="flex-1 bg-purple-700 hover:bg-purple-600 text-white py-2 rounded-xl font-bold text-sm transition-colors">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Player -->
+<div id="modal-player" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
+    <div class="glass rounded-2xl p-6 w-full max-w-sm">
+        <h2 class="text-lg font-black text-emerald-400 mb-4">Adicionar Jogador</h2>
+        <div class="space-y-3">
+            <div><label class="lbl">Código único *</label><input type="text" id="pf-code" placeholder="ex: user_001" class="inp"></div>
+            <div><label class="lbl">Nome *</label><input type="text" id="pf-name" placeholder="Nome do jogador" class="inp"></div>
+        </div>
+        <div class="flex gap-2 mt-5">
+            <button onclick="closeModal('modal-player')" class="btn-cancel flex-1">Cancelar</button>
+            <button onclick="savePlayer()" class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white py-2 rounded-xl font-bold text-sm transition-colors">Adicionar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Session -->
+<div id="modal-session" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
+    <div class="glass rounded-2xl p-6 w-full max-w-lg max-h-[92vh] overflow-y-auto">
+        <h2 class="text-lg font-black text-sky-400 mb-4" id="modal-session-title">Nova Sessão</h2>
+        <div class="space-y-3">
+            <div><label class="lbl">Título (opcional)</label><input type="text" id="sf-title" placeholder="ex: A Queda do Dragão" class="inp"></div>
+            <div>
+                <label class="lbl">Tipo de Data</label>
+                <div class="flex gap-2">
+                    <label class="flex-1 flex items-center gap-2.5 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2.5 cursor-pointer hover:border-sky-500 transition-colors">
+                        <input type="radio" name="sf-type" value="fixed" checked onchange="toggleSessType()" class="accent-sky-500 shrink-0">
+                        <span class="text-sm">📅 Data Fixa</span>
+                    </label>
+                    <label class="flex-1 flex items-center gap-2.5 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2.5 cursor-pointer hover:border-sky-500 transition-colors">
+                        <input type="radio" name="sf-type" value="voting" onchange="toggleSessType()" class="accent-sky-500 shrink-0">
+                        <span class="text-sm">🗳 Votação</span>
+                    </label>
+                </div>
+            </div>
+            <div id="sf-fixed" class="flex gap-2">
+                <div class="flex-1"><label class="lbl">Data</label><input type="date" id="sf-date" class="inp"></div>
+                <div class="flex-1"><label class="lbl">Horário</label><input type="time" id="sf-time" class="inp"></div>
+            </div>
+            <div id="sf-voting" class="hidden space-y-2">
+                <p class="text-xs text-slate-500">Até 3 datas, cada uma com até 4 horários.</p>
+                <div id="voting-days-wrap" class="space-y-2"></div>
+                <button type="button" id="btn-add-vday" onclick="addVDay()" class="text-xs text-sky-400 hover:text-sky-300 font-bold transition-colors">+ Adicionar Data</button>
+            </div>
+            <div><label class="lbl">Pontos Importantes</label>
+                <textarea id="sf-keypoints" rows="3" class="inp resize-none" placeholder="Objetivos, NPCs, local..."></textarea></div>
+            <div><label class="lbl">Recompensa (opcional)</label>
+                <input type="text" id="sf-reward" placeholder="ex: 200 XP, tesouro..." class="inp"></div>
+        </div>
+        <div class="flex gap-2 mt-5">
+            <button onclick="closeModal('modal-session')" class="btn-cancel flex-1">Cancelar</button>
+            <button onclick="saveSession()" class="flex-1 bg-sky-700 hover:bg-sky-600 text-white py-2 rounded-xl font-bold text-sm transition-colors">Salvar Sessão</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Attendance -->
+<div id="modal-attendance" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
+    <div class="glass rounded-2xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto">
+        <h2 class="text-lg font-black text-white mb-1">Registro de Presença</h2>
+        <p class="text-xs text-slate-500 mb-4" id="modal-att-label"></p>
+        <div id="att-list" class="space-y-2 mb-4"></div>
+        <button onclick="closeModal('modal-attendance')" class="w-full btn-cancel">Fechar</button>
+    </div>
+</div>
+
+<!-- Modal Recap -->
+<div id="modal-recap" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
+    <div class="glass rounded-2xl p-6 w-full max-w-lg">
+        <h2 class="text-lg font-black text-emerald-400 mb-1">Encerrar Sessão</h2>
+        <p class="text-xs text-slate-500 mb-4">Escreva a recapitulação (será exibida na próxima sessão).</p>
+        <textarea id="recap-text" rows="6" class="inp resize-none w-full mb-3" placeholder="O que aconteceu nessa sessão..."></textarea>
+        <div class="flex gap-2">
+            <button onclick="closeModal('modal-recap')" class="btn-cancel flex-1">Cancelar</button>
+            <button onclick="saveRecap()" class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white py-2 rounded-xl font-bold text-sm transition-colors">🏁 Encerrar &amp; Salvar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Fix Date (from voting) -->
+<div id="modal-fixdate" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
+    <div class="glass rounded-2xl p-6 w-full max-w-sm">
+        <h2 class="text-lg font-black text-amber-400 mb-4">Definir Data Fixa</h2>
+        <div class="space-y-3">
+            <div><label class="lbl">Data</label><input type="date" id="fd-date" class="inp"></div>
+            <div><label class="lbl">Horário</label><input type="time" id="fd-time" class="inp"></div>
+        </div>
+        <div class="flex gap-2 mt-5">
+            <button onclick="closeModal('modal-fixdate')" class="btn-cancel flex-1">Cancelar</button>
+            <button onclick="saveFixDate()" class="btn-amber flex-1">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .lbl { display:block; font-size:10px; color:#94a3b8; text-transform:uppercase; font-weight:700; margin-bottom:4px; }
+    .inp { width:100%; background:#0f172a; border:1px solid #334155; border-radius:10px; padding:8px 12px; font-size:13px; color:#e2e8f0; outline:none; }
+    .inp:focus { border-color:#f59e0b; }
+    .btn-cancel { background:#1e293b; color:#94a3b8; border-radius:12px; padding:8px; font-weight:700; font-size:13px; transition:background .15s; }
+    .btn-cancel:hover { background:#334155; }
+    .btn-amber { background:#d97706; color:#fff; border-radius:12px; padding:8px; font-weight:700; font-size:13px; transition:background .15s; }
+    .btn-amber:hover { background:#b45309; }
+</style>
+
+<script>
+// ===========================  STATE  ===========================
+const OMEGA_CODE = 'omega';
+const OMEGA_PWD_KEY = 'woe_agenda_omega_pwd';
+const DEFAULT_OMEGA_PWD = 'omega123';
+
+// ── Backend API ─────────────────────────────────────────────────
+// Após deploy do agenda_lambda.py, substitua pela URL do API Gateway
+const AGENDA_API_URL = 'https://ttphw8j5bh.execute-api.sa-east-1.amazonaws.com/prod';
+
+async function apiFetch(path, method = 'GET', data = null) {
+    try {
+        let headers = { 'Content-Type': 'application/json' };
+        if (currentUser) {
+            headers['Authorization'] = `${currentUser.code}:${currentUser.pwd || ''}`;
+        }
+        // Injeta credenciais no body dos POSTs como fallback (caso o header seja bloqueado)
+        let payload = data;
+        if (method === 'POST' && currentUser && payload) {
+            payload = { ...payload, _code: currentUser.code, _pwd: currentUser.pwd || '' };
+        }
+        let res = await fetch(AGENDA_API_URL + path, {
+            method,
+            headers,
+            body: payload ? JSON.stringify(payload) : null,
+        });
+        if (!res.ok) {
+            let err = await res.json().catch(() => ({}));
+            throw new Error(err.message || `HTTP ${res.status}`);
+        }
+        return await res.json();
+    } catch (e) {
+        console.warn('Agenda API offline, usando localStorage:', e.message);
+        return null;
+    }
+}
+
+async function preloadData() {
+    let data = await apiFetch('/agenda/data');
+    if (!data) return;
+    if (data.admins)   LS.saveAdmins(data.admins);
+    if (data.mesas)    LS.saveMesas(data.mesas);
+    if (data.sessions) LS.saveSessions(data.sessions);
+    if (data.players)  LS.savePlayers(data.players);
+}
+
+let currentUser = null;
+let currentMesaId = null;
+let currentSessionId = null;
+let _editMesaId = null;
+let _editAdminCode = null;
+let _editSessionId = null;
+let _attendSessId = null;
+let _recapSessId = null;
+let _fixDateSessId = null;
+let _vdayIdx = 0;
+
+// ========================  DATA LAYER  =========================
+const LS = {
+    admins:   () => JSON.parse(localStorage.getItem('woe_admins')   || '{}'),
+    mesas:    () => JSON.parse(localStorage.getItem('woe_mesas')    || '{}'),
+    sessions: () => JSON.parse(localStorage.getItem('woe_sessions') || '{}'),
+    players:  () => JSON.parse(localStorage.getItem('woe_players')  || '{}'),
+    saveAdmins:   d => localStorage.setItem('woe_admins',   JSON.stringify(d)),
+    saveMesas:    d => localStorage.setItem('woe_mesas',    JSON.stringify(d)),
+    saveSessions: d => localStorage.setItem('woe_sessions', JSON.stringify(d)),
+    savePlayers:  d => localStorage.setItem('woe_players',  JSON.stringify(d)),
+    omegaPwd: () => localStorage.getItem(OMEGA_PWD_KEY) || DEFAULT_OMEGA_PWD,
+    setOmegaPwd: p => localStorage.setItem(OMEGA_PWD_KEY, p),
+};
+
+function genId(p) { return `${p}_${Date.now()}_${Math.random().toString(36).slice(2,5)}`; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(d) { if (!d) return '—'; let [y,m,dd]=d.split('-'); return `${dd}/${m}/${y}`; }
+function fmtDT(d,t) { return `${fmtDate(d)} às ${t||'??:??'}`; }
+function isAdmin() { return currentUser?.role==='omega' || currentUser?.role==='admin'; }
+function canAdminMesa(m) { return currentUser?.role==='omega' || (currentUser?.role==='admin' && m?.masterId===currentUser?.code); }
+
+// ==========================  AUTH  =============================
+function authNext() {
+    let code = document.getElementById('auth-code').value.trim().toLowerCase();
+    if (!code) return authErr('Digite um código.');
+    if (code === OMEGA_CODE) { return showPwdStep('Omega Admin'); }
+    let admins = LS.admins();
+    if (admins[code]) { return showPwdStep(admins[code].name); }
+    let players = LS.players();
+    if (players[code]) { currentUser = {code, name:players[code].name, role:'player', pwd:''}; return startApp(); }
+    authErr('Código não encontrado. Verifique com o administrador.');
+}
+
+function showPwdStep(name) {
+    document.getElementById('auth-greeting').textContent = name;
+    document.getElementById('auth-step-code').classList.add('hidden');
+    document.getElementById('auth-step-pwd').classList.remove('hidden');
+    setTimeout(()=>document.getElementById('auth-pwd').focus(), 50);
+}
+
+function authLogin() {
+    let code = document.getElementById('auth-code').value.trim().toLowerCase();
+    let pwd  = document.getElementById('auth-pwd').value;
+    if (code === OMEGA_CODE) {
+        if (pwd !== LS.omegaPwd()) return authErr('Senha incorreta.');
+        currentUser = {code:OMEGA_CODE, name:'Omega Admin', role:'omega', pwd};
+        return startApp();
+    }
+    let admins = LS.admins();
+    if (admins[code]) {
+        if (pwd !== admins[code].password) return authErr('Senha incorreta.');
+        currentUser = {code, name:admins[code].name, role:'admin', pwd};
+        return startApp();
+    }
+    authErr('Erro na autenticação.');
+}
+
+function authBack() {
+    document.getElementById('auth-step-code').classList.remove('hidden');
+    document.getElementById('auth-step-pwd').classList.add('hidden');
+    document.getElementById('auth-pwd').value = '';
+    authErr('');
+}
+
+function authErr(msg) {
+    let el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.classList.toggle('hidden', !msg);
+}
+
+function startApp() {
+    document.getElementById('screen-auth').classList.add('hidden');
+    document.getElementById('screen-app').classList.remove('hidden');
+    document.getElementById('header-user').textContent = currentUser.name;
+    navigate('mesas');
+}
+
+function logout() {
+    currentUser = null;
+    document.getElementById('screen-app').classList.add('hidden');
+    document.getElementById('screen-auth').classList.remove('hidden');
+    document.getElementById('auth-step-code').classList.remove('hidden');
+    document.getElementById('auth-step-pwd').classList.add('hidden');
+    document.getElementById('auth-code').value = '';
+    document.getElementById('auth-pwd').value = '';
+    authErr('');
+}
+
+// =========================  ROUTER  ============================
+function navigate(view, params={}) {
+    ['view-mesas','view-mesa','view-session'].forEach(v => document.getElementById(v).classList.add('hidden'));
+    let bc = document.getElementById('breadcrumb');
+    bc.innerHTML = '';
+
+    if (view === 'mesas') {
+        document.getElementById('view-mesas').classList.remove('hidden');
+        renderMesas();
+    } else if (view === 'mesa') {
+        currentMesaId = params.mesaId;
+        let m = LS.mesas()[currentMesaId];
+        bc.innerHTML = `<span class="text-slate-700">›</span><span class="truncate text-slate-400">${esc(m?.title||'')}</span>`;
+        document.getElementById('view-mesa').classList.remove('hidden');
+        renderMesa();
+    } else if (view === 'session') {
+        currentSessionId = params.sessionId;
+        if (params.mesaId) currentMesaId = params.mesaId;
+        let m = LS.mesas()[currentMesaId];
+        let s = LS.sessions()[currentSessionId];
+        bc.innerHTML = `
+            <span class="text-slate-700">›</span>
+            <button onclick="navigate('mesa',{mesaId:'${currentMesaId}'})" class="text-slate-400 hover:text-slate-200 transition-colors truncate max-w-[120px]">${esc(m?.title||'')}</button>
+            <span class="text-slate-700">›</span>
+            <span class="text-slate-300 shrink-0">Sessão ${s?.number||''}</span>`;
+        document.getElementById('view-session').classList.remove('hidden');
+        renderSession();
+    }
+}
+
+// =======================  VIEW: MESAS  =========================
+function renderMesas() {
+    let mesas = LS.mesas();
+    let isOmega = currentUser.role === 'omega';
+    let isAdm   = currentUser.role === 'admin';
+
+    document.getElementById('omega-panel').classList.toggle('hidden', !isOmega);
+    document.getElementById('btn-create-mesa').classList.toggle('hidden', !isOmega);
+    if (isOmega) renderAdminList();
+
+    let visible = Object.values(mesas).filter(m => {
+        if (isOmega) return true;
+        if (isAdm)  return m.masterId === currentUser.code;
+        return (m.playerCodes||[]).includes(currentUser.code);
+    });
+
+    let grid  = document.getElementById('mesas-grid');
+    let empty = document.getElementById('mesas-empty');
+    if (!visible.length) { grid.innerHTML=''; empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+
+    let sessions = LS.sessions();
+    grid.innerHTML = visible.map(m => {
+        let nextSess = Object.values(sessions)
+            .filter(s => s.mesaId===m.id && s.status==='upcoming')
+            .sort((a,b)=>a.number-b.number)[0];
+        let dateInfo = nextSess
+            ? (nextSess.type==='voting' ? '🗳 Votação em andamento' : nextSess.date ? fmtDT(nextSess.date, nextSess.time) : 'Data a definir')
+            : 'Sem sessões agendadas';
+        let bg = m.images?.[0] ? `style="background-image:url('${m.images[0]}');background-size:cover;background-position:center;"` : '';
+        let delBtn = isOmega ? `<button onclick="event.stopPropagation();deleteMesa('${m.id}')" class="absolute top-2 right-2 bg-red-900/60 hover:bg-red-800 text-red-300 text-[10px] px-2 py-1 rounded-lg font-bold backdrop-blur transition-colors">Excluir</button>` : '';
+        return `
+        <div onclick="navigate('mesa',{mesaId:'${m.id}'})" class="card card-hover rounded-2xl overflow-hidden relative">
+            ${delBtn}
+            <div class="h-28 bg-slate-800" ${bg}>
+                <div class="h-full bg-gradient-to-t from-slate-950/90 to-transparent flex items-end p-3">
+                    <div>
+                        <h3 class="font-black text-white text-base leading-tight">${esc(m.title)}</h3>
+                        ${m.system ? `<p class="text-[10px] text-slate-400 mt-0.5">${esc(m.system)}</p>` : ''}
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 flex justify-between items-center gap-2">
+                <div class="min-w-0">
+                    <p class="text-xs text-slate-300 font-medium truncate">${nextSess ? `Sessão ${nextSess.number}${nextSess.title?' — '+esc(nextSess.title):''}` : 'Sem próxima sessão'}</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">${dateInfo}</p>
+                </div>
+                <span class="text-xs text-slate-600 shrink-0"><span class="font-bold text-slate-400">${(m.playerCodes||[]).length}</span> jogadores</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderAdminList() {
+    let admins = LS.admins();
+    let list = document.getElementById('admin-list');
+    let arr = Object.values(admins);
+    if (!arr.length) { list.innerHTML='<p class="text-xs text-slate-500 italic">Nenhum administrador.</p>'; return; }
+    list.innerHTML = arr.map(a => `
+        <div class="flex items-center justify-between bg-slate-900/70 rounded-xl px-3 py-2.5 gap-2">
+            <div class="min-w-0">
+                <span class="text-sm text-white font-bold">${esc(a.name)}</span>
+                <span class="text-[10px] text-slate-500 font-mono ml-2">${esc(a.code)}</span>
+            </div>
+            <div class="flex gap-1.5 shrink-0">
+                <button onclick="openModalAdmin('${a.code}')" class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded-lg font-bold transition-colors">Editar</button>
+                <button onclick="deleteAdmin('${a.code}')" class="text-[10px] bg-red-900/50 hover:bg-red-800/70 text-red-300 px-2 py-1 rounded-lg font-bold transition-colors">Excluir</button>
+            </div>
+        </div>`).join('');
+}
+
+// ======================  VIEW: MESA  ===========================
+let _mesaTab = 'sessoes';
+
+function renderMesa() {
+    let m = LS.mesas()[currentMesaId];
+    if (!m) { navigate('mesas'); return; }
+    let admins = LS.admins();
+    let master = admins[m.masterId]?.name || m.masterId;
+    let ok = canAdminMesa(m);
+
+    document.getElementById('mesa-title').textContent = m.title;
+    document.getElementById('mesa-master-label').textContent = `Mestre: ${master}`;
+    document.getElementById('mesa-admin-btns').classList.toggle('hidden', !ok);
+    document.getElementById('btn-new-session').classList.toggle('hidden', !ok);
+    document.getElementById('btn-add-player').classList.toggle('hidden', !ok);
+
+    let banner = document.getElementById('mesa-banner');
+    banner.style.backgroundImage = m.images?.[0] ? `url('${m.images[0]}')` : '';
+    banner.style.backgroundSize = 'cover';
+    banner.style.backgroundPosition = 'center';
+
+    mesaTab(_mesaTab);
+}
+
+function mesaTab(tab) {
+    _mesaTab = tab;
+    ['sessoes','jogadores','info'].forEach(t => {
+        document.getElementById('mesa-tab-'+t).classList.add('hidden');
+        document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    });
+    document.getElementById('mesa-tab-'+tab).classList.remove('hidden');
+    if (tab==='sessoes')   renderSessionsList();
+    if (tab==='jogadores') renderPlayersList();
+    if (tab==='info')      renderMesaInfo();
+}
+
+function renderSessionsList() {
+    let m = LS.mesas()[currentMesaId];
+    let ok = canAdminMesa(m);
+    let sessions = Object.values(LS.sessions())
+        .filter(s => s.mesaId===currentMesaId)
+        .sort((a,b) => b.number-a.number);
+
+    let list  = document.getElementById('sessions-list');
+    let empty = document.getElementById('sessions-empty');
+    if (!sessions.length) { list.innerHTML=''; empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+
+    list.innerHTML = sessions.map(s => {
+        let statusColor = {done:'text-emerald-400', cancelled:'text-red-400', upcoming:'text-sky-400'}[s.status]||'text-slate-400';
+        let statusLabel = {done:'Concluída', cancelled:'Cancelada', upcoming:'Agendada'}[s.status]||s.status;
+        let dateInfo = s.type==='voting' ? '🗳 Votação' : (s.date ? fmtDT(s.date,s.time) : 'Data a definir');
+        let myC = s.confirmations?.[currentUser.code];
+        let badge = currentUser.role==='player'
+            ? (myC?.playerConfirmed ? '<span class="text-[10px] bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded-full font-bold">✅ Confirmado</span>' : '<span class="text-[10px] bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full">Pendente</span>')
+            : '';
+        let adminBtns = ok && s.status==='upcoming' ? `
+            <div class="flex flex-col gap-1 shrink-0" onclick="event.stopPropagation()">
+                <button onclick="openModalAttendance('${s.id}')" class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded-lg font-bold transition-colors whitespace-nowrap">✅ Presença</button>
+                <button onclick="openModalRecap('${s.id}')" class="text-[10px] bg-emerald-900/50 hover:bg-emerald-800/70 text-emerald-300 px-2 py-1 rounded-lg font-bold transition-colors whitespace-nowrap">🏁 Encerrar</button>
+            </div>` : '';
+        return `
+        <div onclick="navigate('session',{sessionId:'${s.id}',mesaId:'${s.mesaId}'})" class="card card-hover rounded-2xl p-4 flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                    <span class="text-xs font-black text-slate-500">Sess. ${s.number}</span>
+                    <span class="text-xs font-bold ${statusColor}">${statusLabel}</span>
+                    ${badge}
+                </div>
+                ${s.title ? `<p class="font-bold text-white text-sm leading-snug mb-1">${esc(s.title)}</p>` : ''}
+                <p class="text-xs text-slate-400">${dateInfo}</p>
+                ${s.reward ? `<p class="text-xs text-amber-400 mt-1">🏆 ${esc(s.reward)}</p>` : ''}
+            </div>
+            ${adminBtns}
+        </div>`;
+    }).join('');
+}
+
+function renderPlayersList() {
+    let m = LS.mesas()[currentMesaId];
+    let players = LS.players();
+    let ok = canAdminMesa(m);
+    let list  = document.getElementById('players-list');
+    let empty = document.getElementById('players-empty');
+    if (!(m?.playerCodes||[]).length) { list.innerHTML=''; empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+
+    list.innerHTML = m.playerCodes.map(code => {
+        let p = players[code]||{name:code};
+        let {misses,strikes} = getStrikeInfo(code, currentMesaId);
+        let threshold = m.strikeThreshold||3;
+        let strikeHtml = Array.from({length:strikes},()=>'<span class="strike-dot bg-red-500"></span>').join('');
+        let missHtml = Array.from({length:misses%(threshold)},()=>'<span class="strike-dot bg-orange-700/70"></span>').join('');
+        return `
+        <div class="card rounded-xl p-3 flex items-center justify-between gap-3">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-sm text-white">${esc(p.name)}</span>
+                    <span class="text-[10px] text-slate-600 font-mono">${esc(code)}</span>
+                </div>
+                <div class="flex items-center gap-0.5 mt-1.5">${strikeHtml}${missHtml}</div>
+                ${strikes ? `<p class="text-xs text-red-400 font-bold mt-0.5">${strikes} strike${strikes>1?'s':''}</p>` : ''}
+            </div>
+            ${ok ? `<button onclick="removePlayer('${code}')" class="text-[10px] text-red-400 hover:text-red-300 font-bold transition-colors shrink-0">Remover</button>` : ''}
+        </div>`;
+    }).join('');
+}
+
+function renderMesaInfo() {
+    let m = LS.mesas()[currentMesaId];
+    document.getElementById('info-system').textContent = m.system||'—';
+    document.getElementById('info-desc').textContent = m.desc||'—';
+    document.getElementById('info-strike').textContent = `${m.strikeThreshold||3} falta(s) = 1 strike`;
+    let imgs = document.getElementById('info-images');
+    let wrap = document.getElementById('info-images-wrap');
+    if (m.images?.length) {
+        imgs.innerHTML = m.images.map(u=>`<img src="${u}" class="w-24 h-24 object-cover rounded-xl border border-slate-700" onerror="this.style.display='none'">`).join('');
+        wrap.classList.remove('hidden');
+    } else { wrap.classList.add('hidden'); }
+}
+
+function getStrikeInfo(playerCode, mesaId) {
+    let m = LS.mesas()[mesaId];
+    let threshold = m?.strikeThreshold||3;
+    let sessions = Object.values(LS.sessions()).filter(s=>s.mesaId===mesaId && s.status==='done');
+    let misses = sessions.filter(s=>s.confirmations?.[playerCode]?.adminCheck==='missed').length;
+    return { misses, strikes: Math.floor(misses/threshold) };
+}
+
+// ====================  VIEW: SESSION  ==========================
+function renderSession() {
+    let s = LS.sessions()[currentSessionId];
+    let m = LS.mesas()[currentMesaId||s?.mesaId];
+    if (!s||!m) { navigate('mesa',{mesaId:currentMesaId}); return; }
+    let ok = canAdminMesa(m);
+    let players = LS.players();
+
+    // Previous recap
+    let prevRecap = Object.values(LS.sessions())
+        .filter(ss=>ss.mesaId===s.mesaId && ss.status==='done' && ss.number < s.number)
+        .sort((a,b)=>b.number-a.number)[0];
+
+    // Schedule block
+    let schedHtml = '';
+    if (s.type==='fixed') {
+        schedHtml = `<div class="flex items-center gap-3">
+            <span class="text-2xl">📅</span>
+            <div><p class="font-bold text-white">${s.date ? fmtDT(s.date,s.time) : 'Data a definir'}</p>
+            <p class="text-xs text-slate-500">Data Fixa</p></div></div>`;
+    } else {
+        let counts = {};
+        Object.values(s.votes||{}).forEach(v=>{ let k=`${v.date}|${v.time}`; counts[k]=(counts[k]||0)+1; });
+        let optsHtml = (s.votingDays||[]).map(day=>
+            day.times.map(t=>{
+                let k=`${day.date}|${t}`, n=counts[k]||0;
+                return `<div class="flex items-center justify-between bg-slate-900/70 rounded-xl px-3 py-2 text-xs">
+                    <span class="text-slate-300">${fmtDate(day.date)} às ${t}</span>
+                    <span class="font-bold ${n?'text-emerald-400':'text-slate-600'}">${n} voto${n!==1?'s':''}</span></div>`;
+            }).join('')
+        ).join('');
+        let voteLink = `${location.href.split('#')[0]}#vote/${s.id}`;
+        schedHtml = `<div>
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-xl">🗳</span>
+                <div><p class="font-bold text-white">Votação</p>
+                <p class="text-xs text-slate-500">${Object.keys(s.votes||{}).length} voto(s)</p></div>
+            </div>
+            <div class="space-y-1 mb-3">${optsHtml}</div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="copyLink('${esc(voteLink)}')" class="text-xs bg-sky-900/50 hover:bg-sky-800/70 text-sky-300 px-3 py-1.5 rounded-xl font-bold transition-colors">🔗 Copiar Link</button>
+                ${ok?`<button onclick="openModalFixDate('${s.id}')" class="text-xs bg-amber-900/50 hover:bg-amber-800/70 text-amber-300 px-3 py-1.5 rounded-xl font-bold transition-colors">📌 Definir Data</button>`:''}
+            </div></div>`;
+    }
+
+    // Player confirm
+    let myC = s.confirmations?.[currentUser.code];
+    let confirmBtn = (currentUser.role==='player' && s.status==='upcoming')
+        ? (myC?.playerConfirmed
+            ? `<div class="flex items-center gap-2 text-emerald-400 text-sm font-bold"><span>✅</span>Presença Confirmada</div>`
+            : `<button onclick="playerConfirm('${s.id}')" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm transition-colors">✅ Confirmar Presença</button>`)
+        : '';
+
+    // Confirmations table
+    let confTable = m.playerCodes.map(code=>{
+        let p = players[code]||{name:code};
+        let c = s.confirmations?.[code]||{};
+        let pc = c.playerConfirmed ? '✅' : '⬜';
+        let ac = c.adminCheck==='attended'
+            ? '<span class="text-emerald-400 text-xs font-bold">Compareceu</span>'
+            : c.adminCheck==='missed'
+            ? `<span class="text-red-400 text-xs font-bold">Faltou${c.strike?' ⚡':''}</span>`
+            : '<span class="text-slate-600 text-xs">—</span>';
+        return `<div class="flex items-center gap-3 text-sm">
+            <span class="flex-1 text-slate-300 truncate">${esc(p.name)}</span>
+            <span>${pc}</span>${ac}</div>`;
+    }).join('');
+
+    let statusColor = {done:'text-emerald-400',cancelled:'text-red-400',upcoming:'text-sky-400'}[s.status];
+    let statusLabel = {done:'Concluída',cancelled:'Cancelada',upcoming:'Agendada'}[s.status];
+
+    document.getElementById('session-content').innerHTML = `
+    <div class="space-y-4">
+        <div class="card rounded-2xl p-5">
+            <div class="flex items-start justify-between gap-3 mb-4">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-xs text-slate-500 font-bold">Sessão ${s.number}</span>
+                        <span class="text-xs font-bold ${statusColor}">${statusLabel}</span>
+                    </div>
+                    <h2 class="text-xl font-black text-white">${s.title ? esc(s.title) : `Sessão ${s.number}`}</h2>
+                </div>
+                ${ok && s.status==='upcoming' ? `<div class="flex flex-wrap gap-1.5 shrink-0">
+                    <button onclick="openModalSession('${s.id}')" class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1.5 rounded-lg font-bold transition-colors">✏ Editar</button>
+                    <button onclick="openModalAttendance('${s.id}')" class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1.5 rounded-lg font-bold transition-colors">✅ Presença</button>
+                    <button onclick="openModalRecap('${s.id}')" class="text-[10px] bg-emerald-900/50 text-emerald-300 hover:bg-emerald-800 px-2 py-1.5 rounded-lg font-bold transition-colors">🏁 Encerrar</button>
+                </div>` : ''}
+            </div>
+            ${schedHtml}
+            ${s.reward ? `<div class="mt-3 text-sm text-amber-400 flex items-center gap-2"><span>🏆</span>${esc(s.reward)}</div>` : ''}
+        </div>
+
+        ${confirmBtn ? `<div class="card rounded-2xl p-4">${confirmBtn}</div>` : ''}
+
+        ${s.keyPoints ? `<div class="card rounded-2xl p-4">
+            <p class="text-[10px] text-slate-500 uppercase font-bold mb-2">📋 Pontos Importantes</p>
+            <p class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">${esc(s.keyPoints)}</p>
+        </div>` : ''}
+
+        ${prevRecap ? `<div class="card rounded-2xl p-4 border-l-2 border-amber-500">
+            <p class="text-[10px] text-amber-400 uppercase font-bold mb-2">📜 Recap — Sessão ${prevRecap.number}</p>
+            <p class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">${esc(prevRecap.recap)}</p>
+        </div>` : ''}
+
+        ${s.status==='done' && s.recap ? `<div class="card rounded-2xl p-4 border-l-2 border-emerald-500">
+            <p class="text-[10px] text-emerald-400 uppercase font-bold mb-2">📖 Recap desta Sessão</p>
+            <p class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">${esc(s.recap)}</p>
+        </div>` : ''}
+
+        ${m.playerCodes.length ? `<div class="card rounded-2xl p-4">
+            <p class="text-[10px] text-slate-500 uppercase font-bold mb-3">Confirmações</p>
+            <div class="space-y-2">${confTable}</div>
+        </div>` : ''}
+    </div>`;
+}
+
+// ====================  VIEW: VOTING  ===========================
+function renderVotingScreen(sessionId) {
+    let s = LS.sessions()[sessionId];
+    if (!s || s.type !== 'voting') {
+        document.getElementById('vote-msg').textContent = 'Sessão de votação não encontrada.';
+        document.getElementById('vote-submit-btn').disabled = true;
+        return;
+    }
+    let m = LS.mesas()[s.mesaId];
+    document.getElementById('vote-session-title').textContent =
+        `${m?.title||''} — Sessão ${s.number}${s.title?' — '+s.title:''}`;
+
+    let html = (s.votingDays||[]).map(day => `
+        <div class="mb-3">
+            <p class="text-[10px] text-slate-500 font-bold uppercase mb-2">${fmtDate(day.date)}</p>
+            <div class="space-y-2">
+            ${day.times.map(t=>`
+                <label class="vote-option flex items-center gap-3 bg-slate-900/80 border border-slate-700 rounded-2xl px-4 py-3 cursor-pointer hover:border-sky-500 transition-colors">
+                    <input type="radio" name="vote-pick" value="${day.date}|${t}" class="accent-sky-500 shrink-0">
+                    <span class="text-sm text-slate-200">${t}</span>
+                </label>`).join('')}
+            </div>
+        </div>`).join('');
+    document.getElementById('vote-options').innerHTML = html;
+
+    document.querySelectorAll('input[name="vote-pick"]').forEach(r => {
+        r.addEventListener('change', () => {
+            document.querySelectorAll('.vote-option').forEach(el=>el.classList.remove('selected'));
+            r.closest('.vote-option').classList.add('selected');
+        });
+    });
+}
+
+function submitVote() {
+    let code = document.getElementById('vote-player-code').value.trim().toLowerCase();
+    let picked = document.querySelector('input[name="vote-pick"]:checked');
+    let sessId = location.hash.replace('#vote/','');
+    let msg = document.getElementById('vote-msg');
+    if (!code) { msg.textContent = 'Digite seu código.'; msg.className='text-xs text-center text-red-400 mb-3'; return; }
+    if (!picked) { msg.textContent = 'Selecione uma opção.'; msg.className='text-xs text-center text-red-400 mb-3'; return; }
+    let sessions = LS.sessions();
+    let s = sessions[sessId];
+    if (!s) { msg.textContent = 'Sessão não encontrada.'; return; }
+    let m = LS.mesas()[s.mesaId];
+    if (!m?.playerCodes.includes(code)) { msg.textContent = 'Código não pertence a esta mesa.'; msg.className='text-xs text-center text-red-400 mb-3'; return; }
+    let [date,time] = picked.value.split('|');
+    s.votes = s.votes||{};
+    s.votes[code] = {date, time};
+    sessions[sessId] = s;
+    LS.saveSessions(sessions);
+    apiFetch('/agenda/vote', 'POST', {sessionId: sessId, playerCode: code, date, time});
+    let pname = LS.players()[code]?.name||code;
+    msg.textContent = `✅ Voto de ${pname} registrado!`;
+    msg.className = 'text-xs text-center text-emerald-400 mb-3';
+    document.getElementById('vote-submit-btn').disabled = true;
+}
+
+function copyLink(url) {
+    navigator.clipboard.writeText(url).then(()=>alert('Link copiado!')).catch(()=>prompt('Copie:', url));
+}
+
+// ====================  ADMIN: MESA CRUD  =======================
+function openModalMesa(id=null) {
+    _editMesaId = id;
+    document.getElementById('modal-mesa-title').textContent = id ? 'Editar Mesa' : 'Nova Mesa';
+    let admins = LS.admins();
+    let sel = document.getElementById('mf-master');
+    sel.innerHTML = '<option value="">— Selecione —</option>' +
+        Object.values(admins).map(a=>`<option value="${a.code}">${esc(a.name)}</option>`).join('');
+    if (id) {
+        let m = LS.mesas()[id];
+        document.getElementById('mf-title').value = m.title||'';
+        document.getElementById('mf-system').value = m.system||'';
+        document.getElementById('mf-desc').value = m.desc||'';
+        document.getElementById('mf-master').value = m.masterId||'';
+        document.getElementById('mf-strike').value = m.strikeThreshold||3;
+        document.getElementById('mf-images').value = (m.images||[]).join('\n');
+    } else {
+        ['mf-title','mf-system','mf-desc','mf-images'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('mf-strike').value = 3;
+        sel.value = '';
+    }
+    document.getElementById('modal-mesa').classList.remove('hidden');
+}
+
+function saveMesa() {
+    let title = document.getElementById('mf-title').value.trim();
+    let master = document.getElementById('mf-master').value;
+    if (!title) { alert('Preencha o título.'); return; }
+    if (!master) { alert('Selecione um mestre.'); return; }
+    let mesas = LS.mesas();
+    let id = _editMesaId||genId('mesa');
+    let ex = mesas[id]||{};
+    mesas[id] = { ...ex, id, title,
+        system: document.getElementById('mf-system').value.trim(),
+        desc: document.getElementById('mf-desc').value.trim(),
+        masterId: master,
+        strikeThreshold: parseInt(document.getElementById('mf-strike').value)||3,
+        images: document.getElementById('mf-images').value.split('\n').map(s=>s.trim()).filter(Boolean),
+        playerCodes: ex.playerCodes||[],
+        sessionCount: ex.sessionCount||0,
+        createdAt: ex.createdAt||new Date().toISOString(),
+    };
+    LS.saveMesas(mesas);
+    apiFetch('/agenda/mesa', 'POST', mesas[id]);
+    let admins = LS.admins();
+    if (admins[master]) {
+        admins[master].mesaIds = admins[master].mesaIds||[];
+        if (!admins[master].mesaIds.includes(id)) admins[master].mesaIds.push(id);
+        LS.saveAdmins(admins);
+    }
+    closeModal('modal-mesa');
+    if (_editMesaId) renderMesa(); else renderMesas();
+}
+
+function deleteMesa(id) {
+    if (!confirm('Excluir esta mesa e todas as suas sessões?')) return;
+    let mesas = LS.mesas(); delete mesas[id]; LS.saveMesas(mesas);
+    let s = LS.sessions();
+    Object.keys(s).forEach(k=>{ if(s[k].mesaId===id) delete s[k]; });
+    LS.saveSessions(s);
+    apiFetch('/agenda/mesa/' + id, 'DELETE');
+    renderMesas();
+}
+
+// ====================  ADMIN: ADMIN CRUD  ======================
+function openModalAdmin(code=null) {
+    _editAdminCode = code;
+    document.getElementById('modal-admin-title').textContent = code ? 'Editar Admin' : 'Novo Administrador';
+    let idInput = document.getElementById('af-code');
+    if (code) {
+        let a = LS.admins()[code];
+        idInput.value=a.code; idInput.readOnly=true;
+        document.getElementById('af-name').value=a.name;
+        document.getElementById('af-pwd').value=a.password;
+    } else {
+        idInput.value=''; idInput.readOnly=false;
+        document.getElementById('af-name').value='';
+        document.getElementById('af-pwd').value='';
+    }
+    document.getElementById('modal-admin').classList.remove('hidden');
+}
+
+function saveAdmin() {
+    let code=document.getElementById('af-code').value.trim().toLowerCase();
+    let name=document.getElementById('af-name').value.trim();
+    let pwd=document.getElementById('af-pwd').value;
+    if (!code||!name||!pwd) { alert('Preencha todos os campos.'); return; }
+    if (code===OMEGA_CODE) { alert('Código reservado.'); return; }
+    let admins=LS.admins();
+    admins[code]={...admins[code], code, name, password:pwd, mesaIds:admins[code]?.mesaIds||[]};
+    LS.saveAdmins(admins);
+    apiFetch('/agenda/admin', 'POST', admins[code]);
+    closeModal('modal-admin');
+    renderAdminList();
+}
+
+function deleteAdmin(code) {
+    if (!confirm(`Excluir admin "${code}"?`)) return;
+    let admins=LS.admins(); delete admins[code]; LS.saveAdmins(admins);
+    apiFetch('/agenda/admin/' + code, 'DELETE');
+    renderAdminList();
+}
+
+function changeOmegaPwd() {
+    let p = prompt('Nova senha Omega:');
+    if (!p) return;
+    LS.setOmegaPwd(p);
+    if (currentUser) currentUser.pwd = p;
+    apiFetch('/agenda/omega-pwd', 'POST', {password: p});
+    alert('Senha alterada.');
+}
+
+// ====================  ADMIN: PLAYERS  =========================
+function openModalPlayer() {
+    document.getElementById('pf-code').value='';
+    document.getElementById('pf-name').value='';
+    document.getElementById('modal-player').classList.remove('hidden');
+}
+
+function savePlayer() {
+    let code=document.getElementById('pf-code').value.trim().toLowerCase();
+    let name=document.getElementById('pf-name').value.trim();
+    if (!code||!name) { alert('Preencha código e nome.'); return; }
+    let players=LS.players(); players[code]={code,name}; LS.savePlayers(players);
+    apiFetch('/agenda/player', 'POST', players[code]);
+    let mesas=LS.mesas(); let m=mesas[currentMesaId];
+    if (m&&!m.playerCodes.includes(code)) { m.playerCodes.push(code); LS.saveMesas(mesas); apiFetch('/agenda/mesa', 'POST', m); }
+    closeModal('modal-player');
+    renderPlayersList();
+}
+
+function removePlayer(code) {
+    if (!confirm(`Remover "${code}" desta mesa?`)) return;
+    let mesas=LS.mesas(); let m=mesas[currentMesaId];
+    if (m) { m.playerCodes=m.playerCodes.filter(c=>c!==code); LS.saveMesas(mesas); apiFetch('/agenda/mesa', 'POST', m); }
+    renderPlayersList();
+}
+
+// ====================  ADMIN: SESSIONS  ========================
+let _vdayCount = 0;
+
+function openModalSession(id=null) {
+    _editSessionId = id;
+    _vdayCount = 0;
+    _vdayIdx = 0;
+    document.getElementById('modal-session-title').textContent = id ? 'Editar Sessão' : 'Nova Sessão';
+    document.getElementById('voting-days-wrap').innerHTML = '';
+    document.getElementById('btn-add-vday').style.display = '';
+    if (id) {
+        let s=LS.sessions()[id];
+        document.getElementById('sf-title').value=s.title||'';
+        document.querySelector(`input[name="sf-type"][value="${s.type||'fixed'}"]`).checked=true;
+        document.getElementById('sf-date').value=s.date||'';
+        document.getElementById('sf-time').value=s.time||'';
+        document.getElementById('sf-keypoints').value=s.keyPoints||'';
+        document.getElementById('sf-reward').value=s.reward||'';
+        if (s.type==='voting') (s.votingDays||[]).forEach(d=>addVDay(d.date, d.times));
+    } else {
+        ['sf-title','sf-date','sf-time','sf-keypoints','sf-reward'].forEach(id=>document.getElementById(id).value='');
+        document.querySelector('input[name="sf-type"][value="fixed"]').checked=true;
+    }
+    toggleSessType();
+    document.getElementById('modal-session').classList.remove('hidden');
+}
+
+function toggleSessType() {
+    let v = document.querySelector('input[name="sf-type"]:checked')?.value==='voting';
+    document.getElementById('sf-fixed').classList.toggle('hidden',v);
+    document.getElementById('sf-voting').classList.toggle('hidden',!v);
+}
+
+function addVDay(date='', times=[]) {
+    let wrap = document.getElementById('voting-days-wrap');
+    if (wrap.children.length>=3) { alert('Máximo 3 datas.'); return; }
+    let idx = _vdayIdx++;
+    _vdayCount++;
+    let timesHtml = times.map(t=>timeChip(t)).join('');
+    let div = document.createElement('div');
+    div.className='bg-slate-900/70 border border-slate-700 rounded-2xl p-3 space-y-2';
+    div.dataset.dayIdx=idx;
+    div.innerHTML=`
+        <div class="flex items-center gap-2">
+            <input type="date" value="${date}" class="vday-date flex-1 inp text-xs py-1.5">
+            <button type="button" onclick="this.closest('[data-day-idx]').remove();updateVDayBtn()" class="text-slate-500 hover:text-red-400 transition-colors text-lg px-1">✕</button>
+        </div>
+        <div class="vday-times flex flex-wrap gap-1.5">${timesHtml}</div>
+        <button type="button" onclick="addVTime(${idx})" class="text-xs text-sky-400 hover:text-sky-300 font-bold transition-colors">+ Horário</button>`;
+    wrap.appendChild(div);
+    updateVDayBtn();
+}
+
+function timeChip(t='') {
+    return `<div class="flex items-center gap-1 bg-slate-800 border border-slate-600 rounded-xl px-2 py-1">
+        <input type="time" value="${t}" class="bg-transparent text-xs text-white outline-none w-20">
+        <button type="button" onclick="this.parentElement.remove()" class="text-slate-600 hover:text-red-400 text-xs transition-colors">✕</button></div>`;
+}
+
+function addVTime(idx) {
+    let wrap = document.querySelector(`[data-day-idx="${idx}"] .vday-times`);
+    if (!wrap) return;
+    if (wrap.children.length>=4) { alert('Máximo 4 horários.'); return; }
+    wrap.insertAdjacentHTML('beforeend', timeChip());
+}
+
+function updateVDayBtn() {
+    let wrap = document.getElementById('voting-days-wrap');
+    document.getElementById('btn-add-vday').style.display = wrap.children.length>=3 ? 'none' : '';
+}
+
+function getVDays() {
+    let days=[];
+    document.querySelectorAll('#voting-days-wrap [data-day-idx]').forEach(el=>{
+        let date=el.querySelector('.vday-date')?.value;
+        let times=Array.from(el.querySelectorAll('.vday-times input[type="time"]')).map(i=>i.value).filter(Boolean);
+        if (date&&times.length) days.push({date,times});
+    });
+    return days;
+}
+
+function saveSession() {
+    let type = document.querySelector('input[name="sf-type"]:checked')?.value||'fixed';
+    let mesas=LS.mesas(); let m=mesas[currentMesaId]; if (!m) return;
+    let sessions=LS.sessions();
+    let id=_editSessionId||genId('sess');
+    let ex=sessions[id]||{};
+    if (!ex.number) { m.sessionCount=(m.sessionCount||0)+1; LS.saveMesas(mesas); }
+    sessions[id]={...ex, id, mesaId:currentMesaId,
+        number: ex.number||m.sessionCount,
+        title: document.getElementById('sf-title').value.trim(),
+        type,
+        date: type==='fixed' ? document.getElementById('sf-date').value : null,
+        time: type==='fixed' ? document.getElementById('sf-time').value : null,
+        votingDays: type==='voting' ? getVDays() : [],
+        votes: ex.votes||{},
+        keyPoints: document.getElementById('sf-keypoints').value.trim(),
+        reward: document.getElementById('sf-reward').value.trim(),
+        status: ex.status||'upcoming',
+        confirmations: ex.confirmations||{},
+        recap: ex.recap||'',
+        createdAt: ex.createdAt||new Date().toISOString(),
+    };
+    LS.saveSessions(sessions);
+    apiFetch('/agenda/session', 'POST', sessions[id]);
+    if (!_editSessionId) apiFetch('/agenda/mesa', 'POST', mesas[currentMesaId]);
+    closeModal('modal-session');
+    if (_editSessionId) renderSession(); else renderSessionsList();
+}
+
+// ====================  ADMIN: ATTENDANCE  ======================
+function openModalAttendance(sessId) {
+    _attendSessId = sessId;
+    let s=LS.sessions()[sessId];
+    let m=LS.mesas()[s.mesaId];
+    let players=LS.players();
+    document.getElementById('modal-att-label').textContent=`Sessão ${s.number}${s.title?' — '+s.title:''}`;
+    document.getElementById('att-list').innerHTML=(m?.playerCodes||[]).map(code=>{
+        let p=players[code]||{name:code};
+        let c=s.confirmations?.[code]||{};
+        let pc=c.playerConfirmed?'✅':'⬜';
+        let av=c.adminCheck||'';
+        return `<div class="flex items-center gap-3 bg-slate-900/60 rounded-xl px-3 py-2.5">
+            <span class="text-base shrink-0">${pc}</span>
+            <span class="flex-1 text-sm text-slate-200 truncate">${esc(p.name)}</span>
+            <select onchange="setAttendance('${sessId}','${code}',this.value)"
+                class="bg-slate-800 border border-slate-600 rounded-xl px-2 py-1 text-xs text-white outline-none focus:border-amber-500">
+                <option value="" ${!av?'selected':''}>— Pendente</option>
+                <option value="attended" ${av==='attended'?'selected':''}>✅ Compareceu</option>
+                <option value="missed" ${av==='missed'?'selected':''}>❌ Faltou</option>
+            </select></div>`;
+    }).join('');
+    document.getElementById('modal-attendance').classList.remove('hidden');
+}
+
+function setAttendance(sessId, code, val) {
+    let sessions=LS.sessions(); let s=sessions[sessId];
+    let m=LS.mesas()[s.mesaId];
+    if (!s.confirmations) s.confirmations={};
+    if (!s.confirmations[code]) s.confirmations[code]={};
+    s.confirmations[code].adminCheck = val||null;
+    sessions[sessId]=s; LS.saveSessions(sessions);
+    // Recompute strike flag
+    if (val==='missed') {
+        let {misses}=getStrikeInfo(code,s.mesaId);
+        let threshold=m?.strikeThreshold||3;
+        s.confirmations[code].strike = misses>0 && misses%(threshold)===0;
+        sessions[sessId]=s; LS.saveSessions(sessions);
+    } else {
+        s.confirmations[code].strike=false;
+        sessions[sessId]=s; LS.saveSessions(sessions);
+    }
+    apiFetch('/agenda/session', 'POST', sessions[sessId]);
+}
+
+// ====================  ADMIN: RECAP  ===========================
+function openModalRecap(sessId) {
+    _recapSessId=sessId;
+    let s=LS.sessions()[sessId];
+    document.getElementById('recap-text').value=s.recap||'';
+    document.getElementById('modal-recap').classList.remove('hidden');
+}
+
+function saveRecap() {
+    let text=document.getElementById('recap-text').value.trim();
+    let sessions=LS.sessions(); let s=sessions[_recapSessId];
+    s.recap=text; s.status='done';
+    LS.saveSessions(sessions);
+    apiFetch('/agenda/session', 'POST', sessions[_recapSessId]);
+    closeModal('modal-recap');
+    navigate('mesa',{mesaId:s.mesaId});
+}
+
+// ====================  ADMIN: FIX DATE  ========================
+function openModalFixDate(sessId) {
+    _fixDateSessId=sessId;
+    let s=LS.sessions()[sessId];
+    document.getElementById('fd-date').value=s.date||'';
+    document.getElementById('fd-time').value=s.time||'';
+    document.getElementById('modal-fixdate').classList.remove('hidden');
+}
+
+function saveFixDate() {
+    let date=document.getElementById('fd-date').value;
+    let time=document.getElementById('fd-time').value;
+    if (!date||!time) { alert('Preencha data e horário.'); return; }
+    let sessions=LS.sessions(); let s=sessions[_fixDateSessId];
+    s.type='fixed'; s.date=date; s.time=time;
+    LS.saveSessions(sessions);
+    apiFetch('/agenda/session', 'POST', sessions[_fixDateSessId]);
+    closeModal('modal-fixdate');
+    renderSession();
+}
+
+// ====================  PLAYER ACTIONS  =========================
+function playerConfirm(sessId) {
+    if (!confirm('Confirmar presença nesta sessão?')) return;
+    let sessions=LS.sessions(); let s=sessions[sessId];
+    if (!s.confirmations) s.confirmations={};
+    if (!s.confirmations[currentUser.code]) s.confirmations[currentUser.code]={};
+    s.confirmations[currentUser.code].playerConfirmed=true;
+    LS.saveSessions(sessions);
+    apiFetch('/agenda/session', 'POST', sessions[sessId]);
+    renderSession();
+}
+
+// ==========================  UTIL  =============================
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ==========================  INIT  =============================
+async function init() {
+    let hash = location.hash;
+    if (hash.startsWith('#vote/')) {
+        let sessId = hash.replace('#vote/','');
+        document.getElementById('screen-vote').classList.remove('hidden');
+        // Load session + mesa from API for voting (no auth needed)
+        let apiData = await apiFetch('/agenda/session/' + sessId);
+        if (apiData) {
+            let sessions = LS.sessions();
+            sessions[sessId] = apiData.session;
+            LS.saveSessions(sessions);
+            if (apiData.mesa?.id) {
+                let mesas = LS.mesas();
+                mesas[apiData.mesa.id] = apiData.mesa;
+                LS.saveMesas(mesas);
+            }
+        }
+        renderVotingScreen(sessId);
+        return;
+    }
+    // Pre-load all data into localStorage before showing auth screen
+    await preloadData();
+    document.getElementById('screen-auth').classList.remove('hidden');
+}
+
+init();
+</script>
+</body>
+</html>
