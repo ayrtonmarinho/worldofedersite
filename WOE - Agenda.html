@@ -341,6 +341,19 @@
     </div>
 </div>
 
+<!-- Modal Player Confirm -->
+<div id="modal-player-confirm" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
+    <div class="glass rounded-2xl p-6 w-full max-w-sm text-center">
+        <div class="text-4xl mb-3">📋</div>
+        <h2 class="text-lg font-black text-white mb-1">Confirmar Presença</h2>
+        <p id="modal-confirm-label" class="text-sm text-slate-400 mb-6"></p>
+        <div class="flex gap-2">
+            <button onclick="closeModal('modal-player-confirm')" class="btn-cancel flex-1">Cancelar</button>
+            <button onclick="confirmPlayerPresence()" class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white py-2 rounded-xl font-bold text-sm transition-colors">✅ Confirmar</button>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Recap -->
 <div id="modal-recap" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-bg">
     <div class="glass rounded-2xl p-6 w-full max-w-lg">
@@ -698,7 +711,7 @@ function renderSessionsList() {
         let myC = s.confirmations?.[currentUser.code];
         let badge = '';
         if (currentUser.role === 'player' && s.status === 'upcoming') {
-            if (s.type === 'voting') {
+            if (s.type === 'voting' && !s.votingClosed) {
                 let voted = s.votes?.[currentUser.code];
                 badge = voted
                     ? '<span class="text-[10px] bg-emerald-900/50 text-emerald-400 px-2 py-0.5 rounded-full font-bold">🗳 Votado</span>'
@@ -835,17 +848,25 @@ function renderSession() {
             </div>`;
         }
 
+        let votingClosedBadge = s.votingClosed
+            ? `<span class="text-[10px] bg-red-900/40 text-red-400 px-2 py-0.5 rounded-full font-bold">🔒 Encerrada</span>`
+            : `<span class="text-[10px] bg-sky-900/40 text-sky-400 px-2 py-0.5 rounded-full font-bold">Em andamento</span>`;
+
         schedHtml = `<div>
             <div class="flex items-center gap-2 mb-3">
                 <span class="text-xl">🗳</span>
-                <div><p class="font-bold text-white">Votação</p>
-                <p class="text-xs text-slate-500">${Object.keys(s.votes||{}).length} de ${m.playerCodes.length} voto(s)</p></div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <div><p class="font-bold text-white">Votação</p>
+                    <p class="text-xs text-slate-500">${Object.keys(s.votes||{}).length} de ${m.playerCodes.length} voto(s)</p></div>
+                    ${votingClosedBadge}
+                </div>
             </div>
             <div class="space-y-1 mb-2">${optsHtml}</div>
             ${playerVoteBreakdown}
             <div class="flex flex-wrap gap-2 mt-3">
-                <button onclick="copyLink('${esc(voteLink)}')" class="text-xs bg-sky-900/50 hover:bg-sky-800/70 text-sky-300 px-3 py-1.5 rounded-xl font-bold transition-colors">🔗 Copiar Link</button>
-                ${ok?`<button onclick="openModalFixDate('${s.id}')" class="text-xs bg-amber-900/50 hover:bg-amber-800/70 text-amber-300 px-3 py-1.5 rounded-xl font-bold transition-colors">📌 Definir Data</button>`:''}
+                ${!s.votingClosed ? `<button onclick="copyLink('${esc(voteLink)}')" class="text-xs bg-sky-900/50 hover:bg-sky-800/70 text-sky-300 px-3 py-1.5 rounded-xl font-bold transition-colors">🔗 Copiar Link</button>` : ''}
+                ${ok && !s.votingClosed ? `<button onclick="closeVoting('${s.id}')" class="text-xs bg-red-900/50 hover:bg-red-800/70 text-red-300 px-3 py-1.5 rounded-xl font-bold transition-colors">🔒 Encerrar Votação</button>` : ''}
+                ${ok ? `<button onclick="openModalFixDate('${s.id}')" class="text-xs bg-amber-900/50 hover:bg-amber-800/70 text-amber-300 px-3 py-1.5 rounded-xl font-bold transition-colors">📌 Definir Data</button>` : ''}
             </div></div>`;
     }
 
@@ -855,8 +876,8 @@ function renderSession() {
     let playerVoteHtml = '';
 
     if (currentUser.role === 'player' && s.status === 'upcoming') {
-        // Voting session — show inline vote UI
-        if (s.type === 'voting') {
+        if (s.type === 'voting' && !s.votingClosed) {
+            // Voting open — show inline vote UI
             let myVote = s.votes?.[currentUser.code];
             if (myVote) {
                 playerVoteHtml = `<div class="card rounded-2xl p-4 border-l-2 border-emerald-500">
@@ -882,11 +903,12 @@ function renderSession() {
                     <p id="inline-vote-msg" class="text-xs text-center text-slate-500 mt-2 min-h-[1rem]"></p>
                 </div>`;
             }
+        } else {
+            // Fixed session OR voting closed — show attendance confirmation
+            confirmBtn = myC?.playerConfirmed
+                ? `<div class="flex items-center gap-2 text-emerald-400 text-sm font-bold"><span>✅</span>Presença Confirmada</div>`
+                : `<button onclick="openModalPlayerConfirm('${s.id}')" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm transition-colors">✅ Confirmar Presença</button>`;
         }
-        // Attendance confirmation
-        confirmBtn = myC?.playerConfirmed
-            ? `<div class="flex items-center gap-2 text-emerald-400 text-sm font-bold"><span>✅</span>Presença Confirmada</div>`
-            : `<button onclick="playerConfirm('${s.id}')" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-sm transition-colors">✅ Confirmar Presença</button>`;
     }
 
     // Confirmations table
@@ -1300,6 +1322,7 @@ function saveSession() {
         time: type==='fixed' ? document.getElementById('sf-time').value : null,
         votingDays: type==='voting' ? getVDays() : [],
         votes: ex.votes||{},
+        votingClosed: ex.votingClosed||false,
         keyPoints: document.getElementById('sf-keypoints').value.trim(),
         reward: document.getElementById('sf-reward').value.trim(),
         voteMessage: document.getElementById('sf-votemsg').value.trim(),
@@ -1400,6 +1423,18 @@ function saveFixDate() {
 }
 
 // ====================  PLAYER ACTIONS  =========================
+function closeVoting(sessId) {
+    if (!confirm('Encerrar votação? Os jogadores não poderão mais votar e verão o botão de confirmar presença.')) return;
+    let sessions = LS.sessions();
+    let s = sessions[sessId];
+    if (!s) return;
+    s.votingClosed = true;
+    sessions[sessId] = s;
+    LS.saveSessions(sessions);
+    apiFetch('/agenda/session', 'POST', sessions[sessId]);
+    renderSession();
+}
+
 function submitInlineVote(sessId) {
     let picked = document.querySelector('input[name="inline-vote"]:checked');
     let msg = document.getElementById('inline-vote-msg');
@@ -1430,15 +1465,32 @@ function clearInlineVote(sessId) {
     renderSession();
 }
 
-function playerConfirm(sessId) {
-    if (!confirm('Confirmar presença nesta sessão?')) return;
-    let sessions=LS.sessions(); let s=sessions[sessId];
-    if (!s.confirmations) s.confirmations={};
-    if (!s.confirmations[currentUser.code]) s.confirmations[currentUser.code]={};
-    s.confirmations[currentUser.code].playerConfirmed=true;
+let _confirmSessId = null;
+
+function openModalPlayerConfirm(sessId) {
+    _confirmSessId = sessId;
+    let s = LS.sessions()[sessId];
+    let label = s?.title ? `Sessão ${s.number} — ${s.title}` : `Sessão ${s?.number||''}`;
+    document.getElementById('modal-confirm-label').textContent = label;
+    document.getElementById('modal-player-confirm').classList.remove('hidden');
+}
+
+function confirmPlayerPresence() {
+    let sessId = _confirmSessId;
+    if (!sessId) return;
+    let sessions = LS.sessions();
+    let s = sessions[sessId];
+    if (!s.confirmations) s.confirmations = {};
+    if (!s.confirmations[currentUser.code]) s.confirmations[currentUser.code] = {};
+    s.confirmations[currentUser.code].playerConfirmed = true;
     LS.saveSessions(sessions);
     apiFetch('/agenda/session', 'POST', sessions[sessId]);
+    closeModal('modal-player-confirm');
     renderSession();
+}
+
+function playerConfirm(sessId) {
+    openModalPlayerConfirm(sessId);
 }
 
 // ==========================  UTIL  =============================
