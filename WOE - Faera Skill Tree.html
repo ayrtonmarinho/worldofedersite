@@ -109,6 +109,57 @@
             border-bottom: 2px solid #7c3aed;
         }
 
+        .kw-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 7px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+            white-space: nowrap;
+            line-height: 1.6;
+            vertical-align: middle;
+        }
+
+        .kw-val {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 7px 1px 5px;
+            background: #2a2a2a;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: 0 3px 3px 0;
+            margin-left: 1px;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.85),
+                        inset 0 1px 0 rgba(255,255,255,0.07),
+                        inset 0 -1px 0 rgba(0,0,0,0.5),
+                        inset 1px 0 0 rgba(255,255,255,0.04);
+            text-shadow: 0 1px 4px rgba(0,0,0,1), 0 0 8px rgba(0,0,0,0.8);
+            letter-spacing: 0.04em;
+            line-height: 1.6;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .stat-diamond {
+            display: inline-block;
+            background: linear-gradient(135deg,
+                #c4b5fd 0%, #67e8f9 25%, #86efac 50%, #fde68a 75%, #f9a8d4 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 9px;
+            line-height: 1;
+            filter: drop-shadow(0 0 3px rgba(167,139,250,0.55));
+            flex-shrink: 0;
+            user-select: none;
+            vertical-align: middle;
+        }
+
         /* ===== MOBILE ===== */
         @media (max-width: 768px) {
             body { overflow: hidden; touch-action: none; }
@@ -325,9 +376,13 @@
         <div id="panel-editor" class="flex-1 overflow-y-auto p-5 flex flex-col hidden">
             <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
                 <h2 class="text-lg font-black text-fuchsia-500" id="form-title">🛠️ Criar Novo Nodo</h2>
-                <button type="button" onclick="resetNodeForm()"
-                    class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-white font-bold uppercase tracking-wider">Limpar
-                    / Novo</button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="openKeywordsModal()"
+                        class="text-[10px] bg-cyan-800/60 hover:bg-cyan-700/80 border border-cyan-700/50 px-2 py-1 rounded text-cyan-300 font-bold uppercase tracking-wider transition-colors">🏷️ Tags</button>
+                    <button type="button" onclick="resetNodeForm()"
+                        class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-white font-bold uppercase tracking-wider">Limpar
+                        / Novo</button>
+                </div>
             </div>
             <form id="add-node-form" onsubmit="saveNode(event)" class="space-y-3">
                 <div class="flex gap-2">
@@ -411,11 +466,15 @@
                     <p class="text-[10px] text-slate-500 mt-1">Obrigatório para Omini comum. O Fonte deve existir na árvore.</p>
                 </div>
 
-                <div>
-                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Status / Efeitos (Separe
-                        por vírgula)</label>
-                    <input type="text" id="new-stat" placeholder="+10 Força, +5 Vida"
+                <div class="relative">
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Status / Efeitos — <span class="text-cyan-500">keywords</span> ou texto livre (sep. por vírgula)</label>
+                    <input type="text" id="new-stat" placeholder="Digite para buscar keywords, ou texto livre..."
+                        autocomplete="off"
+                        oninput="handleStatAutocomplete()"
+                        onblur="setTimeout(()=>{let d=document.getElementById('stat-autocomplete');if(d)d.classList.add('hidden');},150)"
                         class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none">
+                    <div id="stat-autocomplete" class="absolute w-full mt-1 bg-slate-800 border border-cyan-800/60 rounded shadow-2xl max-h-44 overflow-y-auto hidden z-50"></div>
+                    <p class="text-[10px] text-slate-600 mt-1">Selecione uma keyword → adicione valor após ':' (ex: <span class="text-cyan-700">kw:forca:+10</span>)</p>
                 </div>
 
                 <div class="relative">
@@ -579,6 +638,112 @@
                 Raças Cadastradas</h3>
             <div id="admin-race-list" class="space-y-2 text-sm">
                 <!-- Preenchido via JS -->
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    <!-- MODAL DE KEYWORDS (ADMIN) -->
+    <div id="keywords-modal" class="fixed inset-0 bg-black/75 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+        <div class="bg-slate-800 rounded-xl border border-slate-600 shadow-2xl w-[520px] max-w-[96vw] max-h-[90vh] flex flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-700 shrink-0">
+                <h2 class="text-base font-black text-cyan-400">🏷️ Gerenciar Keywords</h2>
+                <button onclick="closeKeywordsModal()" class="text-slate-400 hover:text-white transition-colors text-xl leading-none">✕</button>
+            </div>
+
+            <div class="overflow-y-auto flex-1 p-5 space-y-5">
+                <!-- Formulário -->
+                <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700 space-y-3">
+                    <h3 class="text-sm font-bold text-white" id="kw-form-title">Nova Keyword</h3>
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">ID único</label>
+                            <input type="text" id="kw-form-id" placeholder="ex: forca"
+                                class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1.5 text-xs text-white focus:border-cyan-500 outline-none">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Nome exibido</label>
+                            <input type="text" id="kw-form-name" placeholder="ex: Força" oninput="updateKwPreview()"
+                                class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1.5 text-xs text-white focus:border-cyan-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1.5">Tipo de Cor</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-1.5 cursor-pointer">
+                                <input type="radio" name="kw-color-type" value="solid" id="kw-type-solid" checked onchange="toggleKwColorType()" class="accent-cyan-500">
+                                <span class="text-xs text-slate-300">Sólida</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 cursor-pointer">
+                                <input type="radio" name="kw-color-type" value="gradient" id="kw-type-gradient" onchange="toggleKwColorType()" class="accent-cyan-500">
+                                <span class="text-xs text-slate-300">Gradiente</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Cor Sólida -->
+                    <div id="kw-solid-section">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Cor</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" id="kw-color" value="#f97316" oninput="updateKwPreview()"
+                                class="w-12 h-9 rounded cursor-pointer border border-slate-600 bg-slate-800">
+                            <span id="kw-color-hex" class="text-xs text-slate-400 font-mono">#f97316</span>
+                        </div>
+                    </div>
+
+                    <!-- Gradiente -->
+                    <div id="kw-gradient-section" class="hidden space-y-2">
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="text-[10px] text-slate-400 uppercase font-bold">Cores do Gradiente</label>
+                                <button type="button" id="kw-add-stop-btn" onclick="addGradStop()"
+                                    class="text-[10px] bg-slate-700 hover:bg-slate-600 border border-slate-500 px-2 py-0.5 rounded text-cyan-300 font-bold transition-colors">+ Cor</button>
+                            </div>
+                            <div id="kw-grad-stops" class="space-y-1.5">
+                                <!-- preenchido via JS -->
+                            </div>
+                            <p class="text-[10px] text-slate-600 mt-1">Mínimo 2, máximo 5 cores</p>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Direção</label>
+                            <select id="kw-grad-dir" onchange="updateKwPreview()"
+                                class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1.5 text-xs text-white">
+                                <option value="to right">→ Horizontal</option>
+                                <option value="to bottom right">↘ Diagonal ↗</option>
+                                <option value="135deg">↗ Diagonal ↙</option>
+                                <option value="to bottom">↓ Vertical</option>
+                                <option value="to top right">↑↗ Ascendente</option>
+                                <option value="45deg">45°</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="flex items-center gap-3">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold shrink-0">Preview:</label>
+                        <span id="kw-preview" class="kw-badge" style="background:#f97316;font-size:13px;padding:3px 12px">Keyword</span>
+                    </div>
+
+                    <div class="flex gap-2 pt-1">
+                        <button onclick="adminClearKwForm()" class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 rounded font-bold text-xs transition-colors">Limpar</button>
+                        <button onclick="adminSaveKeyword()" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white py-2 rounded font-bold text-xs shadow-lg shadow-cyan-900/50 transition-colors">Salvar Keyword</button>
+                    </div>
+                </div>
+
+                <!-- Lista -->
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-700 pb-2 mb-3">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Keywords Cadastradas</h3>
+                        <button onclick="syncKeywordsDB(this)" class="text-[10px] bg-slate-700 hover:bg-slate-600 border border-slate-500 px-2 py-1 rounded text-white font-bold transition-colors">⬆️ Sync DB</button>
+                    </div>
+                    <div id="kw-sync-status" class="hidden text-[10px] text-center py-1 px-2 rounded mb-2"></div>
+                    <div id="admin-keyword-list" class="space-y-2">
+                        <p class="text-slate-500 text-xs italic">Nenhuma keyword cadastrada.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1873,7 +2038,7 @@
                         <span class="text-orange-500 mt-0.5 shrink-0">▸</span>
                         <div>
                             <span class="font-medium">${escHtml(n.name)}</span>
-                            ${n.stats && n.stats.length ? `<div class="text-[10px] text-orange-400/70">↳ ${n.stats.map(escHtml).join(', ')}</div>` : ''}
+                            ${n.stats && n.stats.length ? `<div class="text-[10px] text-orange-400/70 flex items-center gap-1 flex-wrap">↳ ${n.stats.map(s => renderStatHtml(s)).join(' ')}</div>` : ''}
                         </div>
                     </div>`).join('');
             }
@@ -2123,14 +2288,14 @@
             if (Object.keys(basics).length > 0) {
                 html += `<div class="bg-slate-800 p-3 rounded border border-slate-700">
                     <h4 class="text-xs font-bold text-slate-400 mb-2">Atributos Básicos</h4>`;
-                for (let k in basics) { let ek = escHtml(k); html += `<div class="text-sm text-blue-300">• ${basics[k] > 1 ? ek + ' (x' + basics[k] + ')' : ek}</div>`; }
+                for (let k in basics) { html += `<div class="text-sm text-blue-300 flex items-center gap-1.5 flex-wrap mb-0.5">${_diamond()} ${renderStatHtml(k)}${basics[k] > 1 ? '<span class="text-slate-500 text-xs">(x'+basics[k]+')</span>' : ''}</div>`; }
                 html += `</div>`;
             }
             if (passives.length > 0) {
                 html += `<div class="bg-slate-800 p-3 rounded border border-slate-700">
                     <h4 class="text-xs font-bold text-fuchsia-400 mb-2">Passivas Notáveis</h4>`;
                 passives.forEach(p => {
-                    let statsText = p.stats && p.stats.length > 0 ? `<div class="text-[10px] text-fuchsia-400/80 ml-3">↳ ${p.stats.map(escHtml).join(', ')}</div>` : '';
+                    let statsText = p.stats && p.stats.length > 0 ? `<div class="text-[10px] text-fuchsia-400/80 ml-3 flex items-center gap-1 flex-wrap mt-0.5">↳ ${p.stats.map(s => renderStatHtml(s)).join(' ')}</div>` : '';
                     html += `<div class="text-sm text-fuchsia-200 cursor-default mb-2" data-node-id="${p.id}">• ${escHtml(p.name)}${statsText}</div>`;
                 });
                 html += `</div>`;
@@ -2210,14 +2375,15 @@
 
             html += `<h3 style="color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">💪 Atributos Básicos</h3><ul style="line-height: 1.6; font-size: 14px;">`;
             for (let k in basics) {
-                html += `<li>${basics[k] > 1 ? k + ' <strong>(x' + basics[k] + ')</strong>' : k}</li>`;
+                let kt = statToText(k);
+                html += `<li>${basics[k] > 1 ? kt + ' <strong>(x' + basics[k] + ')</strong>' : kt}</li>`;
             }
             html += `</ul>`;
 
             if (passives.length > 0) {
                 html += `<h3 style="color: #9333ea; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 30px;">🌀 Passivas Notáveis</h3><ul style="line-height: 1.6; font-size: 14px;">`;
                 passives.forEach(p => {
-                    let statsText = p.stats && p.stats.length > 0 ? `<br><span style="color: #7c3aed; font-size: 12px; margin-left: 10px;">↳ Efeitos: ${p.stats.join(', ')}</span>` : '';
+                    let statsText = p.stats && p.stats.length > 0 ? `<br><span style="color: #7c3aed; font-size: 12px; margin-left: 10px;">↳ Efeitos: ${p.stats.map(statToText).join(', ')}</span>` : '';
                     html += `<li style="margin-bottom: 12px;"><strong>${p.name}:</strong> ${p.desc || ''}${statsText}</li>`;
                 });
                 html += `</ul>`;
@@ -2242,7 +2408,7 @@
                     } else {
                         html += `<ul style="margin:0; padding-left:18px; line-height:1.8; font-size:13px;">`;
                         chain.forEach(n => {
-                            let statsText = n.stats && n.stats.length ? ` <span style="color:#ea580c; font-size:11px;">↳ ${n.stats.join(', ')}</span>` : '';
+                            let statsText = n.stats && n.stats.length ? ` <span style="color:#ea580c; font-size:11px;">↳ ${n.stats.map(statToText).join(', ')}</span>` : '';
                             html += `<li><strong>${n.name}</strong>${n.desc ? ': ' + n.desc : ''}${statsText}</li>`;
                         });
                         html += `</ul>`;
@@ -2281,7 +2447,7 @@
             if (n.desc) { desc.textContent = n.desc; desc.classList.remove("hidden"); }
             else { desc.classList.add("hidden"); }
 
-            document.getElementById("tt-stats").innerHTML = n.stats.map(s => `<div>+ ${s}</div>`).join("");
+            document.getElementById("tt-stats").innerHTML = n.stats.map(s => `<div class="flex items-center gap-1.5">${_diamond()} ${renderStatHtml(s)}</div>`).join("");
             if (n.type === 'omega' && n.fonteId) {
                 let fonteNode = treeData.nodes[n.fonteId];
                 let fonteName = fonteNode ? fonteNode.name : n.fonteId;
@@ -2935,6 +3101,7 @@
             saveActiveTreeId(id);
             currentTreeId = id;
             treeData = trees[id].data;
+            // Keywords são globais — não resetar ao trocar de árvore
 
             await apiFetch('/manage/trees/active', 'POST', { active_tree_id: id });
             renderAdminTreeList();
@@ -3225,7 +3392,7 @@
 
             let statsEl = document.getElementById('stt-stats');
             statsEl.innerHTML = n.stats && n.stats.length > 0
-                ? n.stats.map(s => `<div>+ ${escHtml(s)}</div>`).join('')
+                ? n.stats.map(s => `<div class="flex items-center gap-1.5">${_diamond()} ${renderStatHtml(s)}</div>`).join('')
                 : '<div class="text-slate-500 italic text-xs">Sem efeitos adicionais.</div>';
 
             tt.classList.remove('hidden');
@@ -3580,6 +3747,414 @@
             alert('Raça resetada com sucesso.');
         }
 
+        // ================= SISTEMA DE KEYWORDS =================
+        let keywordsData = {};
+
+        function getLocalKeywords() {
+            let k = localStorage.getItem("poe2_keywords_db");
+            return k ? JSON.parse(k) : {};
+        }
+
+        function saveLocalKeywords(db) {
+            localStorage.setItem("poe2_keywords_db", JSON.stringify(db));
+        }
+
+        // Keywords são GLOBAIS — independentes de árvore.
+        // Armazenamento: localStorage "poe2_keywords_db" + endpoint dedicado /keywords no backend.
+        // Nunca salvas dentro de treeData para não ficarem presas a uma árvore específica.
+
+        async function initKeywordsSystem() {
+            // 1. Endpoint dedicado (fonte verdadeira — global)
+            let apiKw = await apiFetch('/keywords', 'GET');
+            if (apiKw && apiKw.keywords && Object.keys(apiKw.keywords).length > 0) {
+                keywordsData = apiKw.keywords;
+                saveLocalKeywords(keywordsData);
+                return;
+            }
+            // 2. Fallback: cache local (global, não por árvore)
+            keywordsData = getLocalKeywords();
+        }
+
+        async function persistKeywords() {
+            saveLocalKeywords(keywordsData);
+            // Único destino: endpoint global /keywords
+            await apiFetch('/keywords', 'POST', { keywords: keywordsData });
+        }
+
+        async function syncKeywordsDB(btn) {
+            let orig = btn ? btn.innerHTML : '';
+            if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+            let statusEl = document.getElementById('kw-sync-status');
+            try {
+                let res = await apiFetch('/keywords', 'POST', { keywords: keywordsData });
+                if (statusEl) {
+                    statusEl.textContent = res ? '✓ Sincronizado com o banco!' : '⚠ Salvo localmente (API offline)';
+                    statusEl.className = `text-[10px] text-center py-1 px-2 rounded mb-2 ${res ? 'bg-emerald-900/50 text-emerald-300' : 'bg-amber-900/40 text-amber-300'}`;
+                    statusEl.classList.remove('hidden');
+                    setTimeout(() => statusEl.classList.add('hidden'), 3500);
+                }
+            } catch(e) {}
+            if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+        }
+
+        function kwBackground(kw) {
+            if (!kw) return '#334155';
+            if (kw.colorType === 'gradient') {
+                let dir = kw.gradDir || 'to right';
+                // novo formato: array de stops
+                if (kw.gradStops && kw.gradStops.length >= 2) {
+                    return `linear-gradient(${dir}, ${kw.gradStops.join(', ')})`;
+                }
+                // retrocompat com gradStart/gradEnd
+                let s = kw.gradStart || '#f97316';
+                let e = kw.gradEnd || '#ef4444';
+                return `linear-gradient(${dir}, ${s}, ${e})`;
+            }
+            return kw.color || '#334155';
+        }
+
+        function renderStatHtml(stat) {
+            if (typeof stat === 'string' && stat.startsWith('kw:')) {
+                let parts = stat.substring(3).split(':');
+                let kwId = parts[0];
+                let kwVal = parts.slice(1).join(':').trim();
+                let kw = keywordsData[kwId];
+                if (kw) {
+                    let bg = kwBackground(kw);
+                    // Tag combinada com outra tag
+                    if (kwVal && keywordsData[kwVal]) {
+                        let linked = keywordsData[kwVal];
+                        let linkedBg = kwBackground(linked);
+                        return `<span class="kw-badge" style="background:${escHtml(bg)};border-radius:3px 0 0 3px">${escHtml(kw.name)}</span>`
+                             + `<span class="kw-badge" style="background:${escHtml(linkedBg)};border-radius:0 3px 3px 0;margin-left:1px">${escHtml(linked.name)}</span>`;
+                    }
+                    // Tag com valor numérico/texto
+                    if (kwVal) {
+                        return `<span class="kw-badge" style="background:${escHtml(bg)};border-radius:3px 0 0 3px">${escHtml(kw.name)}</span>`
+                             + `<span class="kw-val">${escHtml(kwVal)}</span>`;
+                    }
+                    // Só a tag
+                    return `<span class="kw-badge" style="background:${escHtml(bg)}">${escHtml(kw.name)}</span>`;
+                }
+                return `<span class="text-blue-300">${escHtml(kwId + (kwVal ? ' ' + kwVal : ''))}</span>`;
+            }
+            return `<span class="text-slate-300">${escHtml(String(stat))}</span>`;
+        }
+
+        function _diamond() {
+            return '<span class="stat-diamond" aria-hidden="true">◆</span>';
+        }
+
+        function statToText(stat) {
+            if (typeof stat === 'string' && stat.startsWith('kw:')) {
+                let parts = stat.substring(3).split(':');
+                let kwId = parts[0];
+                let kwVal = parts.slice(1).join(':').trim();
+                let kw = keywordsData[kwId];
+                return (kw ? kw.name : kwId) + (kwVal ? ' ' + kwVal : '');
+            }
+            return String(stat);
+        }
+
+        // ---- Gradient multi-stops ----
+        function initGradStops(colors) {
+            let container = document.getElementById('kw-grad-stops');
+            if (!container) return;
+            container.innerHTML = '';
+            let initial = (colors && colors.length >= 2) ? colors : ['#f97316', '#ef4444'];
+            initial.forEach(c => _appendGradStop(c));
+            _updateAddStopBtn();
+        }
+
+        function _appendGradStop(color) {
+            let container = document.getElementById('kw-grad-stops');
+            if (!container) return;
+            let idx = container.children.length;
+            let row = document.createElement('div');
+            row.className = 'kw-stop-row flex items-center gap-2';
+            let isRemovable = idx >= 2;
+            row.innerHTML = `
+                <span class="text-[10px] text-slate-500 w-4 shrink-0">${idx + 1}</span>
+                <input type="color" value="${color}" class="kw-stop-color w-12 h-8 rounded cursor-pointer border border-slate-600 shrink-0">
+                <span class="kw-stop-hex text-[10px] text-slate-400 font-mono flex-1">${color}</span>
+                ${isRemovable ? `<button type="button" onmousedown="removeGradStop(this)" class="text-slate-500 hover:text-red-400 text-sm leading-none px-1 transition-colors">✕</button>` : '<span class="w-5"></span>'}
+            `;
+            let inp = row.querySelector('.kw-stop-color');
+            let hex = row.querySelector('.kw-stop-hex');
+            inp.addEventListener('input', () => { hex.textContent = inp.value; updateKwPreview(); });
+            container.appendChild(row);
+        }
+
+        function addGradStop() {
+            let container = document.getElementById('kw-grad-stops');
+            if (!container || container.children.length >= 5) return;
+            _appendGradStop('#ffffff');
+            _updateAddStopBtn();
+            updateKwPreview();
+        }
+
+        function removeGradStop(btn) {
+            let row = btn.closest('.kw-stop-row');
+            if (!row) return;
+            let container = document.getElementById('kw-grad-stops');
+            if (container && container.children.length <= 2) return;
+            row.remove();
+            // Renumera
+            let container2 = document.getElementById('kw-grad-stops');
+            Array.from(container2.children).forEach((r, i) => {
+                let numEl = r.querySelector('span.text-slate-500');
+                if (numEl) numEl.textContent = i + 1;
+            });
+            _updateAddStopBtn();
+            updateKwPreview();
+        }
+
+        function _updateAddStopBtn() {
+            let container = document.getElementById('kw-grad-stops');
+            let btn = document.getElementById('kw-add-stop-btn');
+            if (btn && container) btn.classList.toggle('hidden', container.children.length >= 5);
+        }
+
+        function getGradStops() {
+            let inputs = document.querySelectorAll('#kw-grad-stops .kw-stop-color');
+            return Array.from(inputs).map(i => i.value);
+        }
+
+        function toggleKwColorType() {
+            let type = document.querySelector('input[name="kw-color-type"]:checked')?.value;
+            let solid = document.getElementById('kw-solid-section');
+            let grad = document.getElementById('kw-gradient-section');
+            if (solid) solid.classList.toggle('hidden', type !== 'solid');
+            if (grad) grad.classList.toggle('hidden', type !== 'gradient');
+            if (type === 'gradient') {
+                let container = document.getElementById('kw-grad-stops');
+                if (container && container.children.length === 0) initGradStops();
+            }
+            updateKwPreview();
+        }
+
+        function updateKwPreview() {
+            let typeEl = document.querySelector('input[name="kw-color-type"]:checked');
+            let type = typeEl ? typeEl.value : 'solid';
+            let preview = document.getElementById('kw-preview');
+            let nameInput = document.getElementById('kw-form-name');
+            let name = nameInput ? (nameInput.value || 'Keyword') : 'Keyword';
+
+            let bg;
+            if (type === 'gradient') {
+                let stops = getGradStops();
+                let dir = document.getElementById('kw-grad-dir')?.value || 'to right';
+                bg = stops.length >= 2 ? `linear-gradient(${dir}, ${stops.join(', ')})` : '#334155';
+            } else {
+                let color = document.getElementById('kw-color')?.value || '#f97316';
+                bg = color;
+                let ch = document.getElementById('kw-color-hex');
+                if (ch) ch.textContent = color;
+            }
+
+            if (preview) {
+                preview.style.background = bg;
+                preview.style.borderRadius = '3px';
+                preview.textContent = name;
+            }
+        }
+
+        function adminSaveKeyword() {
+            let idRaw = document.getElementById('kw-form-id').value.trim();
+            let id = idRaw.replace(/\s+/g, '_').toLowerCase();
+            let name = document.getElementById('kw-form-name').value.trim();
+            if (!id || !name) { alert('Preencha ID e Nome da Keyword.'); return; }
+
+            let typeEl = document.querySelector('input[name="kw-color-type"]:checked');
+            let type = typeEl ? typeEl.value : 'solid';
+            let kw = { id, name, colorType: type };
+
+            if (type === 'gradient') {
+                kw.gradStops = getGradStops();
+                kw.gradDir = document.getElementById('kw-grad-dir').value;
+            } else {
+                kw.color = document.getElementById('kw-color').value;
+            }
+
+            keywordsData[id] = kw;
+            persistKeywords();
+            renderAdminKeywordList();
+            adminClearKwForm();
+            let statusEl = document.getElementById('kw-sync-status');
+            if (statusEl) {
+                statusEl.textContent = `✓ Keyword "${name}" salva e enviada ao banco.`;
+                statusEl.className = 'text-[10px] text-center py-1 px-2 rounded mb-2 bg-emerald-900/50 text-emerald-300';
+                statusEl.classList.remove('hidden');
+                setTimeout(() => statusEl.classList.add('hidden'), 3000);
+            }
+        }
+
+        function adminClearKwForm() {
+            let idInput = document.getElementById('kw-form-id');
+            if (idInput) { idInput.value = ''; idInput.readOnly = false; }
+            let nameInput = document.getElementById('kw-form-name');
+            if (nameInput) nameInput.value = '';
+            let solidRad = document.getElementById('kw-type-solid');
+            if (solidRad) solidRad.checked = true;
+            let colorEl = document.getElementById('kw-color');
+            if (colorEl) colorEl.value = '#f97316';
+            let title = document.getElementById('kw-form-title');
+            if (title) title.textContent = 'Nova Keyword';
+            initGradStops(['#f97316', '#ef4444']);
+            toggleKwColorType();
+        }
+
+        function openKeywordsModal() {
+            renderAdminKeywordList();
+            document.getElementById('keywords-modal').classList.remove('hidden');
+            // Inicializa stops se ainda vazio
+            let container = document.getElementById('kw-grad-stops');
+            if (container && container.children.length === 0) initGradStops();
+        }
+
+        function closeKeywordsModal() {
+            document.getElementById('keywords-modal').classList.add('hidden');
+        }
+
+        function adminEditKeyword(id) {
+            let kw = keywordsData[id];
+            if (!kw) return;
+            adminClearKwForm();
+            let idInput = document.getElementById('kw-form-id');
+            idInput.value = kw.id;
+            idInput.readOnly = true;
+            document.getElementById('kw-form-name').value = kw.name;
+            if (kw.colorType === 'gradient') {
+                document.getElementById('kw-type-gradient').checked = true;
+                let stops = kw.gradStops || [kw.gradStart || '#f97316', kw.gradEnd || '#ef4444'];
+                initGradStops(stops);
+                let dirEl = document.getElementById('kw-grad-dir');
+                if (dirEl) dirEl.value = kw.gradDir || 'to right';
+            } else {
+                document.getElementById('kw-type-solid').checked = true;
+                let colorEl = document.getElementById('kw-color');
+                if (colorEl) colorEl.value = kw.color || '#f97316';
+            }
+            toggleKwColorType();
+            updateKwPreview();
+            let title = document.getElementById('kw-form-title');
+            if (title) title.textContent = 'Editar Keyword';
+            openKeywordsModal();
+        }
+
+        function adminDeleteKeyword(id) {
+            let kw = keywordsData[id];
+            if (!kw) return;
+            if (!confirm(`Excluir a keyword "${kw.name}"?`)) return;
+            delete keywordsData[id];
+            persistKeywords();
+            renderAdminKeywordList();
+        }
+
+        function renderAdminKeywordList() {
+            let list = document.getElementById('admin-keyword-list');
+            if (!list) return;
+            let kws = Object.values(keywordsData);
+            if (kws.length === 0) {
+                list.innerHTML = '<p class="text-slate-500 text-xs italic">Nenhuma keyword cadastrada.</p>';
+                return;
+            }
+            list.innerHTML = kws.map(kw => {
+                let bg = kwBackground(kw);
+                let stopsInfo = kw.colorType === 'gradient' && kw.gradStops
+                    ? `<span class="text-[9px] text-slate-600">${kw.gradStops.length} cores</span>`
+                    : '';
+                return `<div class="bg-slate-900/60 border border-slate-700 rounded-lg p-2.5 flex items-center gap-3">
+                    <span class="kw-badge shrink-0" style="background:${escHtml(bg)};font-size:12px;padding:2px 10px">${escHtml(kw.name)}</span>
+                    <div class="flex-1 min-w-0 space-y-0.5">
+                        <p class="text-[10px] text-slate-500 font-mono truncate">${escHtml(kw.id)}</p>
+                        ${stopsInfo}
+                    </div>
+                    <div class="flex gap-1.5 shrink-0">
+                        <button onclick="adminEditKeyword('${kw.id}')" class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded font-bold transition-colors">Editar</button>
+                        <button onclick="adminDeleteKeyword('${kw.id}')" class="text-[10px] bg-red-900/50 hover:bg-red-800/70 text-red-300 px-2 py-1 rounded font-bold transition-colors">✕</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function handleStatAutocomplete() {
+            let input = document.getElementById('new-stat');
+            let dropdown = document.getElementById('stat-autocomplete');
+            if (!input || !dropdown) return;
+
+            let parts = input.value.split(',');
+            let lastPart = parts[parts.length - 1].trim();
+
+            if (!lastPart || Object.keys(keywordsData).length === 0) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            // Detecta padrão "kw:id:..." — já tem uma tag, oferecer combinar com outra
+            let comboMatch = lastPart.match(/^kw:([^:,]+):(.*)$/);
+            if (comboMatch) {
+                let parentId = comboMatch[1];
+                let search = comboMatch[2].toLowerCase().trim();
+                let others = Object.values(keywordsData)
+                    .filter(kw => kw.id !== parentId && (!search || kw.name.toLowerCase().includes(search) || kw.id.toLowerCase().includes(search)));
+                if (!others.length) { dropdown.classList.add('hidden'); return; }
+                let header = `<div class="px-3 py-1.5 text-[10px] text-slate-400 bg-slate-900/70 border-b border-slate-700 uppercase tracking-wider font-bold">Combinar com outra tag</div>`;
+                dropdown.innerHTML = header + others.slice(0, 7).map(kw => {
+                    let bg = kwBackground(kw);
+                    return `<div onmousedown="selectLinkedTag('${parentId}','${kw.id}')"
+                        class="px-3 py-2 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 transition-colors flex items-center gap-2">
+                        <span class="kw-badge shrink-0" style="background:${escHtml(bg)}">${escHtml(kw.name)}</span>
+                        <span class="text-[10px] text-slate-500 font-mono">${escHtml(kw.id)}</span>
+                    </div>`;
+                }).join('');
+                dropdown.classList.remove('hidden');
+                return;
+            }
+
+            // Modo normal: busca tag pelo que está sendo digitado
+            let q = lastPart.toLowerCase();
+            let matches = Object.values(keywordsData).filter(kw =>
+                kw.name.toLowerCase().includes(q) || kw.id.toLowerCase().includes(q)
+            );
+            if (!matches.length) { dropdown.classList.add('hidden'); return; }
+            dropdown.innerHTML = matches.slice(0, 8).map(kw => {
+                let bg = kwBackground(kw);
+                return `<div onmousedown="selectStatKeyword('${kw.id}')"
+                    class="px-3 py-2 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 transition-colors flex items-center gap-2">
+                    <span class="kw-badge shrink-0" style="background:${escHtml(bg)}">${escHtml(kw.name)}</span>
+                    <span class="text-[10px] text-slate-500 font-mono">${escHtml(kw.id)}</span>
+                    <span class="text-[10px] text-cyan-700 ml-auto">+ valor ou tag</span>
+                </div>`;
+            }).join('');
+            dropdown.classList.remove('hidden');
+        }
+
+        function selectStatKeyword(kwId) {
+            let input = document.getElementById('new-stat');
+            let dropdown = document.getElementById('stat-autocomplete');
+            if (!input) return;
+            let parts = input.value.split(',');
+            parts[parts.length - 1] = 'kw:' + kwId + ':';
+            input.value = parts.map((p, i) => i === parts.length - 1 ? p : p.trim()).join(', ');
+            if (dropdown) dropdown.classList.add('hidden');
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+            setTimeout(() => handleStatAutocomplete(), 0);
+        }
+
+        function selectLinkedTag(parentKwId, linkedKwId) {
+            let input = document.getElementById('new-stat');
+            let dropdown = document.getElementById('stat-autocomplete');
+            if (!input) return;
+            let parts = input.value.split(',');
+            parts[parts.length - 1] = `kw:${parentKwId}:${linkedKwId}`;
+            input.value = parts.map((p, i) => i === parts.length - 1 ? p : p.trim()).join(', ');
+            if (dropdown) dropdown.classList.add('hidden');
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+
         // ================= MOBILE =================
         function isMobile() {
             return window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -3634,7 +4209,7 @@
             let descEl = document.getElementById('mni-desc');
             if (node.desc) { descEl.textContent = node.desc; descEl.classList.remove('hidden'); }
             else { descEl.classList.add('hidden'); }
-            document.getElementById('mni-stats').innerHTML = node.stats.map(s => `<div>+ ${s}</div>`).join('');
+            document.getElementById('mni-stats').innerHTML = node.stats.map(s => `<div class="flex items-center gap-1.5">${_diamond()} ${renderStatHtml(s)}</div>`).join('');
             let st = document.getElementById('mni-status');
             let actionBtn = document.getElementById('mni-action-btn');
             let mythicBtn = document.getElementById('mni-mythic-btn');
@@ -3793,6 +4368,7 @@
             window.addEventListener('resize', resizeCanvas);
             await initTreeSystem();
             await initRacesSystem();
+            await initKeywordsSystem();
             initDefaultUser();
             setupInput();
             setupMobileInput();
