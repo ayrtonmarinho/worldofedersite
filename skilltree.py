@@ -18,10 +18,13 @@ dynamodb = boto3.resource('dynamodb')
 # Tentar buscar nome das tabelas por variáveis de ambiente AWS.
 # Adicionado fallback para nomes de teste (ex: RPG_Users) caso as Serverless envs não existam agora
 TABLE_USERS_NAME = os.environ.get('TABLE_USERS', 'RPG_Users')
-TABLE_TREE_NAME = os.environ.get('TABLE_TREE', 'RPG_Tree')
+TABLE_TREE_NAME  = os.environ.get('TABLE_TREE',  'RPG_Tree')
 
 users_table = dynamodb.Table(TABLE_USERS_NAME)
-tree_table = dynamodb.Table(TABLE_TREE_NAME)
+tree_table  = dynamodb.Table(TABLE_TREE_NAME)
+
+# Chave reservada na RPG_Tree para o registro global de keywords
+KEYWORDS_KEY = 'WOE_KEYWORDS'
 
 # "Senha" simples fixada estaticamente pra validação e segurança em rotas admin.
 ADMIN_SECRET = "skillarte"
@@ -122,6 +125,29 @@ def lambda_handler(event, context):
             except ClientError as e:
                 return _build_response(500, {"message": str(e)})
 
+        # ROTA: GET /keywords -> Retorna todas as keywords globais (aberto — players precisam pra renderizar stats)
+        elif http_method == 'GET' and path == '/keywords':
+            try:
+                response = tree_table.get_item(Key={'tree_id': KEYWORDS_KEY})
+                if 'Item' in response:
+                    return _build_response(200, {'keywords': response['Item'].get('keywords', {})})
+                return _build_response(200, {'keywords': {}})
+            except ClientError as e:
+                return _build_response(500, {'message': str(e)})
+
+        # ROTA: POST /keywords -> Salva o mapa completo de keywords (Admin)
+        elif http_method == 'POST' and path == '/keywords':
+            if not check_admin_auth(headers):
+                return _build_response(403, {'message': 'Acesso Administrativo Negado.'})
+            keywords = body.get('keywords')
+            if keywords is None:
+                return _build_response(400, {'message': "Campo 'keywords' obrigatório."})
+            try:
+                tree_table.put_item(Item={'tree_id': KEYWORDS_KEY, 'keywords': keywords})
+                return _build_response(200, {'message': 'Keywords globais salvas com sucesso.'})
+            except ClientError as e:
+                return _build_response(500, {'message': str(e)})
+
         # -------------- MÉTODOS RESTRITOS A ROOT / ADMINISTRATIVOS --------------
 
         # ROTA: GET /users -> Buscar TODOS os jogadores para listar as tabelas do Admin
@@ -143,8 +169,9 @@ def lambda_handler(event, context):
                 # Scan para obter as árvores listadas
                 response = tree_table.scan()
                 trees = []
+                reserved = {'SYSTEM_CONFIG', KEYWORDS_KEY}
                 for item in response.get('Items', []):
-                    if item['tree_id'] != 'SYSTEM_CONFIG':
+                    if item['tree_id'] not in reserved:
                         trees.append(
                             {'id': item['tree_id'], 'name': item.get('name', item['tree_id'])})
 
@@ -241,11 +268,33 @@ def lambda_handler(event, context):
 # Simulação mockada local para bateria de testes rápidos locais.
 # Só ativado executando pelo CMD ou na compilação do VisualStudio
 if __name__ == "__main__":
-    test_event_listar_todos = {
+    test_get_users = {
         "httpMethod": "GET",
         "path": "/users",
-        "headers": {"Authorization": "admin"}  # Sem autorização daria falha
+        "headers": {"Authorization": "skillarte"}
     }
+    print("\n🚀[TESTE] GET /users (admin):")
+    print(lambda_handler(test_get_users, None))
 
-    print("\\n🚀[TESTE] Disparando Rota Admin Restrita /users :")
-    print(lambda_handler(test_event_listar_todos, None))
+    test_get_keywords = {
+        "httpMethod": "GET",
+        "path": "/keywords",
+        "headers": {}
+    }
+    print("\n🔑[TESTE] GET /keywords (público):")
+    print(lambda_handler(test_get_keywords, None))
+
+    test_post_keywords = {
+        "httpMethod": "POST",
+        "path": "/keywords",
+        "headers": {"Authorization": "skillarte"},
+        "body": json.dumps({
+            "keywords": {
+                "forca": {"id": "forca", "name": "Força", "colorType": "solid", "color": "#f97316"},
+                "magia": {"id": "magia", "name": "Magia", "colorType": "gradient",
+                          "gradStops": ["#3b82f6", "#8b5cf6"], "gradDir": "to right"}
+            }
+        })
+    }
+    print("\n🔑[TESTE] POST /keywords (admin):")
+    print(lambda_handler(test_post_keywords, None))
