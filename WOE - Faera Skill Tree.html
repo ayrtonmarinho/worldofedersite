@@ -859,11 +859,24 @@
                 </div>
             </div>
 
-            <h3
-                class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-2 mb-3 mt-6">
-                Usuários Locais</h3>
-            <div id="admin-user-list" class="space-y-2 text-sm">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-2 mb-3 mt-6">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Usuários Locais</h3>
+                <label class="flex items-center gap-1.5 cursor-pointer text-[10px] text-slate-500 hover:text-slate-300 transition-colors">
+                    <input type="checkbox" id="select-all-users" onchange="toggleSelectAllUsers(this.checked)" class="w-3.5 h-3.5 rounded accent-indigo-500 cursor-pointer">
+                    Todos
+                </label>
+            </div>
+            <div id="admin-user-list" class="space-y-2 text-sm flex-1">
                 <!-- Preenchido via JS -->
+            </div>
+
+            <!-- Barra de ação em lote -->
+            <div id="batch-bar" class="hidden sticky bottom-0 mt-3 bg-indigo-950/95 border border-indigo-500/60 rounded-lg px-3 py-2.5 flex items-center justify-between gap-2 backdrop-blur shadow-lg shadow-indigo-900/40">
+                <span id="batch-bar-label" class="text-xs text-indigo-300 font-bold shrink-0">0 selecionados</span>
+                <div class="flex gap-1.5 shrink-0">
+                    <button onclick="clearUserSelection()" class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded text-slate-300 font-bold transition-colors">✕</button>
+                    <button onclick="openBatchPtsModal()" class="text-[10px] bg-indigo-600 hover:bg-indigo-500 px-3 py-1 rounded text-white font-bold transition-colors shadow-lg shadow-indigo-900/50">⚡ Pontos em Lote</button>
+                </div>
             </div>
         </div>
         <!-- ================= PAINEL: ADMIN RAÇAS ================= -->
@@ -1042,7 +1055,7 @@
     </div>
 
     <!-- MOBILE NODE INFO PANEL -->
-    <div id="mobile-node-info" class="hidden fixed bottom-16 left-3 right-3 z-50 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-4 max-h-[45vh] overflow-y-auto">
+    <div id="mobile-node-info" class="hidden fixed bottom-16 left-3 right-3 z-50 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-4 max-h-[45vh] overflow-y-auto" style="touch-action: manipulation;">
         <button onclick="hideMobileNodeInfo()" class="absolute top-3 right-3 text-slate-400 text-lg leading-none">✕</button>
         <p id="mni-type" class="text-[10px] uppercase tracking-widest font-black text-slate-500 mb-0.5"></p>
         <h3 id="mni-name" class="font-bold text-lg text-white leading-tight mb-1"></h3>
@@ -1102,9 +1115,15 @@
             <!-- Cabeçalho (sempre visível) -->
             <div class="flex items-center gap-3 mb-5 pr-6">
                 <div class="w-11 h-11 rounded-full bg-indigo-900 border border-indigo-600 flex items-center justify-center text-xl shrink-0">👤</div>
-                <div class="min-w-0">
-                    <h2 class="text-base font-bold text-white leading-tight truncate" id="pm-name"></h2>
-                    <p class="text-xs text-slate-400"><span id="pm-code" class="text-slate-500"></span> &middot; <span class="text-green-400">Pontos: <strong id="pm-current"></strong></span></p>
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1 group">
+                        <input type="text" id="pm-name"
+                            onblur="saveModalName()"
+                            onkeydown="if(event.key==='Enter'){this.blur()}"
+                            class="text-base font-bold text-white leading-tight bg-transparent border-b border-transparent group-hover:border-slate-600 focus:border-indigo-400 outline-none w-full transition-colors truncate">
+                        <span class="text-slate-600 group-hover:text-slate-400 transition-colors text-xs shrink-0 select-none cursor-text" title="Clique no nome para editar">✏️</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-0.5"><span id="pm-code" class="text-slate-500"></span> &middot; <span class="text-green-400">Pontos: <strong id="pm-current"></strong></span></p>
                 </div>
             </div>
 
@@ -1160,6 +1179,28 @@
         </div>
     </div>
 
+    <!-- MODAL: PONTOS EM LOTE -->
+    <div id="batch-pts-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+        <div class="bg-slate-800 p-6 rounded-xl border border-indigo-600/50 shadow-2xl w-80 relative">
+            <h2 class="text-sm font-bold text-white mb-1">⚡ Pontos em Lote</h2>
+            <p id="batch-pts-desc" class="text-xs text-slate-400 mb-5">0 jogadores selecionados</p>
+            <label class="block text-xs text-slate-400 uppercase font-bold mb-2">Quantidade</label>
+            <div class="flex gap-2 mb-1">
+                <button onclick="adjustBatchInput(-1)" class="bg-red-900/50 hover:bg-red-800/80 border border-red-800 text-red-300 font-bold w-10 shrink-0 rounded text-xl transition-colors">−</button>
+                <input type="number" id="batch-pts-input" placeholder="Ex: 5 ou -3"
+                    class="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-white text-center text-sm focus:outline-none focus:border-indigo-500"
+                    onkeydown="if(event.key==='Enter') applyBatchPoints()">
+                <button onclick="adjustBatchInput(1)" class="bg-emerald-900/50 hover:bg-emerald-800/80 border border-emerald-800 text-emerald-300 font-bold w-10 shrink-0 rounded text-xl transition-colors">+</button>
+            </div>
+            <p class="text-[10px] text-slate-500 text-center mb-5">Valores negativos removem pontos</p>
+            <div id="batch-pts-status" class="hidden text-xs text-indigo-300 text-center mb-3 italic">Aplicando...</div>
+            <div class="flex gap-2">
+                <button onclick="closeBatchPtsModal()" class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 rounded font-bold text-sm transition-colors">Cancelar</button>
+                <button onclick="applyBatchPoints()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded font-bold text-sm transition-colors shadow-lg shadow-indigo-900/50">Aplicar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- TOOLTIP DE MENÇÃO DE NÓ (em descrições) -->
     <div id="node-mention-tooltip" class="fixed hidden bg-slate-900 border border-slate-700 rounded-lg shadow-2xl pointer-events-none z-50 w-64 overflow-hidden">
         <div id="nmt-accent" class="h-0.5 w-full"></div>
@@ -1197,6 +1238,7 @@
         let currentUser = null; // Objeto do jogador logado atualmente
         let imageCache = {};
         let adminUserCache = {};
+        let selectedUsers = new Set();
 
         function countPointsUsed(allocatedNodes) {
             return allocatedNodes.filter(id => {
@@ -3276,19 +3318,111 @@
             let html = '';
             for (let code in adminUserCache) {
                 let u = adminUserCache[code];
-                html += `<div onclick="openPointsModal('${u.code}')" class="bg-slate-900 p-2 rounded border border-slate-700 flex justify-between items-center cursor-pointer hover:border-indigo-500 hover:bg-slate-800/80 transition-colors group">
-                    <div class="min-w-0">
-                        <strong class="text-white group-hover:text-indigo-300 transition-colors truncate block">${escHtml(u.name)}</strong>
-                        <span class="text-slate-500 text-xs">(${escHtml(u.code)})</span>
-                    </div>
-                    <div class="text-right shrink-0 ml-2">
-                        <div class="text-xs text-green-400">Pts: ${u.totalPoints}</div>
-                        <div class="text-xs text-blue-400">Nvl: ${u.level}</div>
+                let sel = selectedUsers.has(u.code);
+                html += `<div class="bg-slate-900 p-2 rounded border ${sel ? 'border-indigo-500 bg-slate-800/80' : 'border-slate-700'} flex items-center gap-2 transition-colors group">
+                    <input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation();toggleUserSelection('${u.code}',this.checked)"
+                        class="w-3.5 h-3.5 rounded accent-indigo-500 cursor-pointer shrink-0">
+                    <div onclick="openPointsModal('${u.code}')" class="flex justify-between items-center flex-1 min-w-0 cursor-pointer hover:opacity-80 transition-opacity">
+                        <div class="min-w-0">
+                            <strong class="text-white group-hover:text-indigo-300 transition-colors truncate block">${escHtml(u.name)}</strong>
+                            <span class="text-slate-500 text-xs">(${escHtml(u.code)})</span>
+                        </div>
+                        <div class="text-right shrink-0 ml-2">
+                            <div class="text-xs text-green-400">Pts: ${u.totalPoints}</div>
+                            <div class="text-xs text-blue-400">Nvl: ${u.level}</div>
+                        </div>
                     </div>
                 </div>`;
             }
             if (!html) html = '<div class="text-slate-500 text-sm text-center py-4 italic">Nenhum jogador cadastrado.</div>';
             document.getElementById('admin-user-list').innerHTML = html;
+            updateBatchBar();
+        }
+
+        function toggleUserSelection(code, checked) {
+            if (checked) selectedUsers.add(code); else selectedUsers.delete(code);
+            updateBatchBar();
+            let allCodes = Object.keys(adminUserCache);
+            let selectAllCb = document.getElementById('select-all-users');
+            if (selectAllCb) selectAllCb.checked = allCodes.length > 0 && allCodes.every(c => selectedUsers.has(c));
+        }
+
+        function updateBatchBar() {
+            let bar = document.getElementById('batch-bar');
+            let label = document.getElementById('batch-bar-label');
+            if (!bar) return;
+            let n = selectedUsers.size;
+            if (n > 0) {
+                bar.classList.remove('hidden');
+                label.textContent = `${n} selecionado${n > 1 ? 's' : ''}`;
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
+
+        function toggleSelectAllUsers(checked) {
+            if (checked) {
+                for (let code in adminUserCache) selectedUsers.add(code);
+            } else {
+                selectedUsers.clear();
+            }
+            renderUserListHtml();
+        }
+
+        function clearUserSelection() {
+            selectedUsers.clear();
+            let selectAllCb = document.getElementById('select-all-users');
+            if (selectAllCb) selectAllCb.checked = false;
+            renderUserListHtml();
+        }
+
+        function openBatchPtsModal() {
+            if (selectedUsers.size === 0) return;
+            let n = selectedUsers.size;
+            document.getElementById('batch-pts-desc').textContent = `${n} jogador${n > 1 ? 'es' : ''} selecionado${n > 1 ? 's' : ''}`;
+            document.getElementById('batch-pts-input').value = '';
+            document.getElementById('batch-pts-status').classList.add('hidden');
+            document.getElementById('batch-pts-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('batch-pts-input').focus(), 50);
+        }
+
+        function closeBatchPtsModal() {
+            document.getElementById('batch-pts-modal').classList.add('hidden');
+        }
+
+        function adjustBatchInput(delta) {
+            let input = document.getElementById('batch-pts-input');
+            input.value = (parseInt(input.value) || 0) + delta;
+        }
+
+        async function applyBatchPoints() {
+            let pts = parseInt(document.getElementById('batch-pts-input').value);
+            if (isNaN(pts) || pts === 0) return alert("Digite uma quantidade válida (diferente de zero).");
+
+            let status = document.getElementById('batch-pts-status');
+            status.textContent = `Aplicando para ${selectedUsers.size} jogador${selectedUsers.size > 1 ? 'es' : ''}...`;
+            status.classList.remove('hidden');
+
+            let db = getLocalUsers();
+            let codes = [...selectedUsers];
+            for (let code of codes) {
+                let apiUser = await apiFetch(`/user/${code}`, 'GET');
+                let u = apiUser || db[code];
+                if (!u) continue;
+                let minimum = countPointsUsed(u.allocatedNodes);
+                u.totalPoints = Math.max(u.totalPoints + pts, minimum);
+                db[code] = u;
+                adminUserCache[code] = u;
+                if (currentUser && currentUser.code === code) {
+                    currentUser.totalPoints = u.totalPoints;
+                    updatePointsUI();
+                }
+                await apiFetch('/user', 'POST', u);
+            }
+            saveLocalUsers(db);
+            renderUserListHtml();
+            closeBatchPtsModal();
+            clearUserSelection();
         }
 
         async function renderAdminUserList() {
@@ -3494,7 +3628,7 @@
             let u = adminUserCache[code] || getLocalUsers()[code];
             if (!u) return alert("Jogador não encontrado. Tente recarregar a lista.");
 
-            document.getElementById('pm-name').textContent = u.name;
+            document.getElementById('pm-name').value = u.name;
             document.getElementById('pm-code').textContent = code;
             document.getElementById('pm-current').textContent = u.totalPoints;
 
@@ -3575,6 +3709,36 @@
                 if (!unlock && currentUser.mythicClassId === nodeId) currentUser.mythicClassId = null;
                 updateSummaryUI();
             }
+        }
+
+        async function saveModalName() {
+            let nameEl = document.getElementById('pm-name');
+            let code = document.getElementById('pm-pts-input').dataset.code;
+            if (!nameEl || !code) return;
+            let newName = nameEl.value.trim();
+            if (!newName) { nameEl.value = adminUserCache[code]?.name || ''; return; }
+
+            let db = getLocalUsers();
+            let u = adminUserCache[code] || db[code];
+            if (!u || u.name === newName) return; // sem mudança
+
+            u.name = newName;
+            db[code] = u;
+            saveLocalUsers(db);
+            adminUserCache[code] = u;
+
+            // Atualiza o jogador ativo se for o mesmo
+            if (currentUser && currentUser.code === code) {
+                currentUser.name = newName;
+                let nameSpan = document.getElementById('lbl-char-name');
+                if (nameSpan) nameSpan.querySelector('span:first-child').textContent = newName;
+            }
+
+            // Atualiza a lista de usuários
+            renderUserListHtml();
+
+            // Sincroniza com o banco
+            await apiFetch('/user', 'POST', u);
         }
 
         function closePointsModal() {
@@ -4923,14 +5087,16 @@
 
         function mniAction() {
             if (!_mniNode) return;
+            let nodeId = _mniNode.id;
             hideMobileNodeInfo();
-            toggleAllocation(_mniNode.id);
+            toggleAllocation(nodeId);
         }
 
         function mniMythicActivate() {
             if (!_mniNode) return;
+            let nodeId = _mniNode.id;
             hideMobileNodeInfo();
-            playerActivateMythicClass(_mniNode.id);
+            playerActivateMythicClass(nodeId);
         }
 
         function setupMobileInput() {
@@ -4945,7 +5111,6 @@
                 e.preventDefault();
                 touchActive = true;
                 isDragging = false; // block mouse pan while touch is active
-                hideMobileNodeInfo();
                 if (e.touches.length === 1) {
                     let t = e.touches[0];
                     touchLastPos = { x: t.clientX, y: t.clientY };
@@ -5012,9 +5177,14 @@
 
             c.addEventListener('touchend', (e) => {
                 if (e.touches.length === 0) {
-                    // tap detection: finger lifted without moving
-                    if (!touchMoved && touchStartNode && currentUser) {
-                        showMobileNodeInfo(touchStartNode);
+                    if (!touchMoved) {
+                        if (touchStartNode && currentUser) {
+                            // tapped a node — show/update info panel
+                            showMobileNodeInfo(touchStartNode);
+                        } else {
+                            // tapped empty space — close panel
+                            hideMobileNodeInfo();
+                        }
                     }
                     touchActive = false;
                     touchLastPos = null;
@@ -5027,6 +5197,26 @@
                     touchLastPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
                 }
             }, { passive: true });
+
+            // Botões do painel mobile: usar touchend direto para garantir resposta
+            // independente de touch-action herdado do body
+            let mniPanel = document.getElementById('mobile-node-info');
+            mniPanel.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+            document.getElementById('mni-action-btn').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                mniAction();
+            });
+            document.getElementById('mni-mythic-btn').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                mniMythicActivate();
+            });
+            document.querySelector('#mobile-node-info button:first-child').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                hideMobileNodeInfo();
+            });
         }
 
         function applyMobileLayout() {
