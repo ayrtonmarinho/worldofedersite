@@ -374,6 +374,25 @@
         }
         .kw-style-color-thunder { animation: kwColorThunder 4.8s linear infinite; }
 
+        .node-mention {
+            display: inline;
+            background: rgba(99,102,241,0.13);
+            color: #a5b4fc;
+            border-bottom: 1px dashed rgba(99,102,241,0.5);
+            border-radius: 2px;
+            padding: 0 3px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: background 0.15s, color 0.15s;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        .node-mention:hover {
+            background: rgba(99,102,241,0.28);
+            color: #c7d2fe;
+        }
+
         .stat-diamond {
             display: inline-block;
             background: linear-gradient(135deg,
@@ -677,13 +696,15 @@
 
                 <div id="ext-desc" class="hidden">
                     <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">
-                        Descrição — digite <span class="text-cyan-600 font-mono">[kw:</span> para inserir uma tag
+                        Descrição —
+                        <span class="text-cyan-600 font-mono">[kw:</span> tags ·
+                        <span class="text-indigo-400 font-mono"># ou @</span> mencionar habilidades
                     </label>
                     <div class="relative">
                         <textarea id="new-desc" rows="2"
                             oninput="handleDescAutocomplete('new-desc','new-desc-ac')"
                             onblur="setTimeout(()=>document.getElementById('new-desc-ac')?.classList.add('hidden'),150)"
-                            class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none resize-none"></textarea>
+                            class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none resize-y min-h-[60px]"></textarea>
                         <div id="new-desc-ac" class="absolute w-full mt-1 bg-slate-800 border border-cyan-800/60 rounded shadow-2xl max-h-44 overflow-y-auto hidden z-50"></div>
                     </div>
                 </div>
@@ -923,10 +944,14 @@
                     <!-- Cor Sólida -->
                     <div id="kw-solid-section">
                         <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Cor</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" id="kw-color" value="#f97316" oninput="updateKwPreview()"
-                                class="w-12 h-9 rounded cursor-pointer border border-slate-600 bg-slate-800">
-                            <span id="kw-color-hex" class="text-xs text-slate-400 font-mono">#f97316</span>
+                        <div class="flex items-center gap-2">
+                            <input type="color" id="kw-color" value="#f97316"
+                                oninput="onKwColorPick('kw-color','kw-color-hex')"
+                                class="w-12 h-9 rounded cursor-pointer border border-slate-600 bg-slate-800 shrink-0">
+                            <input type="text" id="kw-color-hex" value="#f97316" maxlength="7"
+                                placeholder="#f97316"
+                                oninput="onKwHexInput('kw-color-hex','kw-color')"
+                                class="w-24 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs text-slate-200 font-mono focus:border-cyan-500 outline-none">
                         </div>
                     </div>
 
@@ -1128,6 +1153,19 @@
                 </button>
             </div>
 
+        </div>
+    </div>
+
+    <!-- TOOLTIP DE MENÇÃO DE NÓ (em descrições) -->
+    <div id="node-mention-tooltip" class="fixed hidden bg-slate-900 border border-slate-700 rounded-lg shadow-2xl pointer-events-none z-50 w-64 overflow-hidden">
+        <div id="nmt-accent" class="h-0.5 w-full"></div>
+        <div class="px-3 pt-2.5 pb-1">
+            <p id="nmt-type" class="text-[10px] uppercase tracking-widest font-black mb-0.5 text-slate-400"></p>
+            <h3 id="nmt-name" class="font-bold text-sm text-white leading-tight"></h3>
+        </div>
+        <div class="px-3 pb-3 space-y-1.5">
+            <p id="nmt-desc" class="text-xs text-slate-300 italic hidden border-t border-slate-700/50 pt-1.5"></p>
+            <div id="nmt-stats" class="text-xs text-blue-300 space-y-0.5"></div>
         </div>
     </div>
 
@@ -4151,13 +4189,24 @@
             let isRemovable = idx >= 2;
             row.innerHTML = `
                 <span class="text-[10px] text-slate-500 w-4 shrink-0">${idx + 1}</span>
-                <input type="color" value="${color}" class="kw-stop-color w-12 h-8 rounded cursor-pointer border border-slate-600 shrink-0">
-                <span class="kw-stop-hex text-[10px] text-slate-400 font-mono flex-1">${color}</span>
+                <input type="color" value="${color}" class="kw-stop-color w-10 h-8 rounded cursor-pointer border border-slate-600 shrink-0">
+                <input type="text" value="${color}" maxlength="7" placeholder="#ffffff"
+                    class="kw-stop-hex w-20 bg-slate-700 border border-slate-600 rounded px-1.5 py-0.5 text-[10px] text-slate-200 font-mono focus:border-cyan-500 outline-none">
                 ${isRemovable ? `<button type="button" onmousedown="removeGradStop(this)" class="text-slate-500 hover:text-red-400 text-sm leading-none px-1 transition-colors">✕</button>` : '<span class="w-5"></span>'}
             `;
             let inp = row.querySelector('.kw-stop-color');
             let hex = row.querySelector('.kw-stop-hex');
-            inp.addEventListener('input', () => { hex.textContent = inp.value; updateKwPreview(); });
+            inp.addEventListener('input', () => { hex.value = inp.value; updateKwPreview(); });
+            hex.addEventListener('input', () => {
+                let v = hex.value.trim();
+                if (!v.startsWith('#')) v = '#' + v;
+                if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v)) {
+                    inp.value = v.length === 4
+                        ? '#' + v[1]+v[1]+v[2]+v[2]+v[3]+v[3]
+                        : v;
+                    updateKwPreview();
+                }
+            });
             container.appendChild(row);
         }
 
@@ -4196,6 +4245,27 @@
             return Array.from(inputs).map(i => i.value);
         }
 
+        function onKwColorPick(colorId, hexId) {
+            let c = document.getElementById(colorId);
+            let h = document.getElementById(hexId);
+            if (c && h) h.value = c.value;
+            updateKwPreview();
+        }
+
+        function onKwHexInput(hexId, colorId) {
+            let h = document.getElementById(hexId);
+            let c = document.getElementById(colorId);
+            if (!h || !c) return;
+            let val = h.value.trim();
+            if (!val.startsWith('#')) val = '#' + val;
+            if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(val)) {
+                c.value = val.length === 4
+                    ? '#' + val[1]+val[1]+val[2]+val[2]+val[3]+val[3]
+                    : val;
+                updateKwPreview();
+            }
+        }
+
         function toggleKwColorType() {
             let type = document.querySelector('input[name="kw-color-type"]:checked')?.value;
             let solid = document.getElementById('kw-solid-section');
@@ -4225,7 +4295,7 @@
                 let color = document.getElementById('kw-color')?.value || '#f97316';
                 bg = color;
                 let ch = document.getElementById('kw-color-hex');
-                if (ch) ch.textContent = color;
+                if (ch) ch.value = color;
             }
 
             if (preview) {
@@ -4286,6 +4356,8 @@
             if (solidRad) solidRad.checked = true;
             let colorEl = document.getElementById('kw-color');
             if (colorEl) colorEl.value = '#f97316';
+            let hexEl = document.getElementById('kw-color-hex');
+            if (hexEl) hexEl.value = '#f97316';
             let title = document.getElementById('kw-form-title');
             if (title) title.textContent = 'Nova Keyword';
             _selectedKwStyle = 'default';
@@ -4321,8 +4393,11 @@
                 if (dirEl) dirEl.value = kw.gradDir || 'to right';
             } else {
                 document.getElementById('kw-type-solid').checked = true;
+                let colorVal = kw.color || '#f97316';
                 let colorEl = document.getElementById('kw-color');
-                if (colorEl) colorEl.value = kw.color || '#f97316';
+                if (colorEl) colorEl.value = colorVal;
+                let hexEl = document.getElementById('kw-color-hex');
+                if (hexEl) hexEl.value = colorVal;
             }
             _selectedKwStyle = kw.style || 'default';
             toggleKwColorType();
@@ -4377,77 +4452,170 @@
 
         function parseDescWithKeywords(text) {
             if (!text) return '';
-            // Divide o texto nos marcadores [kw:id], escapa as partes de texto e substitui marcadores por badges
-            let parts = text.split(/(\[kw:[^\]]+\])/g);
+            let parts = text.split(/(\[kw:[^\]]+\]|@\[[^\]]+\])/g);
             return parts.map(part => {
-                let m = part.match(/^\[kw:([^\]]+)\]$/);
-                if (m) {
-                    let kw = keywordsData[m[1]];
+                // Tag de keyword
+                let kwM = part.match(/^\[kw:([^\]]+)\]$/);
+                if (kwM) {
+                    let kw = keywordsData[kwM[1]];
                     if (kw) {
                         let bg = kwBackground(kw);
                         return `<span class="kw-badge" style="background:${escHtml(bg)};font-size:10px;padding:0 5px;border-radius:3px;vertical-align:middle;line-height:1.7">${escHtml(kw.name)}</span>`;
                     }
-                    return escHtml(part); // keyword não encontrada: exibe como texto
+                    return escHtml(part);
                 }
+                // Menção de nodo
+                let nodeM = part.match(/^@\[([^\]]+)\]$/);
+                if (nodeM) {
+                    let node = treeData.nodes[nodeM[1]];
+                    if (node) {
+                        let colors = ATTR_COLORS[node.attribute] || ATTR_COLORS['none'];
+                        return `<span class="node-mention" data-node-ref="${escHtml(node.id)}" style="border-color:${escHtml(colors.stroke)}80" onmouseenter="showNodeMentionTooltip(this,event)" onmouseleave="hideNodeMentionTooltip()">⬥ ${escHtml(node.name)}</span>`;
+                    }
+                    return escHtml(part);
+                }
+                // Texto normal — preserva quebras de linha
                 return escHtml(part).replace(/\n/g, '<br>');
             }).join('');
         }
 
         function descToText(text) {
             if (!text) return '';
-            return text.replace(/\[kw:([^\]]+)\]/g, (_, kwId) => {
-                let kw = keywordsData[kwId];
-                return kw ? kw.name : kwId;
-            });
+            return text
+                .replace(/\[kw:([^\]]+)\]/g, (_, kwId) => {
+                    let kw = keywordsData[kwId];
+                    return kw ? kw.name : kwId;
+                })
+                .replace(/@\[([^\]]+)\]/g, (_, nodeId) => {
+                    let n = treeData.nodes[nodeId];
+                    return n ? n.name : nodeId;
+                });
         }
 
         function handleDescAutocomplete(inputId, dropdownId) {
             let input = document.getElementById(inputId);
             let dropdown = document.getElementById(dropdownId);
-            if (!input || !dropdown || !Object.keys(keywordsData).length) return;
+            if (!input || !dropdown) return;
 
             let cursorPos = input.selectionStart;
             let textBefore = input.value.substring(0, cursorPos);
 
-            // Detecta padrão incompleto [kw:... antes do cursor
-            let m = textBefore.match(/\[kw:([^\]]*)$/);
-            if (!m) { dropdown.classList.add('hidden'); return; }
+            // 1. Padrão de tag keyword [kw:...
+            let kwM = textBefore.match(/\[kw:([^\]]*)$/);
+            if (kwM && Object.keys(keywordsData).length > 0) {
+                let search = kwM[1].toLowerCase();
+                let matches = Object.values(keywordsData).filter(kw =>
+                    !search || kw.name.toLowerCase().includes(search) || kw.id.toLowerCase().includes(search)
+                );
+                if (!matches.length) { dropdown.classList.add('hidden'); return; }
+                let header = `<div class="px-3 py-1 text-[10px] text-slate-400 bg-slate-900/70 border-b border-slate-700 uppercase tracking-wider font-bold">Inserir tag</div>`;
+                dropdown.innerHTML = header + matches.slice(0, 8).map(kw => {
+                    let bg = kwBackground(kw);
+                    return `<div onmousedown="selectDescKeyword('${kw.id}','${inputId}','${dropdownId}')"
+                        class="px-3 py-2 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 transition-colors flex items-center gap-2">
+                        <span class="kw-badge shrink-0" style="background:${escHtml(bg)};font-size:10px;padding:0 5px;border-radius:3px">${escHtml(kw.name)}</span>
+                        <span class="text-[10px] text-slate-500 font-mono">${escHtml(kw.id)}</span>
+                    </div>`;
+                }).join('');
+                dropdown.classList.remove('hidden');
+                return;
+            }
 
-            let search = m[1].toLowerCase();
-            let matches = Object.values(keywordsData).filter(kw =>
-                !search || kw.name.toLowerCase().includes(search) || kw.id.toLowerCase().includes(search)
-            );
-            if (!matches.length) { dropdown.classList.add('hidden'); return; }
+            // 2. Padrão de menção # ou @ para nodos
+            let nodeM = textBefore.match(/[#@]([^#@\[\]\n]*)$/);
+            if (nodeM) {
+                let search = nodeM[1].toLowerCase().trim();
+                let allNodes = Object.values(treeData.nodes);
+                let matches = allNodes.filter(n =>
+                    !search || n.name.toLowerCase().includes(search) || n.id.toLowerCase().includes(search)
+                );
+                if (!matches.length) { dropdown.classList.add('hidden'); return; }
+                let typeIcon = { root:'👑', large:'⭐', notable:'🌀', basic:'🔹', omega:'🌌', omegaFonte:'✨', especializacao:'⚔' };
+                let header = `<div class="px-3 py-1 text-[10px] text-indigo-400 bg-indigo-950/40 border-b border-indigo-900/40 uppercase tracking-wider font-bold">Mencionar habilidade / atributo</div>`;
+                dropdown.innerHTML = header + matches.slice(0, 10).map(n => {
+                    let colors = ATTR_COLORS[n.attribute] || ATTR_COLORS['none'];
+                    let icon = typeIcon[n.type] || '🔹';
+                    return `<div onmousedown="selectDescMention('${n.id}','${inputId}','${dropdownId}')"
+                        class="px-3 py-2 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 transition-colors flex items-center gap-2">
+                        <span class="shrink-0 text-base">${icon}</span>
+                        <div class="flex-1 min-w-0">
+                            <span class="text-xs font-bold text-white">${escHtml(n.name)}</span>
+                            <span class="text-[10px] text-slate-500 font-mono ml-1.5">${escHtml(n.id)}</span>
+                        </div>
+                        <div class="w-2 h-2 rounded-full shrink-0" style="background:${colors.stroke}"></div>
+                    </div>`;
+                }).join('');
+                dropdown.classList.remove('hidden');
+                return;
+            }
 
-            let header = `<div class="px-3 py-1 text-[10px] text-slate-400 bg-slate-900/70 border-b border-slate-700 uppercase tracking-wider font-bold">Inserir tag na descrição</div>`;
-            dropdown.innerHTML = header + matches.slice(0, 8).map(kw => {
-                let bg = kwBackground(kw);
-                return `<div onmousedown="selectDescKeyword('${kw.id}','${inputId}','${dropdownId}')"
-                    class="px-3 py-2 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 transition-colors flex items-center gap-2">
-                    <span class="kw-badge shrink-0" style="background:${escHtml(bg)};font-size:10px;padding:0 5px;border-radius:3px">${escHtml(kw.name)}</span>
-                    <span class="text-[10px] text-slate-500 font-mono">${escHtml(kw.id)}</span>
-                </div>`;
-            }).join('');
-            dropdown.classList.remove('hidden');
+            dropdown.classList.add('hidden');
         }
 
         function selectDescKeyword(kwId, inputId, dropdownId) {
             let input = document.getElementById(inputId);
             let dropdown = document.getElementById(dropdownId);
             if (!input) return;
-
             let cursorPos = input.selectionStart;
             let before = input.value.substring(0, cursorPos);
             let after = input.value.substring(cursorPos);
-
-            // Substitui o [kw:... incompleto pelo marcador completo
             let newBefore = before.replace(/\[kw:[^\]]*?$/, `[kw:${kwId}]`);
             input.value = newBefore + after;
             let newPos = newBefore.length;
             input.setSelectionRange(newPos, newPos);
-
             if (dropdown) dropdown.classList.add('hidden');
             input.focus();
+        }
+
+        function selectDescMention(nodeId, inputId, dropdownId) {
+            let input = document.getElementById(inputId);
+            let dropdown = document.getElementById(dropdownId);
+            if (!input) return;
+            let cursorPos = input.selectionStart;
+            let before = input.value.substring(0, cursorPos);
+            let after = input.value.substring(cursorPos);
+            // Substitui o gatilho #... ou @... pelo marcador completo
+            let newBefore = before.replace(/[#@][^#@\[\]\n]*$/, `@[${nodeId}]`);
+            input.value = newBefore + after;
+            let newPos = newBefore.length;
+            input.setSelectionRange(newPos, newPos);
+            if (dropdown) dropdown.classList.add('hidden');
+            input.focus();
+        }
+
+        function showNodeMentionTooltip(el, event) {
+            let nodeId = el.dataset.nodeRef;
+            let node = treeData.nodes[nodeId];
+            if (!node) return;
+            let tt = document.getElementById('node-mention-tooltip');
+            if (!tt) return;
+            let colors = ATTR_COLORS[node.attribute] || ATTR_COLORS['none'];
+            let tmap = { basic:'Atributo', notable:'Passiva Notável', large:'Habilidade Ativa', root: node.isMythic ? 'Classe Mítica' : 'Classe Base', omega:'Omini', omegaFonte:'Omini Fonte', especializacao:'Especialização' };
+            document.getElementById('nmt-type').textContent = tmap[node.type] || node.type;
+            document.getElementById('nmt-name').textContent = node.name;
+            document.getElementById('nmt-accent').style.background = colors.stroke;
+            tt.style.borderColor = colors.stroke + '55';
+            let descEl = document.getElementById('nmt-desc');
+            if (node.desc) { descEl.innerHTML = parseDescWithKeywords(node.desc); descEl.classList.remove('hidden'); }
+            else descEl.classList.add('hidden');
+            let statsEl = document.getElementById('nmt-stats');
+            statsEl.innerHTML = node.stats && node.stats.length
+                ? node.stats.map(s => `<div class="flex items-center gap-1">${_diamond()} ${renderStatHtml(s)}</div>`).join('')
+                : '<span class="text-slate-600 italic">Sem efeitos.</span>';
+            tt.classList.remove('hidden');
+            let tw = 256, th = tt.scrollHeight || 140;
+            let px = event.clientX + 14;
+            if (px + tw > window.innerWidth - 8) px = event.clientX - tw - 14;
+            let py = event.clientY - Math.round(th / 2);
+            if (py + th > window.innerHeight - 8) py = window.innerHeight - th - 8;
+            if (py < 8) py = 8;
+            tt.style.left = px + 'px';
+            tt.style.top = py + 'px';
+        }
+
+        function hideNodeMentionTooltip() {
+            let tt = document.getElementById('node-mention-tooltip');
+            if (tt) tt.classList.add('hidden');
         }
 
         // ---- Estilos visuais para badges ----
