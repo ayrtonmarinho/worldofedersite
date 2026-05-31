@@ -145,6 +145,108 @@
             vertical-align: middle;
         }
 
+        @keyframes kwNeonPulse {
+            0%,100% { box-shadow: 0 0 5px rgba(255,255,255,0.35), 0 0 10px rgba(255,255,255,0.15); }
+            50%      { box-shadow: 0 0 14px rgba(255,255,255,0.75), 0 0 26px rgba(255,255,255,0.3); }
+        }
+        @keyframes kwBorderPulse {
+            0%,100% { outline-color: rgba(255,255,255,0.85); outline-offset: 0px; }
+            50%     { outline-color: rgba(255,255,255,0.1);  outline-offset: 4px; }
+        }
+        @keyframes kwRainbow {
+            0%   { filter: hue-rotate(0deg)   brightness(1.05); }
+            50%  { filter: hue-rotate(180deg) brightness(1.15); }
+            100% { filter: hue-rotate(360deg) brightness(1.05); }
+        }
+        .kw-style-neon        { animation: kwNeonPulse   1.8s ease-in-out infinite; }
+        .kw-style-border-anim { outline: 2px solid rgba(255,255,255,0.8); animation: kwBorderPulse 1.5s ease-in-out infinite; }
+        .kw-style-rainbow     { animation: kwRainbow 3s linear infinite; }
+
+        /* Reluzindo — clarão rápido como luz batendo na superfície */
+        @keyframes kwGlint {
+            0%, 82%, 100% { filter: brightness(1) saturate(1); }
+            85%  { filter: brightness(1.9) saturate(1.5) drop-shadow(0 0 7px rgba(255,255,255,0.95)); }
+            88%  { filter: brightness(1) saturate(1); }
+            92%  { filter: brightness(1.4) saturate(1.2) drop-shadow(0 0 4px rgba(255,255,255,0.6)); }
+            94%  { filter: brightness(1) saturate(1); }
+        }
+        .kw-style-glint { animation: kwGlint 2.8s ease-in-out infinite; }
+
+        /* Ondas no Lago — anéis concêntricos se expandindo */
+        @keyframes kwRipple {
+            0%   { box-shadow: 0 0 0 0px rgba(255,255,255,0.55),
+                               0 0 0 0px rgba(255,255,255,0.3),
+                               0 0 0 0px rgba(255,255,255,0.12); }
+            100% { box-shadow: 0 0 0 10px rgba(255,255,255,0),
+                               0 0 0 20px rgba(255,255,255,0),
+                               0 0 0 32px rgba(255,255,255,0); }
+        }
+        .kw-style-ripple { animation: kwRipple 2.2s ease-out infinite; }
+
+        /* Aura Emanante — energia irradiando em camadas */
+        @keyframes kwAura {
+            0%, 100% { box-shadow: 0 0 4px 1px rgba(255,255,255,0.5),
+                                   0 0 8px  rgba(255,255,255,0.15);
+                       filter: brightness(1.04); }
+            35%       { box-shadow: 0 0 14px 5px rgba(255,255,255,0.22),
+                                   0 0 28px   rgba(255,255,255,0.12),
+                                   0 0 48px   rgba(255,255,255,0.05);
+                       filter: brightness(1.18); }
+            70%       { box-shadow: 0 0 8px 2px rgba(255,255,255,0.35),
+                                   0 0 16px   rgba(255,255,255,0.1);
+                       filter: brightness(1.08); }
+        }
+        .kw-style-aura { animation: kwAura 0.9s ease-in-out infinite; }
+
+        /* Névoa Negra — sombras escuras se deslocando */
+        @keyframes kwDarkMist {
+            0%   { box-shadow:-3px -2px 8px 3px rgba(5,0,12,0.92),2px 3px 14px rgba(25,0,35,0.78),0 0 7px rgba(40,0,60,0.55); filter:brightness(0.82) saturate(1.3); }
+            20%  { box-shadow:5px -4px 11px 4px rgba(0,0,0,0.96),-3px 2px 17px rgba(12,0,22,0.88),4px 0 9px rgba(30,0,50,0.65); filter:brightness(0.76) saturate(1.4); }
+            42%  { box-shadow:-2px 6px 13px 3px rgba(0,0,6,0.82),4px -4px 11px rgba(18,0,28,0.72),-5px 5px 7px rgba(22,0,42,0.58); filter:brightness(0.85) saturate(1.25); }
+            65%  { box-shadow:6px 2px 10px 5px rgba(0,0,9,0.9),-5px -2px 16px rgba(10,0,20,0.93),3px -5px 8px rgba(32,0,52,0.62); filter:brightness(0.79) saturate(1.35); }
+            83%  { box-shadow:-4px -5px 9px 2px rgba(8,0,15,0.88),3px 4px 12px rgba(22,0,32,0.76),-2px 2px 10px rgba(38,0,58,0.5); filter:brightness(0.83) saturate(1.3); }
+            100% { box-shadow:-3px -2px 8px 3px rgba(5,0,12,0.92),2px 3px 14px rgba(25,0,35,0.78),0 0 7px rgba(40,0,60,0.55); filter:brightness(0.82) saturate(1.3); }
+        }
+        .kw-style-dark-mist { animation: kwDarkMist 2.8s ease-in-out infinite; }
+
+        /* Chamas — labaredas subindo */
+        @keyframes kwFlames {
+            0%   { box-shadow:-1px -5px 8px 2px rgba(255,80,0,0.75), 1px -3px 12px rgba(255,170,0,0.55),0 2px 4px rgba(180,0,0,0.4); filter:brightness(1.1) hue-rotate(-5deg); }
+            18%  { box-shadow:-3px -9px 11px 3px rgba(255,145,0,0.85),2px -6px 9px rgba(255,210,0,0.65),-1px 3px 5px rgba(200,10,0,0.5); filter:brightness(1.38) hue-rotate(7deg); }
+            36%  { box-shadow:2px -7px 13px 2px rgba(255,60,0,0.92),-2px -10px 15px rgba(255,135,0,0.75),1px 2px 6px rgba(165,0,0,0.55); filter:brightness(1.22) hue-rotate(-8deg); }
+            55%  { box-shadow:-2px -11px 16px 4px rgba(255,115,0,0.88),3px -7px 11px rgba(255,190,0,0.7),0 3px 5px rgba(190,5,0,0.5); filter:brightness(1.48) hue-rotate(5deg); }
+            78%  { box-shadow:1px -8px 10px 2px rgba(255,95,0,0.78),-1px -5px 12px rgba(255,155,0,0.58),-2px 2px 4px rgba(183,0,0,0.42); filter:brightness(1.17) hue-rotate(-4deg); }
+            100% { box-shadow:-1px -5px 8px 2px rgba(255,80,0,0.75), 1px -3px 12px rgba(255,170,0,0.55),0 2px 4px rgba(180,0,0,0.4); filter:brightness(1.1) hue-rotate(-5deg); }
+        }
+        .kw-style-flames { animation: kwFlames 0.5s ease-in-out infinite; }
+
+        /* Ar Frio / Gelo — cristais de gelo cintilando */
+        @keyframes kwFrost {
+            0%,100%{ box-shadow:0 0 6px 1px rgba(150,230,255,0.55),0 0 12px rgba(100,200,255,0.32),inset 0 0 4px rgba(210,245,255,0.32); filter:brightness(1.06) saturate(0.88) hue-rotate(0deg); }
+            30%    { box-shadow:-2px -2px 9px 2px rgba(185,243,255,0.68),2px 2px 13px rgba(105,212,255,0.42),0 0 20px rgba(165,232,255,0.22); filter:brightness(1.2) saturate(0.78) hue-rotate(-6deg); }
+            65%    { box-shadow:2px -1px 7px 2px rgba(205,250,255,0.73),-2px 2px 10px rgba(125,218,255,0.38),inset 1px -1px 4px rgba(235,252,255,0.42); filter:brightness(1.14) saturate(0.83) hue-rotate(6deg); }
+        }
+        .kw-style-frost { animation: kwFrost 2.4s ease-in-out infinite; }
+
+        /* Vinhas — ramificações orgânicas verdes pulsando */
+        @keyframes kwVines {
+            0%,100%{ box-shadow:-4px 1px 6px rgba(0,140,10,0.58),0 4px 8px rgba(0,112,22,0.42),3px -2px 5px rgba(52,172,0,0.38); filter:saturate(1.38) brightness(1.04); }
+            33%    { box-shadow:-6px -2px 10px rgba(12,162,32,0.68),2px 6px 12px rgba(0,132,18,0.52),6px -3px 8px rgba(62,188,12,0.44); filter:saturate(1.58) brightness(1.12); }
+            66%    { box-shadow:-2px 4px 8px rgba(0,152,12,0.58),5px 3px 10px rgba(0,122,28,0.46),-3px -1px 6px rgba(42,178,6,0.34); filter:saturate(1.48) brightness(1.07); }
+        }
+        .kw-style-vines { animation: kwVines 3s ease-in-out infinite; }
+
+        /* Vela — luz incandescente crescente e minguante */
+        @keyframes kwCandle {
+            0%,100%{ box-shadow:0 0 5px 1px rgba(255,172,52,0.52),0 0 10px rgba(255,132,0,0.32),0 -3px 8px rgba(255,192,72,0.42); filter:brightness(1.06); }
+            14%    { box-shadow:0 0 9px 2px rgba(255,202,82,0.68),0 0 19px rgba(255,158,18,0.42),0 -6px 14px rgba(255,222,92,0.52); filter:brightness(1.2); }
+            32%    { box-shadow:0 0 5px 1px rgba(255,178,42,0.5),0 0 11px rgba(255,122,0,0.3),0 -2px 6px rgba(255,198,68,0.38); filter:brightness(1.07); }
+            54%    { box-shadow:0 0 13px 3px rgba(255,212,92,0.75),0 0 26px rgba(255,168,28,0.48),0 -9px 18px rgba(255,232,102,0.58); filter:brightness(1.32); }
+            74%    { box-shadow:0 0 7px 2px rgba(255,188,62,0.58),0 0 14px rgba(255,142,8,0.34),0 -4px 10px rgba(255,208,82,0.44); filter:brightness(1.13); }
+            90%    { box-shadow:0 0 4px 1px rgba(255,165,45,0.48),0 0 8px rgba(255,118,0,0.26),0 -2px 5px rgba(255,185,65,0.35); filter:brightness(1.04); }
+        }
+        .kw-style-candle { animation: kwCandle 1.9s ease-in-out infinite; }
+
         .stat-diamond {
             display: inline-block;
             background: linear-gradient(135deg,
@@ -447,9 +549,16 @@
                 </div>
 
                 <div id="ext-desc" class="hidden">
-                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Descrição detalhada</label>
-                    <textarea id="new-desc" rows="2"
-                        class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none"></textarea>
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">
+                        Descrição — digite <span class="text-cyan-600 font-mono">[kw:</span> para inserir uma tag
+                    </label>
+                    <div class="relative">
+                        <textarea id="new-desc" rows="2"
+                            oninput="handleDescAutocomplete('new-desc','new-desc-ac')"
+                            onblur="setTimeout(()=>document.getElementById('new-desc-ac')?.classList.add('hidden'),150)"
+                            class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none resize-none"></textarea>
+                        <div id="new-desc-ac" class="absolute w-full mt-1 bg-slate-800 border border-cyan-800/60 rounded shadow-2xl max-h-44 overflow-y-auto hidden z-50"></div>
+                    </div>
                 </div>
 
                 <div id="ext-img" class="hidden">
@@ -721,8 +830,16 @@
                         </div>
                     </div>
 
+                    <!-- Estilo -->
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1.5">Estilo / Profundidade</label>
+                        <div class="grid grid-cols-4 gap-1.5" id="kw-style-grid">
+                            <!-- preenchido via JS -->
+                        </div>
+                    </div>
+
                     <!-- Preview -->
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 flex-wrap">
                         <label class="text-[10px] text-slate-400 uppercase font-bold shrink-0">Preview:</label>
                         <span id="kw-preview" class="kw-badge" style="background:#f97316;font-size:13px;padding:3px 12px">Keyword</span>
                     </div>
@@ -2193,7 +2310,7 @@
                         </div>
                     </div>
                     ${rootNode.desc || statsHtml ? `<div class="px-3 py-2" style="background: ${attrColors.fill}80">
-                        ${rootNode.desc ? `<p class="text-xs text-slate-300 italic mb-1">${escHtml(rootNode.desc)}</p>` : ''}
+                        ${rootNode.desc ? `<p class="text-xs text-slate-300 italic mb-1">${parseDescWithKeywords(rootNode.desc)}</p>` : ''}
                         ${statsHtml}
                     </div>` : ''}`;
                 } else {
@@ -2222,7 +2339,7 @@
                             </div>
                         </div>
                         ${mythicNode.desc || mcStats ? `<div class="px-3 py-2" style="background: rgba(109,40,217,0.2)">
-                            ${mythicNode.desc ? `<p class="text-xs text-slate-300 italic mb-1">${escHtml(mythicNode.desc)}</p>` : ''}
+                            ${mythicNode.desc ? `<p class="text-xs text-slate-300 italic mb-1">${parseDescWithKeywords(mythicNode.desc)}</p>` : ''}
                             ${mcStats}
                         </div>` : ''}`;
 
@@ -2384,7 +2501,7 @@
                 html += `<h3 style="color: #9333ea; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-top: 30px;">🌀 Passivas Notáveis</h3><ul style="line-height: 1.6; font-size: 14px;">`;
                 passives.forEach(p => {
                     let statsText = p.stats && p.stats.length > 0 ? `<br><span style="color: #7c3aed; font-size: 12px; margin-left: 10px;">↳ Efeitos: ${p.stats.map(statToText).join(', ')}</span>` : '';
-                    html += `<li style="margin-bottom: 12px;"><strong>${p.name}:</strong> ${p.desc || ''}${statsText}</li>`;
+                    html += `<li style="margin-bottom: 12px;"><strong>${p.name}:</strong> ${descToText(p.desc || '')}${statsText}</li>`;
                 });
                 html += `</ul>`;
             }
@@ -2444,7 +2561,7 @@
                 }`;
 
             let desc = document.getElementById("tt-desc");
-            if (n.desc) { desc.textContent = n.desc; desc.classList.remove("hidden"); }
+            if (n.desc) { desc.innerHTML = parseDescWithKeywords(n.desc); desc.classList.remove("hidden"); }
             else { desc.classList.add("hidden"); }
 
             document.getElementById("tt-stats").innerHTML = n.stats.map(s => `<div class="flex items-center gap-1.5">${_diamond()} ${renderStatHtml(s)}</div>`).join("");
@@ -3387,7 +3504,7 @@
             tt.style.borderColor = colors.stroke + '55';
 
             let descEl = document.getElementById('stt-desc');
-            if (n.desc) { descEl.textContent = n.desc; descEl.classList.remove('hidden'); }
+            if (n.desc) { descEl.innerHTML = parseDescWithKeywords(n.desc); descEl.classList.remove('hidden'); }
             else { descEl.classList.add('hidden'); }
 
             let statsEl = document.getElementById('stt-stats');
@@ -3813,6 +3930,15 @@
             return kw.color || '#334155';
         }
 
+        function _kwBadgeHtml(kw, extraStyle) {
+            let bg = kwBackground(kw);
+            let styleDef = KW_STYLES_DEF[kw.style] || KW_STYLES_DEF['default'];
+            let cls = styleDef.cls ? ` ${styleDef.cls}` : '';
+            let cssExtra = styleDef.css ? styleDef.css + ';' : '';
+            let style = `background:${escHtml(bg)};${cssExtra}${extraStyle || ''}`;
+            return `<span class="kw-badge${cls}" style="${style}">${escHtml(kw.name)}</span>`;
+        }
+
         function renderStatHtml(stat) {
             if (typeof stat === 'string' && stat.startsWith('kw:')) {
                 let parts = stat.substring(3).split(':');
@@ -3820,21 +3946,19 @@
                 let kwVal = parts.slice(1).join(':').trim();
                 let kw = keywordsData[kwId];
                 if (kw) {
-                    let bg = kwBackground(kw);
                     // Tag combinada com outra tag
                     if (kwVal && keywordsData[kwVal]) {
                         let linked = keywordsData[kwVal];
-                        let linkedBg = kwBackground(linked);
-                        return `<span class="kw-badge" style="background:${escHtml(bg)};border-radius:3px 0 0 3px">${escHtml(kw.name)}</span>`
-                             + `<span class="kw-badge" style="background:${escHtml(linkedBg)};border-radius:0 3px 3px 0;margin-left:1px">${escHtml(linked.name)}</span>`;
+                        return _kwBadgeHtml(kw, 'border-radius:3px 0 0 3px;')
+                             + _kwBadgeHtml(linked, 'border-radius:0 3px 3px 0;margin-left:1px;');
                     }
                     // Tag com valor numérico/texto
                     if (kwVal) {
-                        return `<span class="kw-badge" style="background:${escHtml(bg)};border-radius:3px 0 0 3px">${escHtml(kw.name)}</span>`
+                        return _kwBadgeHtml(kw, 'border-radius:3px 0 0 3px;')
                              + `<span class="kw-val">${escHtml(kwVal)}</span>`;
                     }
                     // Só a tag
-                    return `<span class="kw-badge" style="background:${escHtml(bg)}">${escHtml(kw.name)}</span>`;
+                    return _kwBadgeHtml(kw, '');
                 }
                 return `<span class="text-blue-300">${escHtml(kwId + (kwVal ? ' ' + kwVal : ''))}</span>`;
             }
@@ -3955,6 +4079,11 @@
             if (preview) {
                 preview.style.background = bg;
                 preview.style.borderRadius = '3px';
+                preview.style.clipPath = '';
+                preview.style.padding = '3px 12px';
+                let styleDef = KW_STYLES_DEF[_selectedKwStyle];
+                preview.className = 'kw-badge' + (styleDef?.cls ? ' ' + styleDef.cls : '');
+                preview.style.cssText += styleDef?.css ? ';' + styleDef.css : '';
                 preview.textContent = name;
             }
         }
@@ -3967,7 +4096,7 @@
 
             let typeEl = document.querySelector('input[name="kw-color-type"]:checked');
             let type = typeEl ? typeEl.value : 'solid';
-            let kw = { id, name, colorType: type };
+            let kw = { id, name, colorType: type, style: _selectedKwStyle !== 'default' ? _selectedKwStyle : null };
 
             if (type === 'gradient') {
                 kw.gradStops = getGradStops();
@@ -4000,6 +4129,7 @@
             if (colorEl) colorEl.value = '#f97316';
             let title = document.getElementById('kw-form-title');
             if (title) title.textContent = 'Nova Keyword';
+            _selectedKwStyle = 'default';
             initGradStops(['#f97316', '#ef4444']);
             toggleKwColorType();
         }
@@ -4007,9 +4137,9 @@
         function openKeywordsModal() {
             renderAdminKeywordList();
             document.getElementById('keywords-modal').classList.remove('hidden');
-            // Inicializa stops se ainda vazio
             let container = document.getElementById('kw-grad-stops');
             if (container && container.children.length === 0) initGradStops();
+            initKwStylePicker();
         }
 
         function closeKeywordsModal() {
@@ -4035,6 +4165,7 @@
                 let colorEl = document.getElementById('kw-color');
                 if (colorEl) colorEl.value = kw.color || '#f97316';
             }
+            _selectedKwStyle = kw.style || 'default';
             toggleKwColorType();
             updateKwPreview();
             let title = document.getElementById('kw-form-title');
@@ -4061,14 +4192,19 @@
             }
             list.innerHTML = kws.map(kw => {
                 let bg = kwBackground(kw);
+                let styleDef = KW_STYLES_DEF[kw.style] || KW_STYLES_DEF['default'];
+                let styleCls = styleDef.cls ? ' ' + styleDef.cls : '';
+                let styleCss = styleDef.css ? styleDef.css + ';' : '';
+                let styleName = kw.style ? (KW_STYLES_DEF[kw.style]?.label || kw.style) : '';
                 let stopsInfo = kw.colorType === 'gradient' && kw.gradStops
                     ? `<span class="text-[9px] text-slate-600">${kw.gradStops.length} cores</span>`
                     : '';
+                let styleInfo = styleName ? `<span class="text-[9px] text-slate-600">${styleName}</span>` : '';
                 return `<div class="bg-slate-900/60 border border-slate-700 rounded-lg p-2.5 flex items-center gap-3">
-                    <span class="kw-badge shrink-0" style="background:${escHtml(bg)};font-size:12px;padding:2px 10px">${escHtml(kw.name)}</span>
+                    <span class="kw-badge${styleCls} shrink-0" style="background:${escHtml(bg)};${styleCss}font-size:12px;padding:2px 10px">${escHtml(kw.name)}</span>
                     <div class="flex-1 min-w-0 space-y-0.5">
                         <p class="text-[10px] text-slate-500 font-mono truncate">${escHtml(kw.id)}</p>
-                        ${stopsInfo}
+                        <div class="flex gap-1.5 flex-wrap">${stopsInfo}${styleInfo}</div>
                     </div>
                     <div class="flex gap-1.5 shrink-0">
                         <button onclick="adminEditKeyword('${kw.id}')" class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded font-bold transition-colors">Editar</button>
@@ -4076,6 +4212,133 @@
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        // ---- Tags inline em descrições ----
+
+        function parseDescWithKeywords(text) {
+            if (!text) return '';
+            // Divide o texto nos marcadores [kw:id], escapa as partes de texto e substitui marcadores por badges
+            let parts = text.split(/(\[kw:[^\]]+\])/g);
+            return parts.map(part => {
+                let m = part.match(/^\[kw:([^\]]+)\]$/);
+                if (m) {
+                    let kw = keywordsData[m[1]];
+                    if (kw) {
+                        let bg = kwBackground(kw);
+                        return `<span class="kw-badge" style="background:${escHtml(bg)};font-size:10px;padding:0 5px;border-radius:3px;vertical-align:middle;line-height:1.7">${escHtml(kw.name)}</span>`;
+                    }
+                    return escHtml(part); // keyword não encontrada: exibe como texto
+                }
+                return escHtml(part).replace(/\n/g, '<br>');
+            }).join('');
+        }
+
+        function descToText(text) {
+            if (!text) return '';
+            return text.replace(/\[kw:([^\]]+)\]/g, (_, kwId) => {
+                let kw = keywordsData[kwId];
+                return kw ? kw.name : kwId;
+            });
+        }
+
+        function handleDescAutocomplete(inputId, dropdownId) {
+            let input = document.getElementById(inputId);
+            let dropdown = document.getElementById(dropdownId);
+            if (!input || !dropdown || !Object.keys(keywordsData).length) return;
+
+            let cursorPos = input.selectionStart;
+            let textBefore = input.value.substring(0, cursorPos);
+
+            // Detecta padrão incompleto [kw:... antes do cursor
+            let m = textBefore.match(/\[kw:([^\]]*)$/);
+            if (!m) { dropdown.classList.add('hidden'); return; }
+
+            let search = m[1].toLowerCase();
+            let matches = Object.values(keywordsData).filter(kw =>
+                !search || kw.name.toLowerCase().includes(search) || kw.id.toLowerCase().includes(search)
+            );
+            if (!matches.length) { dropdown.classList.add('hidden'); return; }
+
+            let header = `<div class="px-3 py-1 text-[10px] text-slate-400 bg-slate-900/70 border-b border-slate-700 uppercase tracking-wider font-bold">Inserir tag na descrição</div>`;
+            dropdown.innerHTML = header + matches.slice(0, 8).map(kw => {
+                let bg = kwBackground(kw);
+                return `<div onmousedown="selectDescKeyword('${kw.id}','${inputId}','${dropdownId}')"
+                    class="px-3 py-2 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 transition-colors flex items-center gap-2">
+                    <span class="kw-badge shrink-0" style="background:${escHtml(bg)};font-size:10px;padding:0 5px;border-radius:3px">${escHtml(kw.name)}</span>
+                    <span class="text-[10px] text-slate-500 font-mono">${escHtml(kw.id)}</span>
+                </div>`;
+            }).join('');
+            dropdown.classList.remove('hidden');
+        }
+
+        function selectDescKeyword(kwId, inputId, dropdownId) {
+            let input = document.getElementById(inputId);
+            let dropdown = document.getElementById(dropdownId);
+            if (!input) return;
+
+            let cursorPos = input.selectionStart;
+            let before = input.value.substring(0, cursorPos);
+            let after = input.value.substring(cursorPos);
+
+            // Substitui o [kw:... incompleto pelo marcador completo
+            let newBefore = before.replace(/\[kw:[^\]]*?$/, `[kw:${kwId}]`);
+            input.value = newBefore + after;
+            let newPos = newBefore.length;
+            input.setSelectionRange(newPos, newPos);
+
+            if (dropdown) dropdown.classList.add('hidden');
+            input.focus();
+        }
+
+        // ---- Estilos visuais para badges ----
+        const KW_STYLES_DEF = {
+            'default':       { label: 'Padrão',         css: '',  cls: '' },
+            'shadow-soft':   { label: 'Sombra Suave',   css: 'box-shadow:0 2px 8px rgba(0,0,0,0.55),0 1px 3px rgba(0,0,0,0.35)',  cls: '' },
+            'shadow-deep':   { label: 'Sombra Forte',   css: 'box-shadow:0 5px 18px rgba(0,0,0,0.75),0 2px 6px rgba(0,0,0,0.5)',  cls: '' },
+            'raised':        { label: 'Relevo',         css: 'box-shadow:0 4px 0 rgba(0,0,0,0.5),0 5px 12px rgba(0,0,0,0.4);transform:translateY(-2px)',  cls: '' },
+            'sunken':        { label: 'Afundado',       css: 'box-shadow:inset 0 3px 8px rgba(0,0,0,0.6),inset 0 1px 2px rgba(0,0,0,0.4);filter:brightness(0.78)',  cls: '' },
+            'inner-glow':    { label: 'Brilho Interno', css: 'box-shadow:inset 0 0 10px rgba(255,255,255,0.4),inset 0 0 4px rgba(255,255,255,0.25),0 2px 6px rgba(0,0,0,0.3)',  cls: '' },
+            'metallic':      { label: 'Metálico',       css: 'box-shadow:inset 0 1px 0 rgba(255,255,255,0.6),inset 0 -2px 0 rgba(0,0,0,0.5),2px 4px 8px rgba(0,0,0,0.5);filter:contrast(1.15) saturate(0.7)',  cls: '' },
+            'glass':         { label: 'Cristal',        css: 'box-shadow:inset 0 1px 0 rgba(255,255,255,0.5),inset 0 -1px 0 rgba(0,0,0,0.3),0 4px 14px rgba(0,0,0,0.4);filter:brightness(1.12)',  cls: '' },
+            'double-border': { label: 'Dupla Borda',    css: 'box-shadow:0 0 0 1px rgba(255,255,255,0.55),0 0 0 3px rgba(0,0,0,0.5),0 0 0 4px rgba(255,255,255,0.2),0 3px 8px rgba(0,0,0,0.3)',  cls: '' },
+            'dotted':        { label: 'Pontilhada',     css: 'outline:2px dotted rgba(255,255,255,0.75);outline-offset:2px;box-shadow:0 2px 6px rgba(0,0,0,0.35)',  cls: '' },
+            'dashed':        { label: 'Tracejada',      css: 'outline:2px dashed rgba(255,255,255,0.7);outline-offset:2px;box-shadow:0 2px 6px rgba(0,0,0,0.35)',  cls: '' },
+            'neon':          { label: 'Neon',           css: '',  cls: 'kw-style-neon' },
+            'border-anim':   { label: 'Borda Viva',     css: '',  cls: 'kw-style-border-anim' },
+            'rainbow':       { label: 'Arco-íris',      css: '',  cls: 'kw-style-rainbow' },
+            'faceted':       { label: 'Lapidado',       css: 'box-shadow:inset 3px 3px 0 rgba(255,255,255,0.55),inset -2px -2px 0 rgba(0,0,0,0.45),inset 2px -2px 0 rgba(255,255,255,0.28),inset -2px 2px 0 rgba(0,0,0,0.22),0 0 0 1px rgba(255,255,255,0.22),0 4px 14px rgba(0,0,0,0.5);filter:contrast(1.12) brightness(1.07) saturate(1.15)', cls: '' },
+            'glint':         { label: 'Reluzindo',      css: '',  cls: 'kw-style-glint' },
+            'ripple':        { label: 'Ondas Lago',     css: '',  cls: 'kw-style-ripple' },
+            'aura':          { label: 'Aura',           css: 'box-shadow:0 0 4px 1px rgba(255,255,255,0.4)', cls: 'kw-style-aura' },
+            'dark-mist':     { label: 'Névoa Negra',    css: '',  cls: 'kw-style-dark-mist' },
+            'flames':        { label: 'Chamas',         css: 'box-shadow:0 -3px 8px rgba(255,80,0,0.6)', cls: 'kw-style-flames' },
+            'frost':         { label: 'Ar Frio',        css: 'box-shadow:0 0 5px rgba(150,230,255,0.42)', cls: 'kw-style-frost' },
+            'vines':         { label: 'Vinhas',         css: 'box-shadow:-3px 1px 5px rgba(0,140,10,0.45)', cls: 'kw-style-vines' },
+            'candle':        { label: 'Vela',           css: 'box-shadow:0 0 5px rgba(255,172,52,0.45)', cls: 'kw-style-candle' },
+            'crystal':       { label: 'Cristal',        css: 'opacity:0.82;box-shadow:inset 2px 2px 0 rgba(255,255,255,0.72),inset -1px -1px 0 rgba(255,255,255,0.38),inset 1px -2px 0 rgba(0,0,0,0.14),0 0 0 1px rgba(255,255,255,0.38),0 3px 10px rgba(0,0,0,0.28);filter:brightness(1.22) saturate(0.72)', cls: '' },
+        };
+
+        let _selectedKwStyle = 'default';
+
+        function initKwStylePicker() {
+            let grid = document.getElementById('kw-style-grid');
+            if (!grid) return;
+            grid.innerHTML = Object.entries(KW_STYLES_DEF).map(([key, def]) => {
+                let active = key === _selectedKwStyle;
+                let badgeStyle = `background:#f97316;font-size:10px;padding:2px 8px;border-radius:3px;color:#fff;font-weight:700;display:inline-block;${def.css}`;
+                return `<button type="button" data-style="${key}" onclick="selectKwStyle('${key}')"
+                    class="kw-style-btn flex flex-col items-center gap-1.5 p-2 rounded border transition-colors ${active ? 'border-cyan-400 bg-cyan-900/20' : 'border-slate-600 hover:border-slate-500'}">
+                    <span class="${def.cls}" style="${badgeStyle}">Tag</span>
+                    <span class="text-[9px] leading-tight text-center ${active ? 'text-cyan-400' : 'text-slate-500'}">${def.label}</span>
+                </button>`;
+            }).join('');
+        }
+
+        function selectKwStyle(style) {
+            _selectedKwStyle = style;
+            initKwStylePicker();
+            updateKwPreview();
         }
 
         function handleStatAutocomplete() {
@@ -4207,7 +4470,7 @@
             document.getElementById('mni-type').textContent = tmap[node.type] || node.type;
             document.getElementById('mni-name').textContent = node.name;
             let descEl = document.getElementById('mni-desc');
-            if (node.desc) { descEl.textContent = node.desc; descEl.classList.remove('hidden'); }
+            if (node.desc) { descEl.innerHTML = parseDescWithKeywords(node.desc); descEl.classList.remove('hidden'); }
             else { descEl.classList.add('hidden'); }
             document.getElementById('mni-stats').innerHTML = node.stats.map(s => `<div class="flex items-center gap-1.5">${_diamond()} ${renderStatHtml(s)}</div>`).join('');
             let st = document.getElementById('mni-status');
