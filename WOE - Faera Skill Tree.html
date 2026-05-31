@@ -724,14 +724,18 @@
                 </div>
 
                 <div class="relative">
-                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Status / Efeitos — <span class="text-cyan-500">keywords</span> ou texto livre (sep. por vírgula)</label>
-                    <input type="text" id="new-stat" placeholder="Digite para buscar keywords, ou texto livre..."
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[10px] text-slate-400 uppercase font-bold">Status / Efeitos — <span class="text-cyan-500">keywords</span> ou texto livre (um por linha)</label>
+                        <button type="button" onmousedown="openStatTagPickerBtn(event)"
+                            class="text-[10px] bg-cyan-800/50 hover:bg-cyan-700/70 border border-cyan-700/50 px-2 py-0.5 rounded text-cyan-300 font-bold transition-colors shrink-0">🏷️ Tag</button>
+                    </div>
+                    <textarea id="new-stat" rows="3" placeholder="Digite para buscar keywords, ou texto livre...&#10;(Enter para nova linha, cada linha é um efeito)"
                         autocomplete="off"
                         oninput="handleStatAutocomplete()"
                         onblur="setTimeout(()=>{let d=document.getElementById('stat-autocomplete');if(d)d.classList.add('hidden');},150)"
-                        class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none">
+                        class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-fuchsia-500 outline-none resize-y min-h-[52px]"></textarea>
                     <div id="stat-autocomplete" class="absolute w-full mt-1 bg-slate-800 border border-cyan-800/60 rounded shadow-2xl max-h-44 overflow-y-auto hidden z-50"></div>
-                    <p class="text-[10px] text-slate-600 mt-1">Selecione uma keyword → adicione valor após ':' (ex: <span class="text-cyan-700">kw:forca:+10</span>)</p>
+                    <p class="text-[10px] text-slate-600 mt-1">Cada linha = um efeito. Keyword: <span class="text-cyan-700">kw:forca:+10</span> · use o botão 🏷️ para inserir onde o cursor estiver</p>
                 </div>
 
                 <div class="relative">
@@ -1755,7 +1759,7 @@
                         document.getElementById('new-attr').value = hoveredNode.attribute || 'none';
                         document.getElementById('new-desc').value = hoveredNode.desc || '';
                         document.getElementById('new-img').value = hoveredNode.imgUrl || '';
-                        document.getElementById('new-stat').value = hoveredNode.stats.join(', ');
+                        document.getElementById('new-stat').value = hoveredNode.stats.join('\n');
                         document.getElementById('new-x').value = hoveredNode.x;
                         document.getElementById('new-y').value = hoveredNode.y;
                         document.getElementById('new-fonte').value = hoveredNode.fonteId || '';
@@ -3135,7 +3139,7 @@
                 y: parseFloat(document.getElementById('new-y').value),
                 type: nodeType,
                 attribute: document.getElementById('new-attr').value,
-                stats: document.getElementById('new-stat').value.split(',').map(s => s.trim()).filter(s => s),
+                stats: document.getElementById('new-stat').value.split(/\n/).map(s => s.trim()).filter(s => s),
                 desc: document.getElementById('new-desc').value.trim(),
                 imgUrl: document.getElementById('new-img').value.trim(),
                 fonteId: nodeType === 'omega' ? fonteId : undefined,
@@ -4684,21 +4688,30 @@
             updateKwPreview();
         }
 
+        // Retorna o segmento na posição do cursor (entre separadores , ou \n)
+        function _statSegmentAtCursor(input) {
+            let pos = input.selectionStart ?? input.value.length;
+            let before = input.value.substring(0, pos);
+            let sepIdx = before.lastIndexOf('\n');
+            let afterSep = before.substring(sepIdx + 1);
+            let leading = afterSep.length - afterSep.trimStart().length;
+            return { pos, segStart: sepIdx + 1 + leading, segment: afterSep.trimStart() };
+        }
+
         function handleStatAutocomplete() {
             let input = document.getElementById('new-stat');
             let dropdown = document.getElementById('stat-autocomplete');
             if (!input || !dropdown) return;
 
-            let parts = input.value.split(',');
-            let lastPart = parts[parts.length - 1].trim();
+            let { segment } = _statSegmentAtCursor(input);
 
-            if (!lastPart || Object.keys(keywordsData).length === 0) {
+            if (!segment || Object.keys(keywordsData).length === 0) {
                 dropdown.classList.add('hidden');
                 return;
             }
 
-            // Detecta padrão "kw:id:..." — já tem uma tag, oferecer combinar com outra
-            let comboMatch = lastPart.match(/^kw:([^:,]+):(.*)$/);
+            // Detecta padrão "kw:id:..." — oferecer combinar com outra tag
+            let comboMatch = segment.match(/^kw:([^:\n]+):(.*)$/);
             if (comboMatch) {
                 let parentId = comboMatch[1];
                 let search = comboMatch[2].toLowerCase().trim();
@@ -4718,8 +4731,8 @@
                 return;
             }
 
-            // Modo normal: busca tag pelo que está sendo digitado
-            let q = lastPart.toLowerCase();
+            // Modo normal: busca tag pelo segmento atual
+            let q = segment.toLowerCase();
             let matches = Object.values(keywordsData).filter(kw =>
                 kw.name.toLowerCase().includes(q) || kw.id.toLowerCase().includes(q)
             );
@@ -4736,29 +4749,81 @@
             dropdown.classList.remove('hidden');
         }
 
-        function selectStatKeyword(kwId) {
+        function selectStatKeyword(kwId, fromButton) {
             let input = document.getElementById('new-stat');
             let dropdown = document.getElementById('stat-autocomplete');
             if (!input) return;
-            let parts = input.value.split(',');
-            parts[parts.length - 1] = 'kw:' + kwId + ':';
-            input.value = parts.map((p, i) => i === parts.length - 1 ? p : p.trim()).join(', ');
+
+            let newBefore;
+            if (fromButton) {
+                // Insere na posição do cursor sem apagar conteúdo existente
+                let pos = input.selectionStart ?? input.value.length;
+                let before = input.value.substring(0, pos);
+                let after = input.value.substring(pos);
+                // Adiciona separador se necessário
+                let trimmed = before.trimEnd();
+                let lastChar = trimmed.slice(-1);
+                let sep = (trimmed === '' || lastChar === '\n') ? '' : '\n';
+                newBefore = before + sep + 'kw:' + kwId + ':';
+                input.value = newBefore + after;
+            } else {
+                // Substitui o segmento que está sendo digitado
+                let { pos, segStart } = _statSegmentAtCursor(input);
+                let before = input.value.substring(0, segStart);
+                let after = input.value.substring(pos);
+                newBefore = before + 'kw:' + kwId + ':';
+                input.value = newBefore + after;
+            }
+
+            input.setSelectionRange(newBefore.length, newBefore.length);
             if (dropdown) dropdown.classList.add('hidden');
             input.focus();
-            input.setSelectionRange(input.value.length, input.value.length);
             setTimeout(() => handleStatAutocomplete(), 0);
+        }
+
+        function openStatTagPickerBtn(event) {
+            event.preventDefault(); // mantém foco no textarea
+            let dropdown = document.getElementById('stat-autocomplete');
+            if (!dropdown) return;
+            let kws = Object.values(keywordsData);
+            if (!kws.length) {
+                let input = document.getElementById('new-stat');
+                if (input) { input.focus(); input.placeholder = 'Crie keywords no painel 🏷️ Tags primeiro...'; }
+                return;
+            }
+            // Alterna: fecha se já estiver aberto com o header de "Selecionar"
+            if (!dropdown.classList.contains('hidden') && dropdown.querySelector('.stat-tag-header')) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+            let header = `<div class="stat-tag-header px-3 py-1.5 text-[10px] text-cyan-400 bg-cyan-950/40 border-b border-cyan-900/40 uppercase tracking-wider font-bold">Selecionar tag para inserir</div>`;
+            dropdown.innerHTML = header + kws.map(kw => {
+                let bg = kwBackground(kw);
+                let styleDef = KW_STYLES_DEF[kw.style] || KW_STYLES_DEF['default'];
+                let cls = styleDef.cls ? ' ' + styleDef.cls : '';
+                let css = styleDef.css ? styleDef.css + ';' : '';
+                if (styleDef.usesColor) css += kwColorVars(kw);
+                return `<div onmousedown="selectStatKeyword('${kw.id}', true)"
+                    class="px-3 py-2 hover:bg-slate-700 cursor-pointer border-b border-slate-700/50 last:border-0 transition-colors flex items-center gap-2">
+                    <span class="kw-badge${cls} shrink-0" style="background:${escHtml(bg)};${css}">${escHtml(kw.name)}</span>
+                    <span class="text-[10px] text-slate-500 font-mono">${escHtml(kw.id)}</span>
+                </div>`;
+            }).join('');
+            dropdown.classList.remove('hidden');
         }
 
         function selectLinkedTag(parentKwId, linkedKwId) {
             let input = document.getElementById('new-stat');
             let dropdown = document.getElementById('stat-autocomplete');
             if (!input) return;
-            let parts = input.value.split(',');
-            parts[parts.length - 1] = `kw:${parentKwId}:${linkedKwId}`;
-            input.value = parts.map((p, i) => i === parts.length - 1 ? p : p.trim()).join(', ');
+            let pos = input.selectionStart ?? input.value.length;
+            let before = input.value.substring(0, pos);
+            let after = input.value.substring(pos);
+            let newBefore = before.replace(new RegExp('kw:' + parentKwId + ':[^\\n]*$'), `kw:${parentKwId}:${linkedKwId}`);
+            input.value = newBefore + after;
+            input.setSelectionRange(newBefore.length, newBefore.length);
             if (dropdown) dropdown.classList.add('hidden');
             input.focus();
-            input.setSelectionRange(input.value.length, input.value.length);
         }
 
         // ================= MOBILE =================
