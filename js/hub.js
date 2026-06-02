@@ -372,6 +372,9 @@ function buildMesaPanel(mesa) {
         <button class="btn-icon" onclick="addSlot('${mesa.id}')" title="Adicionar Slot">
           <i class="fa-solid fa-user-plus"></i>
         </button>
+        <button class="btn-icon" onclick="showEditMesaModal('${mesa.id}')" title="Editar Mesa">
+          <i class="fa-solid fa-pen"></i>
+        </button>
         <button class="btn-icon btn-danger" onclick="confirmDeleteMesa('${mesa.id}')" title="Excluir Mesa">
           <i class="fa-solid fa-trash"></i>
         </button>
@@ -717,6 +720,7 @@ function removePlayerFromSlot(mesaId, slotId) {
 //  ACTIONS — MESAS
 // ═══════════════════════════════════════════════════════════
 function showCreateMesaModal() {
+  const isAdmin = currentUser.role === 'admin';
   openModal(`
     <div class="modal-header">
       <h3>Nova Mesa</h3>
@@ -727,7 +731,24 @@ function showCreateMesaModal() {
         <label>Título da Mesa</label>
         <input type="text" id="nova-mesa-titulo" class="modal-input" placeholder="Ex: A Tríade Perdida">
       </div>
-      <button class="btn-primary" style="width:100%;justify-content:center" onclick="createMesa()">
+      ${isAdmin ? `
+      <div class="field-group" style="margin-top:.5rem">
+        <label>Mestre <span style="color:var(--text-secondary);font-size:.7rem">— opcional, pode associar depois</span></label>
+        <div class="mgmt-input-row" style="margin-top:.4rem">
+          <input type="text" id="nova-mesa-mestre-search" class="modal-input"
+            placeholder="Buscar mestre por nome..." style="flex:1"
+            onkeydown="if(event.key==='Enter')searchMestreForMesa()">
+          <button class="btn-mgmt" onclick="searchMestreForMesa()">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </div>
+        <div id="nova-mesa-mestre-results"></div>
+        <input type="hidden" id="nova-mesa-mestre-id" value="">
+        <div id="nova-mesa-mestre-selected"
+          style="display:none;margin-top:.35rem;font-size:.8rem;color:var(--accent-gold)"></div>
+      </div>` : ''}
+      <button class="btn-primary" style="width:100%;justify-content:center;margin-top:.75rem"
+        onclick="createMesa()">
         <i class="fa-solid fa-plus"></i> Criar Mesa
       </button>
     </div>`);
@@ -738,21 +759,25 @@ async function createMesa() {
   const titulo = document.getElementById('nova-mesa-titulo')?.value.trim();
   if (!titulo) { showToast('Digite um título.', 'error'); return; }
 
+  const mestreId   = document.getElementById('nova-mesa-mestre-id')?.value || '';
+  const mestreNome = mestreId
+    ? (document.getElementById('nova-mesa-mestre-search')?.value || '')
+    : currentUser.nome;
+
   const novaMesa = {
     id: `m_${Date.now()}`,
     titulo,
-    mestre_id: currentUser.id,
-    mestre_nome: currentUser.nome,
+    mestre_id:    mestreId || currentUser.id,
+    mestre_nome:  mestreNome,
     archive_link: 'archive_from_eder.html',
     slots: []
   };
-
   allMesas.push(novaMesa);
 
-  await apiCall('/mesas', {
-    method: 'POST',
-    body: JSON.stringify({ titulo, mestre_id: currentUser.id })
-  });
+  const payload = { titulo };
+  if (mestreId) payload.mestre_id = mestreId;
+
+  await apiCall('/mesas', { method: 'POST', body: JSON.stringify(payload) });
 
   closeModal();
   renderLobby();
@@ -943,6 +968,150 @@ function _showInviteFallback(result, email, link, motivo) {
         <i class="fa-solid fa-copy"></i> Copiar
       </button>
     </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ACTIONS — EDITAR MESA
+// ═══════════════════════════════════════════════════════════
+function showEditMesaModal(mesaId) {
+  const mesa    = allMesas.find(m => m.id === mesaId);
+  if (!mesa) return;
+  const isAdmin = currentUser.role === 'admin';
+
+  openModal(`
+    <div class="modal-header">
+      <h3>Editar Mesa</h3>
+      <button class="btn-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Título da Mesa</label>
+        <input type="text" id="edit-mesa-titulo" class="modal-input" value="${esc(mesa.titulo)}">
+      </div>
+      <div class="field-group" style="margin-top:.5rem">
+        <label>Mensagem de convite <span style="color:var(--text-secondary);font-size:.7rem">— opcional, substitui o texto padrão do email</span></label>
+        <textarea id="edit-mesa-msg" class="modal-input" rows="3"
+          placeholder="Ex: Estamos montando uma nova campanha épica! Venha fazer parte desta aventura..."
+          style="resize:vertical;font-family:var(--font-body);font-size:.85rem;line-height:1.5">${esc(mesa.mensagem_convite || '')}</textarea>
+      </div>
+      ${isAdmin ? `
+      <div class="field-group" style="margin-top:.5rem">
+        <label>Mestre atual: <strong style="color:var(--accent-gold)">${esc(mesa.mestre_nome || '—')}</strong></label>
+        <div class="mgmt-input-row" style="margin-top:.5rem">
+          <input type="text" id="edit-mesa-mestre-search" class="modal-input"
+            placeholder="Buscar novo mestre..." style="flex:1"
+            onkeydown="if(event.key==='Enter')searchMestreForEdit()">
+          <button class="btn-mgmt" onclick="searchMestreForEdit()">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </div>
+        <div id="edit-mesa-mestre-results"></div>
+        <input type="hidden" id="edit-mesa-mestre-id" value="">
+        <div id="edit-mesa-mestre-selected"
+          style="display:none;margin-top:.35rem;font-size:.8rem;color:var(--accent-gold)"></div>
+        ${mesa.mestre_id ? `
+        <button class="btn-danger-full" style="margin-top:.5rem"
+          onclick="removeMestreFromMesa('${mesaId}')">
+          <i class="fa-solid fa-user-minus"></i> Remover Mestre
+        </button>` : ''}
+      </div>` : ''}
+      <button class="btn-primary" style="width:100%;justify-content:center;margin-top:.75rem"
+        onclick="saveMesaEdits('${mesaId}')">
+        <i class="fa-solid fa-check"></i> Salvar
+      </button>
+    </div>`);
+  setTimeout(() => document.getElementById('edit-mesa-titulo')?.focus(), 100);
+}
+
+async function saveMesaEdits(mesaId) {
+  const titulo = document.getElementById('edit-mesa-titulo')?.value.trim();
+  if (!titulo) { showToast('Digite um título.', 'error'); return; }
+
+  const mestreId  = document.getElementById('edit-mesa-mestre-id')?.value || null;
+  const msgConv   = document.getElementById('edit-mesa-msg')?.value.trim() || '';
+  const body      = { titulo, mensagem_convite: msgConv };
+  if (mestreId) body.mestre_id = mestreId;
+
+  await apiCall(`/mesas/${mesaId}`, { method: 'PUT', body: JSON.stringify(body) });
+
+  const mesa = allMesas.find(m => m.id === mesaId);
+  if (mesa) {
+    mesa.titulo            = titulo;
+    mesa.mensagem_convite  = msgConv;
+    if (mestreId) {
+      mesa.mestre_id   = mestreId;
+      mesa.mestre_nome = document.getElementById('edit-mesa-mestre-search')?.value || '';
+    }
+  }
+
+  closeModal();
+  renderLobby();
+  showToast('Mesa atualizada!');
+}
+
+async function removeMestreFromMesa(mesaId) {
+  await apiCall(`/mesas/${mesaId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ mestre_id: null })
+  });
+
+  const mesa = allMesas.find(m => m.id === mesaId);
+  if (mesa) { mesa.mestre_id = ''; mesa.mestre_nome = ''; }
+
+  closeModal();
+  renderLobby();
+  showToast('Mestre removido da mesa.');
+}
+
+async function _searchMestre(inputId, resultsId, selectFn) {
+  const query   = document.getElementById(inputId)?.value.trim();
+  const results = document.getElementById(resultsId);
+  if (!query || !results) return;
+
+  results.innerHTML = '<div style="font-size:.75rem;color:var(--text-secondary);padding:.3rem 0">Buscando...</div>';
+
+  let users = [];
+  try {
+    const res = await apiCall(`/users?search=${encodeURIComponent(query)}&role=mestre`);
+    if (res && res.ok) users = await res.json();
+  } catch(e) {}
+
+  if (!users.length) {
+    users = MOCK_USERS.filter(
+      u => u.role === 'mestre' && u.nome.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+
+  if (!users.length) {
+    results.innerHTML = '<div style="font-size:.75rem;color:var(--text-secondary);padding:.3rem 0">Nenhum mestre encontrado.</div>';
+    return;
+  }
+
+  results.innerHTML = users.map(u => `
+    <div class="search-result-row">
+      <span class="result-name"><i class="fa-solid fa-chess-king"></i> ${esc(u.nome)}</span>
+      <button class="btn-assign-player"
+        onclick="${selectFn}('${u.id}','${esc(u.nome)}')">Selecionar</button>
+    </div>`).join('');
+}
+
+function searchMestreForMesa() { _searchMestre('nova-mesa-mestre-search', 'nova-mesa-mestre-results', 'selectMestreForMesa'); }
+function searchMestreForEdit()  { _searchMestre('edit-mesa-mestre-search', 'edit-mesa-mestre-results', 'selectMestreForEdit'); }
+
+function selectMestreForMesa(id, nome) {
+  document.getElementById('nova-mesa-mestre-id').value = id;
+  document.getElementById('nova-mesa-mestre-selected').textContent = `✓ ${nome}`;
+  document.getElementById('nova-mesa-mestre-selected').style.display = 'block';
+  document.getElementById('nova-mesa-mestre-results').innerHTML = '';
+  document.getElementById('nova-mesa-mestre-search').value = nome;
+}
+
+function selectMestreForEdit(id, nome) {
+  document.getElementById('edit-mesa-mestre-id').value = id;
+  document.getElementById('edit-mesa-mestre-selected').textContent = `✓ Novo mestre: ${nome}`;
+  document.getElementById('edit-mesa-mestre-selected').style.display = 'block';
+  document.getElementById('edit-mesa-mestre-results').innerHTML = '';
+  document.getElementById('edit-mesa-mestre-search').value = nome;
 }
 
 // ═══════════════════════════════════════════════════════════

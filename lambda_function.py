@@ -228,7 +228,7 @@ def handle_send_invite(body, auth_user):
     email    = (body.get('email') or '').strip()
     mesa_id  = body.get('mesa_id', '')
     slot_id  = body.get('slot_id', '')
-    base_url = body.get('base_url', 'https://worldofeder.com/')
+    base_url = body.get('base_url', 'https://worldofeder.com.br/')
 
     if not email or not mesa_id or not slot_id:
         return resp(400, {'error': 'email, mesa_id e slot_id são obrigatórios.'})
@@ -259,10 +259,11 @@ def handle_send_invite(body, auth_user):
     mestre_nome = ''
     try:
         mesa = dynamodb.Table('mesas').get_item(Key={'id': mesa_id}).get('Item', {})
-        mesa_titulo = mesa.get('titulo', mesa_titulo)
-        mestre_nome = mesa.get('mestre_nome', '')
+        mesa_titulo    = mesa.get('titulo', mesa_titulo)
+        mestre_nome    = mesa.get('mestre_nome', '')
+        mesa_msg_conv  = mesa.get('mensagem_convite', '')
     except Exception:
-        pass
+        mesa_msg_conv = ''
 
     from_email = os.environ.get('SES_FROM_EMAIL', 'no-reply@worldofeder.com')
 
@@ -273,7 +274,8 @@ def handle_send_invite(body, auth_user):
         subtitulo     = 'Sua presença é requerida'
         msg_principal = (f'O Mestre <strong style="color:#e6e0d4;">{mestre_nome}</strong> '
                          f'te convocou para a mesa')
-        msg_secundaria = (f'Você já possui uma conta, <strong style="color:#e6e0d4;">{nome_jogador}</strong>. '
+        msg_secundaria = (mesa_msg_conv or
+                          f'Você já possui uma conta, <strong style="color:#e6e0d4;">{nome_jogador}</strong>. '
                           f'Basta entrar no Hub para acessar sua ficha e se juntar à aventura.')
         cta_texto     = 'Acessar o Hub &rarr;'
         assunto       = f'Convocação para a mesa: {mesa_titulo} — World Of Eder'
@@ -282,7 +284,8 @@ def handle_send_invite(body, auth_user):
         subtitulo     = 'Um novo destino aguarda'
         msg_principal = (f'O Mestre <strong style="color:#e6e0d4;">{mestre_nome}</strong> '
                          f'te convidou para participar da mesa')
-        msg_secundaria = ('Crie sua conta para acessar a ficha do seu personagem, '
+        msg_secundaria = (mesa_msg_conv or
+                          'Crie sua conta para acessar a ficha do seu personagem, '
                           'explorar o mundo e entrar na aventura.')
         cta_texto     = 'Criar Minha Conta &rarr;'
         assunto       = f'Convite para a mesa: {mesa_titulo} — World Of Eder'
@@ -603,10 +606,13 @@ def handle_create_mesa(body, auth_user):
     if not titulo:
         return resp(400, {'error': 'Título obrigatório.'})
 
-    # Busca nome do mestre
+    # Admin pode especificar outro mestre; mestre sempre é o próprio usuário
+    override = auth_user.get('role') == 'admin' and body.get('mestre_id')
+    target_uid = body['mestre_id'] if override else auth_user['uid']
+
     mestre_nome = ''
     try:
-        u = dynamodb.Table('users').get_item(Key={'id': auth_user['uid']}).get('Item')
+        u = dynamodb.Table('users').get_item(Key={'id': target_uid}).get('Item')
         if u:
             mestre_nome = u.get('nome', '')
     except Exception:
@@ -615,7 +621,7 @@ def handle_create_mesa(body, auth_user):
     mesa = clean_item({
         'id':           str(uuid.uuid4()),
         'titulo':       titulo,
-        'mestre_id':    auth_user['uid'],
+        'mestre_id':    target_uid,
         'mestre_nome':  mestre_nome,
         'archive_link': 'archive_from_eder.html',
         'slots':        []
@@ -627,6 +633,63 @@ def handle_create_mesa(body, auth_user):
     except Exception as e:
         print(f"Create mesa error: {e}")
         return resp(500, {'error': 'Erro ao criar mesa.'})
+
+def handle_update_mesa(mesa_id, body, auth_user):
+    if not auth_user or auth_user.get('role') not in ('mestre', 'admin'):
+        return resp(403, {'error': 'Acesso negado.'})
+    try:
+        table = dynamodb.Table('mesas')
+        mesa = table.get_item(Key={'id': mesa_id}).get('Item')
+        if not mesa:
+            return resp(404, {'error': 'Mesa não encontrada.'})
+        if auth_user.get('role') != 'admin' and mesa.get('mestre_id') != auth_user['uid']:
+            return resp(403, {'error': 'Você não é o mestre desta mesa.'})
+
+        set_parts    = []
+        expr_values  = {}
+        remove_attrs = []
+
+        if (body.get('titulo') or '').strip():
+            set_parts.append('titulo = :titulo')
+            expr_values[':titulo'] = body['titulo'].strip()
+
+        if 'mensagem_convite' in body:
+            msg = (body.get('mensagem_convite') or '').strip()
+            if msg:
+                set_parts.append('mensagem_convite = :msg_conv')
+                expr_values[':msg_conv'] = msg
+            else:
+                remove_attrs.append('mensagem_convite')
+
+        if 'mestre_id' in body and auth_user.get('role') == 'admin':
+            mestre_id = body.get('mestre_id') or ''
+            if mestre_id:
+                u = dynamodb.Table('users').get_item(Key={'id': mestre_id}).get('Item') or {}
+                set_parts.append('mestre_id = :mid')
+                set_parts.append('mestre_nome = :mnome')
+                expr_values[':mid']   = mestre_id
+                expr_values[':mnome'] = u.get('nome', '')
+            else:
+                remove_attrs.extend(['mestre_id', 'mestre_nome'])
+
+        if not set_parts and not remove_attrs:
+            return resp(400, {'error': 'Nenhum campo para atualizar.'})
+
+        update_expr = ''
+        if set_parts:
+            update_expr += 'SET ' + ', '.join(set_parts)
+        if remove_attrs:
+            update_expr += (' ' if update_expr else '') + 'REMOVE ' + ', '.join(remove_attrs)
+
+        kwargs = {'Key': {'id': mesa_id}, 'UpdateExpression': update_expr.strip()}
+        if expr_values:
+            kwargs['ExpressionAttributeValues'] = expr_values
+
+        table.update_item(**kwargs)
+        return resp(200, {'message': 'Mesa atualizada.'})
+    except Exception as e:
+        print(f"Update mesa error: {e}")
+        return resp(500, {'error': 'Erro ao atualizar mesa.'})
 
 def handle_delete_mesa(mesa_id, auth_user):
     if not auth_user or auth_user.get('role') not in ('mestre', 'admin'):
@@ -1022,6 +1085,10 @@ def route_new_api(http_method, parts, body, qs, auth_user):
     if len(parts) < 2:
         return None
     mesa_id = parts[1]
+
+    # PUT /mesas/{id}
+    if len(parts) == 2 and http_method == 'PUT':
+        return handle_update_mesa(mesa_id, body, auth_user)
 
     # DELETE /mesas/{id}
     if len(parts) == 2 and http_method == 'DELETE':
