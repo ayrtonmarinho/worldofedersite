@@ -1,36 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>World Of Eder</title>
-  </head>
-  <body id="login_form">
-    <i id="mode_icon" class="fa-solid fa-moon"></i>
-    <header id="main-box">
-      <div id="main">
-        <img id="logo" src="imgs/woe_titulo.png" alt="World Of Eder" />
-        <header id="titulo"><h1>Bem Vindo ao Eder</h1></header>
-        <div id="login_box">
-          <label class="loginbox" for="username">Usuário</label>
-          <input type="text" name="user" id="username" placeholder="Seu nome de aventureiro...">
-          
-          <label class="loginbox" for="password">Senha</label>
-          <input type="password" name="password" id="password" placeholder="Sua senha...">
-          
-          <a href="http://google.com" target="_blank">Esqueci a senha. Porra!</a>
-          <button id="login_button" onclick="login()">Conectar</button>
-          <span id="warning_login"></span>
-        </div>
-        <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 10px; align-items: center;">
-          <a href="trilha-sonora.html" style="display:inline-flex;align-items:center;gap:8px;color:var(--text-secondary,#9a9488);font-size:0.78rem;text-decoration:none;text-transform:uppercase;letter-spacing:1.5px;font-weight:bold;border:1px solid rgba(255,255,255,0.08);padding:8px 18px;border-radius:99px;backdrop-filter:blur(8px);background:rgba(0,0,0,0.3);transition:color 0.2s,border-color 0.2s;" onmouseover="this.style.color='#cfaa56';this.style.borderColor='rgba(207,170,86,0.4)'" onmouseout="this.style.color='';this.style.borderColor='rgba(255,255,255,0.08)'">♪ Trilha Sonora do Eder</a>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <title>World Of Eder - Hub</title>
+</head>
+<body id="login_form">
+
+  <!-- ═══════════════════════════════════════════
+       TOP BAR — fixo no topo
+  ═══════════════════════════════════════════ -->
+  <div id="top-bar">
+    <img src="imgs/woe_titulo.png" id="top-logo" alt="World of Eder" onerror="this.style.display='none'">
+    <div id="user-badge" class="hidden"></div>
+    <div id="top-bar-right">
+      <i id="mode_icon" class="fa-solid fa-moon"></i>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CONTEÚDO PRINCIPAL
+  ═══════════════════════════════════════════ -->
+  <main id="hub-main">
+
+    <!-- LOGIN SECTION -->
+    <section id="login-section">
+      <div id="login-hero">
+        <img id="logo" src="imgs/woe_titulo.png" alt="World of Eder" onerror="this.style.display='none'">
+        <p>Entre com suas credenciais para acessar o Hub</p>
+      </div>
+      <div id="login_box">
+        <div class="login-title">Entrar no Hub</div>
+        <p class="loginbox">Nome de usuário</p>
+        <input type="text"     id="username" placeholder="Seu nome" autocomplete="off">
+        <p class="loginbox">Senha</p>
+        <input type="password" id="password" placeholder="••••••••">
+        <button id="login_button">
+          <i class="fa-solid fa-right-to-bracket"></i> Entrar
+        </button>
+        <span id="warning_login"></span>
+      </div>
+    </section>
+
+    <!-- LOBBY SECTION -->
+    <section id="lobby-section" class="hidden">
+
+      <div id="lobby-header">
+        <div class="lobby-title-row">
+          <h2 class="section-title">⚔ Lobby do Eder</h2>
+          <!-- Admin: switch de visão -->
+          <div id="view-switcher" class="hidden">
+            <button class="view-btn active" data-view="admin">
+              <i class="fa-solid fa-crown"></i> Admin
+            </button>
+            <button class="view-btn" data-view="mestre">
+              <i class="fa-solid fa-chess-king"></i> Como Mestre
+            </button>
+            <button class="view-btn" data-view="jogador">
+              <i class="fa-solid fa-dice-d20"></i> Como Jogador
+            </button>
+          </div>
         </div>
       </div>
-    </header>
-    <script src="js/index.js"></script>
-    <script src="js/login.js"></script>
-  </body>
+
+      <div id="lobby-content">
+        <div class="lobby-loading">
+          <div class="mini-spinner"></div>
+          <span>Carregando mesas...</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- FERRAMENTAS RPG -->
+    <section id="tools-section" class="hidden">
+      <h2 class="section-title">Ferramentas RPG</h2>
+      <div class="tools-grid">
+        <button class="button-50" onclick="location.href='portasinfinitum.html'">Portas Infinitum</button>
+        <button class="button-49" onclick="location.href='patchnotes.html'">Evento Ativo</button>
+        <button class="button-49" onclick="location.href='soulslikehub.html'">Jormandurr</button>
+        <button class="button-49" onclick="location.href='monsterCreator.html'">Criador de NPCs</button>
+        <button class="button-49" onclick="location.href='poderesheroicos.html'">Poderes Heroicos</button>
+        <button class="button-49" onclick="location.href='itemgeneratorz.html'">Item Generator</button>
+        <button class="button-49" onclick="location.href='tools/dano_bonus.html'">Cálculo de Dano/Cura</button>
+        <button class="button-49" onclick="location.href='WOE - Agenda.html'">Agenda</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast global -->
+  <div id="hub-toast" class="hub-toast"></div>
+
+  <!-- Modal container -->
+  <div id="modal-root"></div>
+
+  <script src="js/index.js"></script>
+  <script src="js/hub.js"></script>
+</body>
 </html>

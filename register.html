@@ -1,0 +1,299 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <title>Criar Conta — World Of Eder</title>
+  <style>
+    .register-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 420px;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--glass-shadow);
+    }
+
+    .register-ornament {
+      text-align: center;
+      color: #4a3f28;
+      font-size: 1rem;
+      letter-spacing: 8px;
+      margin-bottom: .75rem;
+    }
+
+    .register-title {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      color: var(--accent-gold);
+      text-align: center;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: .25rem;
+    }
+
+    .register-sub {
+      text-align: center;
+      font-size: .72rem;
+      color: var(--text-secondary);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 1.75rem;
+    }
+
+    .invite-banner {
+      background: rgba(207,170,86,0.07);
+      border: 1px solid rgba(207,170,86,0.2);
+      border-left: 3px solid var(--accent-gold);
+      border-radius: 6px;
+      padding: .85rem 1rem;
+      margin-bottom: 1.5rem;
+      font-size: .82rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .invite-banner strong {
+      color: var(--text-primary);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+      margin-bottom: 1rem;
+    }
+
+    .field-group label {
+      font-size: .72rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .field-group input {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      padding: .7rem .9rem;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: .88rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .field-group input:focus {
+      border-color: rgba(207,170,86,0.4);
+    }
+
+    .field-group input:read-only {
+      opacity: .5;
+      cursor: default;
+    }
+
+    .btn-register {
+      width: 100%;
+      padding: .85rem;
+      background: var(--accent-gold);
+      color: #08080f;
+      font-family: var(--font-heading);
+      font-size: .88rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: .5rem;
+      transition: background .2s, transform .1s;
+    }
+
+    .btn-register:hover  { background: var(--accent-gold-hover); }
+    .btn-register:active { transform: scale(.98); }
+    .btn-register:disabled { opacity: .5; cursor: not-allowed; }
+
+    .register-warning {
+      text-align: center;
+      font-size: .8rem;
+      color: #e57373;
+      min-height: 1.2rem;
+      margin-top: .6rem;
+    }
+
+    .register-success {
+      text-align: center;
+      font-size: .85rem;
+      color: #4caf50;
+      margin-top: .6rem;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin: 1.25rem 0;
+      color: #2a2316;
+      font-size: .7rem;
+      letter-spacing: 2px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .link-login {
+      text-align: center;
+      font-size: .78rem;
+      color: var(--text-secondary);
+    }
+    .link-login a {
+      color: var(--accent-gold);
+      text-decoration: none;
+    }
+    .link-login a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header id="main-box">
+    <div id="main">
+      <img id="logo" src="imgs/woe_titulo.png" alt="World Of Eder" />
+
+      <div class="register-card">
+        <p class="register-ornament">✦ &nbsp; ✦ &nbsp; ✦</p>
+        <h1 class="register-title">Criar Conta</h1>
+        <p class="register-sub">Sua jornada começa aqui</p>
+
+        <div class="invite-banner" id="invite-banner" style="display:none">
+          <i class="fa-solid fa-envelope" style="color:var(--accent-gold);margin-right:.4rem"></i>
+          Você foi convidado para a mesa <strong id="banner-mesa">—</strong>
+        </div>
+
+        <div class="field-group">
+          <label>Nome de aventureiro</label>
+          <input type="text" id="reg-nome" placeholder="Como você será conhecido..." autocomplete="username" />
+        </div>
+
+        <div class="field-group">
+          <label>Senha</label>
+          <input type="password" id="reg-senha" placeholder="Crie uma senha..." autocomplete="new-password" />
+        </div>
+
+        <div class="field-group">
+          <label>Confirmar senha</label>
+          <input type="password" id="reg-confirma" placeholder="Repita a senha..." autocomplete="new-password" />
+        </div>
+
+        <div class="field-group" id="email-group">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="seu@email.com" autocomplete="email" />
+        </div>
+
+        <button class="btn-register" id="btn-register" onclick="doRegister()">
+          <i class="fa-solid fa-shield-halved"></i> Entrar no Eder
+        </button>
+
+        <p class="register-warning" id="reg-warning"></p>
+
+        <div class="divider">✦</div>
+        <p class="link-login">Já tem conta? <a href="index.html">Fazer login</a></p>
+      </div>
+    </div>
+  </header>
+
+  <script>
+    const API = 'https://ac53afc98d.execute-api.sa-east-1.amazonaws.com/prod';
+
+    const params  = new URLSearchParams(window.location.search);
+    const mesaId  = params.get('mesa')  || '';
+    const slotId  = params.get('slot')  || '';
+    const emailParam = params.get('email') || '';
+
+    // Preenche email e mostra banner se veio de convite
+    if (emailParam) {
+      document.getElementById('reg-email').value = emailParam;
+      document.getElementById('reg-email').readOnly = true;
+    }
+
+    if (mesaId) {
+      document.getElementById('invite-banner').style.display = 'block';
+      fetchMesaTitulo(mesaId);
+    }
+
+    async function fetchMesaTitulo(id) {
+      try {
+        const res = await fetch(`${API}/mesas`);
+        if (res.ok) {
+          const mesas = await res.json();
+          const mesa  = mesas.find(m => m.id === id);
+          if (mesa) document.getElementById('banner-mesa').textContent = mesa.titulo;
+        }
+      } catch(e) {}
+    }
+
+    ['reg-nome','reg-senha','reg-confirma','reg-email'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') doRegister();
+      });
+    });
+
+    async function doRegister() {
+      const nome     = document.getElementById('reg-nome').value.trim();
+      const senha    = document.getElementById('reg-senha').value;
+      const confirma = document.getElementById('reg-confirma').value;
+      const email    = document.getElementById('reg-email').value.trim();
+      const warn     = document.getElementById('reg-warning');
+      const btn      = document.getElementById('btn-register');
+
+      warn.textContent = '';
+
+      if (!nome)              { warn.textContent = 'Digite seu nome de aventureiro.'; return; }
+      if (nome.length < 3)    { warn.textContent = 'Nome deve ter ao menos 3 caracteres.'; return; }
+      if (!senha)             { warn.textContent = 'Digite uma senha.'; return; }
+      if (senha.length < 6)   { warn.textContent = 'Senha deve ter ao menos 6 caracteres.'; return; }
+      if (senha !== confirma) { warn.textContent = 'As senhas não coincidem.'; return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Criando conta...';
+
+      try {
+        const res = await fetch(`${API}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, senha, email, mesa_id: mesaId, slot_id: slotId })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem('woe_token', data.token);
+          localStorage.setItem('woe_user',  JSON.stringify(data.user));
+          warn.style.color = '#4caf50';
+          warn.textContent = 'Conta criada! Entrando no Eder...';
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1200);
+          return;
+        }
+
+        warn.style.color = '#e57373';
+        warn.textContent = data.error || 'Erro ao criar conta.';
+      } catch(e) {
+        warn.style.color = '#e57373';
+        warn.textContent = 'Erro de conexão. Tente novamente.';
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Entrar no Eder';
+    }
+  </script>
+</body>
+</html>
