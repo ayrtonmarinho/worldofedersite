@@ -75,6 +75,13 @@ def parse_path(raw_path):
     parts = [p for p in raw_path.split('/') if p and p != 'prod']
     return parts
 
+def can_manage_mesa(mesa, auth_user):
+    """Retorna True se o usuário pode gerenciar a mesa (admin ou mestre dela)."""
+    if not auth_user or not mesa:
+        return False
+    return (auth_user.get('role') == 'admin' or
+            mesa.get('mestre_id') == auth_user.get('uid'))
+
 # ═══════════════════════════════════════════════════════════
 #  AUTH — JWT simples sem dependências externas
 # ═══════════════════════════════════════════════════════════
@@ -222,8 +229,8 @@ def handle_register(body):
 #  ROUTE HANDLERS — INVITE (SES)
 # ═══════════════════════════════════════════════════════════
 def handle_send_invite(body, auth_user):
-    if not auth_user or auth_user.get('role') not in ('mestre', 'admin'):
-        return resp(403, {'error': 'Acesso negado.'})
+    if not auth_user:
+        return resp(401, {'error': 'Autenticação necessária.'})
 
     email    = (body.get('email') or '').strip()
     mesa_id  = body.get('mesa_id', '')
@@ -264,6 +271,10 @@ def handle_send_invite(body, auth_user):
         mesa_msg_conv  = mesa.get('mensagem_convite', '')
     except Exception:
         mesa_msg_conv = ''
+        mesa = {}
+
+    if not can_manage_mesa(mesa, auth_user):
+        return resp(403, {'error': 'Acesso negado.'})
 
     from_email = os.environ.get('SES_FROM_EMAIL', 'no-reply@worldofeder.com')
 
@@ -590,8 +601,10 @@ def handle_get_mesas(auth_user):
         elif role == 'mestre':
             mesas = [m for m in mesas if m.get('mestre_id') == uid]
         else:
+            # jogador: vê mesas onde é jogador OU mestre
             mesas = [m for m in mesas
-                     if any(s.get('jogador_id') == uid for s in (m.get('slots') or []))]
+                     if m.get('mestre_id') == uid or
+                     any(s.get('jogador_id') == uid for s in (m.get('slots') or []))]
 
         return resp(200, mesas)
     except Exception as e:
@@ -725,12 +738,14 @@ def _save_slots(table, mesa_id, slots):
     )
 
 def handle_add_slot(mesa_id, auth_user):
-    if not auth_user or auth_user.get('role') not in ('mestre', 'admin'):
-        return resp(403, {'error': 'Acesso negado.'})
+    if not auth_user:
+        return resp(401, {'error': 'Autenticação necessária.'})
     try:
         table, mesa, slots = _get_mesa_slots(mesa_id)
         if mesa is None:
             return resp(404, {'error': 'Mesa não encontrada.'})
+        if not can_manage_mesa(mesa, auth_user):
+            return resp(403, {'error': 'Acesso negado.'})
         new_slot = {
             'id': str(uuid.uuid4()),
             'jogador_id': None, 'jogador_nome': None,
@@ -745,12 +760,14 @@ def handle_add_slot(mesa_id, auth_user):
         return resp(500, {'error': 'Erro ao adicionar slot.'})
 
 def handle_remove_slot(mesa_id, slot_id, auth_user):
-    if not auth_user or auth_user.get('role') not in ('mestre', 'admin'):
-        return resp(403, {'error': 'Acesso negado.'})
+    if not auth_user:
+        return resp(401, {'error': 'Autenticação necessária.'})
     try:
         table, mesa, slots = _get_mesa_slots(mesa_id)
         if mesa is None:
             return resp(404, {'error': 'Mesa não encontrada.'})
+        if not can_manage_mesa(mesa, auth_user):
+            return resp(403, {'error': 'Acesso negado.'})
         slots = [s for s in slots if s.get('id') != slot_id]
         _save_slots(table, mesa_id, slots)
         return resp(200, {'message': 'Slot removido.'})
@@ -759,12 +776,14 @@ def handle_remove_slot(mesa_id, slot_id, auth_user):
         return resp(500, {'error': 'Erro ao remover slot.'})
 
 def handle_update_slot(mesa_id, slot_id, body, auth_user):
-    if not auth_user or auth_user.get('role') not in ('mestre', 'admin'):
-        return resp(403, {'error': 'Acesso negado.'})
+    if not auth_user:
+        return resp(401, {'error': 'Autenticação necessária.'})
     try:
         table, mesa, slots = _get_mesa_slots(mesa_id)
         if mesa is None:
             return resp(404, {'error': 'Mesa não encontrada.'})
+        if not can_manage_mesa(mesa, auth_user):
+            return resp(403, {'error': 'Acesso negado.'})
         for slot in slots:
             if slot.get('id') == slot_id:
                 if 'experiencia' in body:
@@ -779,13 +798,15 @@ def handle_update_slot(mesa_id, slot_id, body, auth_user):
         return resp(500, {'error': 'Erro ao atualizar slot.'})
 
 def handle_toggle_ficha(mesa_id, slot_id, body, auth_user):
-    if not auth_user or auth_user.get('role') not in ('mestre', 'admin'):
-        return resp(403, {'error': 'Acesso negado.'})
+    if not auth_user:
+        return resp(401, {'error': 'Autenticação necessária.'})
     liberada = bool(body.get('ficha_liberada', False))
     try:
         table, mesa, slots = _get_mesa_slots(mesa_id)
         if mesa is None:
             return resp(404, {'error': 'Mesa não encontrada.'})
+        if not can_manage_mesa(mesa, auth_user):
+            return resp(403, {'error': 'Acesso negado.'})
         for slot in slots:
             if slot.get('id') == slot_id:
                 slot['ficha_liberada'] = liberada
@@ -808,12 +829,19 @@ def _assign_player_to_slot(mesa_id, slot_id, jogador_id, jogador_nome):
     _save_slots(table, mesa_id, slots)
 
 def handle_assign_player(mesa_id, slot_id, body, auth_user):
-    if not auth_user or auth_user.get('role') not in ('mestre', 'admin'):
-        return resp(403, {'error': 'Acesso negado.'})
+    if not auth_user:
+        return resp(401, {'error': 'Autenticação necessária.'})
     jogador_id = body.get('jogador_id')
     if not jogador_id:
         return resp(400, {'error': 'jogador_id obrigatório.'})
     try:
+        _, mesa_obj, _ = _get_mesa_slots(mesa_id)
+        if not mesa_obj:
+            return resp(404, {'error': 'Mesa não encontrada.'})
+        if not can_manage_mesa(mesa_obj, auth_user):
+            return resp(403, {'error': 'Acesso negado.'})
+        if jogador_id == mesa_obj.get('mestre_id'):
+            return resp(400, {'error': 'O mestre da mesa não pode ser jogador na mesma mesa.'})
         u = dynamodb.Table('users').get_item(Key={'id': jogador_id}).get('Item') or {}
         jogador_nome = u.get('nome', '')
         _assign_player_to_slot(mesa_id, slot_id, jogador_id, jogador_nome)
@@ -823,12 +851,14 @@ def handle_assign_player(mesa_id, slot_id, body, auth_user):
         return resp(500, {'error': 'Erro ao associar jogador.'})
 
 def handle_remove_player(mesa_id, slot_id, auth_user):
-    if not auth_user or auth_user.get('role') not in ('mestre', 'admin'):
-        return resp(403, {'error': 'Acesso negado.'})
+    if not auth_user:
+        return resp(401, {'error': 'Autenticação necessária.'})
     try:
         table, mesa, slots = _get_mesa_slots(mesa_id)
         if mesa is None:
             return resp(404, {'error': 'Mesa não encontrada.'})
+        if not can_manage_mesa(mesa, auth_user):
+            return resp(403, {'error': 'Acesso negado.'})
         for slot in slots:
             if slot.get('id') == slot_id:
                 slot.update({
@@ -844,8 +874,8 @@ def handle_remove_player(mesa_id, slot_id, auth_user):
         return resp(500, {'error': 'Erro ao remover jogador.'})
 
 def handle_add_item_to_player(mesa_id, slot_id, body, auth_user):
-    if not auth_user or auth_user.get('role') not in ('mestre', 'admin'):
-        return resp(403, {'error': 'Acesso negado.'})
+    if not auth_user:
+        return resp(401, {'error': 'Autenticação necessária.'})
     item_id = body.get('item_id')
     if not item_id:
         return resp(400, {'error': 'item_id obrigatório.'})
@@ -853,6 +883,8 @@ def handle_add_item_to_player(mesa_id, slot_id, body, auth_user):
         _, mesa, slots = _get_mesa_slots(mesa_id)
         if not mesa:
             return resp(404, {'error': 'Mesa não encontrada.'})
+        if not can_manage_mesa(mesa, auth_user):
+            return resp(403, {'error': 'Acesso negado.'})
         slot = next((s for s in slots if s.get('id') == slot_id), None)
         if not slot:
             return resp(404, {'error': 'Slot não encontrado.'})
