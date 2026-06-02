@@ -244,12 +244,36 @@ function setupViewSwitcher() {
 function renderLobby() {
   const content  = document.getElementById('lobby-content');
   const switcher = document.getElementById('view-switcher');
+  content.innerHTML = '';
 
   if (currentUser.role === 'admin') {
     switcher.classList.remove('hidden');
     renderViewByRole(adminView, content);
-  } else {
-    switcher.classList.add('hidden');
+    return;
+  }
+
+  switcher.classList.add('hidden');
+
+  const uid              = currentUser.id;
+  const mesasComoMestre  = allMesas.filter(m => m.mestre_id === uid);
+  const mesasComoJogador = allMesas.filter(m =>
+    m.mestre_id !== uid && (m.slots || []).some(s => s.jogador_id === uid)
+  );
+
+  if (mesasComoMestre.length > 0) {
+    renderMestreView(content, mesasComoMestre);
+  }
+
+  if (mesasComoJogador.length > 0) {
+    if (mesasComoMestre.length > 0) {
+      const sep = createElement('div', '');
+      sep.innerHTML = '<h2 class="section-title" style="margin-top:2rem"><i class="fa-solid fa-dice-d20"></i> Suas Mesas como Jogador</h2>';
+      content.appendChild(sep);
+    }
+    renderJogadorView(content, mesasComoJogador);
+  }
+
+  if (mesasComoMestre.length === 0 && mesasComoJogador.length === 0) {
     renderViewByRole(currentUser.role, content);
   }
 }
@@ -264,9 +288,9 @@ function renderViewByRole(role, container) {
 // ═══════════════════════════════════════════════════════════
 //  VISÃO: JOGADOR
 // ═══════════════════════════════════════════════════════════
-function renderJogadorView(container) {
+function renderJogadorView(container, mesas = null) {
   const uid     = currentUser.id;
-  const myMesas = allMesas.filter(m => (m.slots || []).some(s => s.jogador_id === uid));
+  const myMesas = mesas || allMesas.filter(m => (m.slots || []).some(s => s.jogador_id === uid));
 
   if (myMesas.length === 0) {
     container.innerHTML = `
@@ -330,24 +354,28 @@ function buildJogadorCard(mesa, slot) {
 // ═══════════════════════════════════════════════════════════
 //  VISÃO: MESTRE
 // ═══════════════════════════════════════════════════════════
-function renderMestreView(container) {
-  const mestreId = currentUser.role === 'admin' ? null : currentUser.id;
-  const myMesas  = mestreId ? allMesas.filter(m => m.mestre_id === mestreId) : allMesas;
+function renderMestreView(container, mesas = null) {
+  const canCreate = currentUser.role === 'mestre' || currentUser.role === 'admin';
+  const myMesas   = mesas || (currentUser.role === 'admin'
+    ? allMesas
+    : allMesas.filter(m => m.mestre_id === currentUser.id));
 
   const header = createElement('div', 'mestre-header');
-  header.innerHTML = `
-    <button class="btn-primary" onclick="showCreateMesaModal()">
-      <i class="fa-solid fa-plus"></i> Nova Mesa
-    </button>`;
+  if (canCreate) {
+    header.innerHTML = `
+      <button class="btn-primary" onclick="showCreateMesaModal()">
+        <i class="fa-solid fa-plus"></i> Nova Mesa
+      </button>`;
+  }
   container.appendChild(header);
 
   if (myMesas.length === 0) {
-    container.innerHTML += `
-      <div class="lobby-empty">
-        <i class="fa-solid fa-table"></i>
-        <p>Nenhuma mesa criada ainda.</p>
-        <p class="empty-sub">Clique em "Nova Mesa" para começar.</p>
-      </div>`;
+    const empty = createElement('div', 'lobby-empty');
+    empty.innerHTML = `
+      <i class="fa-solid fa-table"></i>
+      <p>Nenhuma mesa encontrada.</p>
+      ${canCreate ? '<p class="empty-sub">Clique em "Nova Mesa" para começar.</p>' : ''}`;
+    container.appendChild(empty);
     return;
   }
 
@@ -894,6 +922,11 @@ async function confirmAssign(mesaId, slotId, userId, userName) {
   const mesa = allMesas.find(m => m.id === mesaId);
   const slot = mesa?.slots.find(s => s.id === slotId);
   if (!slot) return;
+
+  if (mesa.mestre_id === userId) {
+    showToast('O mestre não pode ser jogador da própria mesa.', 'error');
+    return;
+  }
 
   slot.jogador_id   = userId;
   slot.jogador_nome = userName;
