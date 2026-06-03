@@ -1105,13 +1105,13 @@ async function _searchMestre(inputId, resultsId, selectFn) {
 
   let users = [];
   try {
-    const res = await apiCall(`/users?search=${encodeURIComponent(query)}&role=mestre`);
+    const res = await apiCall(`/users?search=${encodeURIComponent(query)}`);
     if (res && res.ok) users = await res.json();
   } catch(e) {}
 
   if (!users.length) {
     users = MOCK_USERS.filter(
-      u => u.role === 'mestre' && u.nome.toLowerCase().includes(query.toLowerCase())
+      u => u.nome.toLowerCase().includes(query.toLowerCase())
     );
   }
 
