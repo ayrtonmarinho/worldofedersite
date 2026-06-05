@@ -32,6 +32,7 @@ TABLE_MAPPING = {
     'musicas':     'musicas',
     'users':       'users',
     'invites':     'invites',
+    'exp_table':   'exp_table',
 }
 
 HEADERS = {
@@ -685,6 +686,14 @@ def handle_update_mesa(mesa_id, body, auth_user):
             else:
                 remove_attrs.extend(['mestre_id', 'mestre_nome'])
 
+        if 'resist_dados' in body:
+            rd = body.get('resist_dados')
+            if isinstance(rd, dict) and rd:
+                set_parts.append('resist_dados = :rd')
+                expr_values[':rd'] = rd
+            else:
+                remove_attrs.append('resist_dados')
+
         if not set_parts and not remove_attrs:
             return resp(400, {'error': 'Nenhum campo para atualizar.'})
 
@@ -913,6 +922,31 @@ def handle_add_item_to_player(mesa_id, slot_id, body, auth_user):
 # ═══════════════════════════════════════════════════════════
 #  ROUTE HANDLERS — PERSONAGENS
 # ═══════════════════════════════════════════════════════════
+def handle_get_exp_table():
+    try:
+        r = dynamodb.Table('exp_table').scan()
+        items = r.get('Items', [])
+        items.sort(key=lambda x: int(x.get('nivel', 0)))
+        return resp(200, items)
+    except Exception as e:
+        print(f"Get exp_table error: {e}")
+        return resp(500, {'error': 'Erro ao buscar tabela de exp.'})
+
+def handle_get_personagens(qs, auth_user):
+    if not auth_user:
+        return resp(401, {'error': 'Autenticação necessária.'})
+    jogador_id = (qs or {}).get('jogador_id', '')
+    if not jogador_id:
+        return resp(400, {'error': 'jogador_id obrigatório.'})
+    try:
+        r = dynamodb.Table('characters').scan(
+            FilterExpression=Attr('jogador_id').eq(jogador_id)
+        )
+        return resp(200, r.get('Items', []))
+    except Exception as e:
+        print(f"Get personagens error: {e}")
+        return resp(500, {'error': 'Erro ao buscar personagens.'})
+
 def handle_get_slot_personagem(mesa_id, slot_id, auth_user):
     """GET /mesas/{id}/slots/{sid}/personagem — carrega a ficha do slot."""
     try:
@@ -953,7 +987,7 @@ def handle_get_slot_personagem(mesa_id, slot_id, auth_user):
 
 
 def handle_create_slot_personagem(mesa_id, slot_id, body, auth_user):
-    """POST /mesas/{id}/slots/{sid}/personagem — cria ficha para o slot."""
+    """POST /mesas/{id}/slots/{sid}/personagem — cria ficha ou vincula existente."""
     if not auth_user:
         return resp(401, {'error': 'Autenticação necessária.'})
 
@@ -968,25 +1002,46 @@ def handle_create_slot_personagem(mesa_id, slot_id, body, auth_user):
         if not slot:
             return resp(404, {'error': 'Slot não encontrado.'})
 
-        uid  = auth_user.get('uid', '')
-        role = auth_user.get('role', '')
-        is_owner  = slot.get('jogador_id') == uid
-        is_mestre = mesa.get('mestre_id') == uid
-        if role != 'admin' and not is_owner and not is_mestre:
+        uid      = auth_user.get('uid', '')
+        is_owner = slot.get('jogador_id') == uid
+        if not is_owner and not can_manage_mesa(mesa, auth_user):
             return resp(403, {'error': 'Acesso negado.'})
 
-        # Cria o personagem
+        chars_table = dynamodb.Table('characters')
+
+        # ── Vincular personagem existente ──────────────────────
+        if body.get('personagem_id'):
+            pid  = body['personagem_id']
+            char = chars_table.get_item(Key={'id': pid}).get('Item')
+            if not char:
+                return resp(404, {'error': 'Personagem não encontrado.'})
+            if char.get('jogador_id') != slot.get('jogador_id'):
+                return resp(400, {'error': 'Este personagem não pertence ao jogador deste slot.'})
+
+            chars_table.update_item(
+                Key={'id': pid},
+                UpdateExpression='SET mesa_id = :m, slot_id = :s',
+                ExpressionAttributeValues={':m': mesa_id, ':s': slot_id}
+            )
+            for s in slots:
+                if s.get('id') == slot_id:
+                    s['personagem_id']   = pid
+                    s['personagem_nome'] = char.get('nome', '')
+                    break
+            _save_slots(mesas_table, mesa_id, slots)
+            return resp(200, {**char, 'mesa_id': mesa_id, 'slot_id': slot_id})
+
+        # ── Criar novo personagem ──────────────────────────────
         personagem_id = str(uuid.uuid4())
         personagem    = clean_item({
             **body,
-            'id':       personagem_id,
-            'mesa_id':  mesa_id,
-            'slot_id':  slot_id,
+            'id':         personagem_id,
+            'mesa_id':    mesa_id,
+            'slot_id':    slot_id,
             'jogador_id': slot.get('jogador_id', uid),
         })
-        dynamodb.Table('characters').put_item(Item=personagem)
+        chars_table.put_item(Item=personagem)
 
-        # Atualiza slot com personagem_id e nome
         for s in slots:
             if s.get('id') == slot_id:
                 s['personagem_id']   = personagem_id
@@ -1101,6 +1156,14 @@ def route_new_api(http_method, parts, body, qs, auth_user):
     # GET /users
     if parts == ['users'] and http_method == 'GET':
         return handle_get_users(qs, auth_user)
+
+    # GET /personagens?jogador_id=...
+    if parts == ['personagens'] and http_method == 'GET':
+        return handle_get_personagens(qs, auth_user)
+
+    # GET /exp_table — público, sem auth
+    if parts == ['exp_table'] and http_method == 'GET':
+        return handle_get_exp_table()
 
     # /mesas
     if not parts or parts[0] != 'mesas':

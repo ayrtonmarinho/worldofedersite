@@ -619,6 +619,18 @@ body {
 }
 .mgmt-select:focus { outline: none; border-color: rgba(207,170,86,0.4); }
 
+.config-resist-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;
+}
+.config-resist-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.5rem; padding: 0.3rem 0.5rem;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px;
+}
+.config-elem-label { font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; }
+.config-dado-sel   { flex: 0 0 auto; width: 90px; font-size: 0.75rem; }
+
 .btn-mgmt {
   background: rgba(207,170,86,0.1);
   border: 1px solid rgba(207,170,86,0.3);
