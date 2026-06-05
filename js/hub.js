@@ -400,6 +400,9 @@ function buildMesaPanel(mesa) {
         <button class="btn-icon" onclick="addSlot('${mesa.id}')" title="Adicionar Slot">
           <i class="fa-solid fa-user-plus"></i>
         </button>
+        <button class="btn-icon" onclick="showMesaConfigModal('${mesa.id}')" title="Configurações da Mesa">
+          <i class="fa-solid fa-gear"></i>
+        </button>
         <button class="btn-icon" onclick="showEditMesaModal('${mesa.id}')" title="Editar Mesa">
           <i class="fa-solid fa-pen"></i>
         </button>
@@ -528,10 +531,15 @@ function buildMgmtPanel(mesa, slot) {
             ${slot.ficha_liberada ? 'Liberada' : 'Bloqueada'}
           </span>
         </div>
+        ${slot.personagem_id ? `
         <button class="btn-mgmt-secondary"
           onclick="openFicha('${mesa.id}','${slot.id}','mestre')">
           <i class="fa-solid fa-eye"></i> Ver Ficha do Jogador
-        </button>
+        </button>` : `
+        <button class="btn-mgmt-secondary"
+          onclick="showAttachPersonagemModal('${mesa.id}','${slot.id}','${slot.jogador_id || ''}')">
+          <i class="fa-solid fa-link"></i> Vincular Personagem Existente
+        </button>`}
       </div>
 
       <div class="mgmt-section">
@@ -1145,6 +1153,153 @@ function selectMestreForEdit(id, nome) {
   document.getElementById('edit-mesa-mestre-selected').style.display = 'block';
   document.getElementById('edit-mesa-mestre-results').innerHTML = '';
   document.getElementById('edit-mesa-mestre-search').value = nome;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  VINCULAR PERSONAGEM EXISTENTE
+// ═══════════════════════════════════════════════════════════
+async function showAttachPersonagemModal(mesaId, slotId, jogadorId) {
+  if (!jogadorId) { showToast('Slot sem jogador associado.', 'error'); return; }
+
+  openModal(`
+    <div class="modal-header">
+      <h3>Vincular Personagem</h3>
+      <button class="btn-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="lobby-loading"><div class="mini-spinner"></div><span>Buscando personagens...</span></div>
+    </div>`);
+
+  let chars = [];
+  try {
+    const res = await apiCall(`/personagens?jogador_id=${encodeURIComponent(jogadorId)}`);
+    if (res && res.ok) chars = await res.json();
+  } catch(e) {}
+
+  const body = document.querySelector('#modal-root .modal-body');
+  if (!body) return;
+
+  if (!chars.length) {
+    body.innerHTML = `<p style="color:var(--text-secondary);font-size:.85rem;text-align:center;padding:.5rem 0">
+      Nenhum personagem disponível para este jogador.</p>`;
+    return;
+  }
+
+  body.innerHTML = chars.map(c => `
+    <div class="search-result-row" style="margin-bottom:.5rem;align-items:flex-start">
+      <div>
+        <span class="result-name"><i class="fa-solid fa-scroll"></i> ${esc(c.nome || '—')}</span>
+        ${c.mesa_id ? `<div style="font-size:.7rem;color:var(--text-secondary);margin-top:.15rem">
+          Mesa anterior: ${esc(c.mesa_id)}</div>` : '<div style="font-size:.7rem;color:#4caf50;margin-top:.15rem">Disponível</div>'}
+      </div>
+      <button class="btn-assign-player"
+        onclick="attachPersonagem('${mesaId}','${slotId}','${c.id}','${esc(c.nome || '')}')">
+        Vincular
+      </button>
+    </div>`).join('');
+}
+
+async function attachPersonagem(mesaId, slotId, personagemId, personagemNome) {
+  const res = await apiCall(`/mesas/${mesaId}/slots/${slotId}/personagem`, {
+    method: 'POST',
+    body: JSON.stringify({ personagem_id: personagemId })
+  });
+
+  if (res && res.ok) {
+    const mesa = allMesas.find(m => m.id === mesaId);
+    if (mesa) {
+      const slot = (mesa.slots || []).find(s => s.id === slotId);
+      if (slot) { slot.personagem_id = personagemId; slot.personagem_nome = personagemNome; }
+    }
+    closeModal();
+    renderLobby();
+    showToast(`Personagem "${personagemNome}" vinculado!`);
+  } else {
+    const data = res ? await res.json().catch(() => ({})) : {};
+    showToast(data.error || 'Erro ao vincular personagem.', 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CONFIGURAÇÕES DA MESA
+// ═══════════════════════════════════════════════════════════
+const RESIST_ELEMS_HUB = [
+  { key: 'fogo',       label: '🔥 Fogo' },
+  { key: 'gelo',       label: '❄ Gelo' },
+  { key: 'trovao',     label: '⚡ Trovão' },
+  { key: 'agua',       label: '💧 Água' },
+  { key: 'natureza',   label: '🌿 Natureza' },
+  { key: 'terra',      label: '🪨 Terra' },
+  { key: 'ar',         label: '💨 Ar' },
+  { key: 'luz',        label: '☀ Luz' },
+  { key: 'trevas',     label: '🌑 Trevas' },
+  { key: 'espectral',  label: '👻 Espectral' },
+  { key: 'vazio',      label: '🕳 Vazio' },
+  { key: 'ethereal',   label: '✨ Ethereal' },
+  { key: 'espiritual', label: '🔮 Espiritual' },
+  { key: 'ilusao',     label: '🌀 Ilusão' },
+  { key: 'imaterial',  label: '◌ Imaterial' },
+  { key: 'cristal',    label: '💎 Cristal' },
+];
+const DADOS_OPCOES = ['d6', 'd8', 'd10', 'd12', 'd20'];
+
+function showMesaConfigModal(mesaId) {
+  const mesa = allMesas.find(m => m.id === mesaId);
+  if (!mesa) return;
+
+  const resistDados = mesa.resist_dados || {};
+
+  const rows = RESIST_ELEMS_HUB.map(({ key, label }) => {
+    const val = resistDados[key] || '';
+    const opts = DADOS_OPCOES.map(d =>
+      `<option value="${d}"${val === d ? ' selected' : ''}>${d}</option>`
+    ).join('');
+    return `
+      <div class="config-resist-row">
+        <span class="config-elem-label">${label}</span>
+        <select class="mgmt-select config-dado-sel" data-elem="${key}">
+          <option value="">— nenhum —</option>${opts}
+        </select>
+      </div>`;
+  }).join('');
+
+  openModal(`
+    <div class="modal-header">
+      <h3>⚙ Configurações — ${esc(mesa.titulo)}</h3>
+      <button class="btn-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.8rem;color:var(--text-secondary);margin-bottom:1rem">
+        Defina o dado de resistência elemental padrão para todas as fichas desta mesa.
+      </p>
+      <div class="config-resist-grid">${rows}</div>
+      <button class="btn-slot btn-primary" style="width:100%;margin-top:1rem"
+        onclick="saveMesaConfig('${mesaId}')">
+        <i class="fa-solid fa-floppy-disk"></i> Salvar Configurações
+      </button>
+    </div>`);
+}
+
+async function saveMesaConfig(mesaId) {
+  const resistDados = {};
+  document.querySelectorAll('#modal-root .config-dado-sel').forEach(sel => {
+    if (sel.value) resistDados[sel.dataset.elem] = sel.value;
+  });
+
+  const res = await apiCall(`/mesas/${mesaId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ resist_dados: resistDados })
+  });
+
+  if (res && res.ok) {
+    const mesa = allMesas.find(m => m.id === mesaId);
+    if (mesa) mesa.resist_dados = resistDados;
+    closeModal();
+    showToast('Configurações salvas!');
+  } else {
+    const data = res ? await res.json().catch(() => ({})) : {};
+    showToast(data.error || 'Erro ao salvar configurações.', 'error');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════

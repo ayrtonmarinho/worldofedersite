@@ -440,6 +440,25 @@ body {
   font-size: 0.55rem; color: var(--text-dim);
   letter-spacing: 1px; text-transform: uppercase;
 }
+.csb-calc {
+  text-align: center; font-family: var(--font-h); font-size: 1.35rem; color: var(--gold);
+  border-bottom: 1px solid rgba(207,170,86,0.15); padding: 0.1rem; width: 100%;
+}
+.ca-subs {
+  display: flex; gap: 0.25rem; width: 100%; justify-content: center; margin-top: 0.1rem;
+}
+.ca-sub {
+  width: 42px; text-align: center; font-size: 0.7rem;
+  background: rgba(255,255,255,0.04) !important; border: 1px solid rgba(207,170,86,0.15) !important;
+  border-radius: 3px !important; padding: 0.15rem !important; color: var(--text-secondary);
+}
+.ca-sub:focus { outline: none; border-color: rgba(207,170,86,0.4) !important; }
+.vital-calc {
+  text-align: center; font-family: var(--font-h); font-size: 1.1rem; color: var(--gold);
+  border-bottom: 1px solid rgba(207,170,86,0.15); padding: 0.1rem; width: 100%;
+  min-height: 1.8rem; display: flex; align-items: center; justify-content: center;
+}
+.tab-locked .tab-label::after { content: ' 🔒'; font-size: 0.7em; opacity: 0.55; }
 
 /* ═══════════════════════════════════════════
    STAT HEXAGONS
@@ -573,6 +592,47 @@ body {
   color: var(--text);
 }
 .resist-val:focus { outline: none; }
+/* ── Defesa ── */
+.defesa-block  { margin-bottom: 0.65rem; }
+.defesa-grid   { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+.defesa-field  { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+.defesa-field label { font-size: 0.55rem; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+.defesa-input  {
+  text-align: center; font-family: var(--font-h); font-size: 1rem; color: var(--text);
+  background: none !important; border: none !important;
+  border-bottom: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: 0 !important; padding: 0.1rem; width: 100%;
+}
+.defesa-input:focus { outline: none; border-bottom-color: rgba(255,255,255,0.4) !important; }
+.defesa-total  {
+  text-align: center; font-family: var(--font-h); font-size: 1.1rem; color: var(--gold);
+  border-bottom: 1px solid rgba(207,170,86,0.2); padding: 0.1rem; width: 100%;
+}
+
+/* ── Resist summary & tiles ── */
+.resist-summary-bar {
+  display: flex; gap: 0.75rem; align-items: center;
+  padding: 0.3rem 0.5rem; margin-bottom: 0.4rem;
+  background: rgba(207,170,86,0.05); border: 1px solid rgba(207,170,86,0.1); border-radius: 4px;
+  font-size: 0.75rem; color: var(--text-secondary);
+}
+.resist-summary-bar strong { color: var(--gold); }
+.resist-hint { font-size: 0.62rem; color: var(--text-dim); margin: 0 0 0.45rem; line-height: 1.4; }
+.resist-val-num {
+  font-family: var(--font-h); font-size: 1rem; color: var(--text); line-height: 1;
+}
+.resist-badge { font-size: 0.56rem; letter-spacing: 0.5px; color: var(--text-dim); }
+.resist-item  { cursor: pointer; user-select: none; }
+.resist-item.resist-plena  {
+  border-color: rgba(207,170,86,0.45); background: rgba(207,170,86,0.08);
+}
+.resist-item.resist-plena .resist-val-num { color: var(--gold); }
+.resist-item.resist-plena .resist-badge   { color: var(--gold); }
+.resist-item.resist-escola {
+  border-color: rgba(58,123,213,0.45); background: rgba(58,123,213,0.08);
+}
+.resist-item.resist-escola .resist-val-num { color: #7eb8f7; }
+.resist-item.resist-escola .resist-badge   { color: #7eb8f7; }
 
 /* Cores por elemento */
 .elem-fogo        { border-color: rgba(231,76,60,0.2);   }

@@ -6,6 +6,46 @@
   <title>Ficha de Personagem — World Of Eder</title>
   <link rel="icon" type="image/png" href="imgs/archive_favicon.png">
   <link rel="stylesheet" href="css/character-sheet.css" />
+  <style>
+    .xp-section { margin-top:.6rem; }
+    .xp-header  { display:flex; justify-content:space-between; align-items:center;
+                  font-size:.7rem; color:var(--text-secondary,#9a9488);
+                  text-transform:uppercase; letter-spacing:1px; margin-bottom:.3rem; }
+    .xp-bar-outer { height:6px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden; }
+    .xp-bar-fill  { height:100%; background:linear-gradient(90deg,#cfaa56,#e8c678);
+                    border-radius:4px; transition:width .4s; }
+    .btn-levelup  { width:100%; margin-top:.5rem; padding:.5rem; background:rgba(207,170,86,0.12);
+                    border:1px solid rgba(207,170,86,0.4); border-radius:6px; color:#cfaa56;
+                    font-size:.78rem; letter-spacing:1px; cursor:pointer; font-weight:bold;
+                    transition:background .2s; }
+    .btn-levelup:hover { background:rgba(207,170,86,0.22); }
+    .btn-levelup.hidden { display:none; }
+    .char-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75);
+                          display:flex; align-items:center; justify-content:center;
+                          z-index:1000; padding:1rem; }
+    .char-modal-box     { background:#1a1a2e; border:1px solid rgba(207,170,86,0.25);
+                          border-radius:10px; padding:1.5rem; max-width:480px; width:100%;
+                          max-height:90vh; overflow-y:auto; }
+    .char-modal-header  { display:flex; justify-content:space-between; align-items:center;
+                          margin-bottom:1rem; }
+    .char-modal-header h3 { font-size:1.1rem; margin:0; }
+    .char-modal-body    { font-size:.88rem; color:#9a9488; }
+    .reward-info        { background:rgba(207,170,86,0.07); border:1px solid rgba(207,170,86,0.2);
+                          border-left:3px solid #cfaa56; border-radius:6px;
+                          padding:.85rem 1rem; line-height:1.7; margin-bottom:.75rem; color:#9a9488; }
+    .btn-opcao          { display:block; width:100%; text-align:left; margin-bottom:.4rem;
+                          padding:.65rem .9rem; background:rgba(255,255,255,0.04);
+                          border:1px solid rgba(255,255,255,0.08); border-radius:6px;
+                          color:#e6e0d4; font-size:.85rem; cursor:pointer; transition:all .2s; }
+    .btn-opcao:hover    { background:rgba(207,170,86,0.1); border-color:rgba(207,170,86,0.35); }
+    .btn-confirm-lv     { width:100%; padding:.75rem; background:#cfaa56; color:#08080f;
+                          font-weight:bold; font-size:.88rem; letter-spacing:1px; border:none;
+                          border-radius:6px; cursor:pointer; margin-top:.5rem; }
+    .btn-confirm-lv:hover { background:#e8c678; }
+    .note-manual        { font-size:.72rem; color:#7a7468; margin:.5rem 0; line-height:1.5; }
+    .pericia-bonus      { margin-left:auto; font-size:.72rem; font-weight:bold; color:#cfaa56;
+                          min-width:2.8rem; text-align:right; flex-shrink:0; }
+  </style>
 </head>
 <body>
 <div id="app">
@@ -101,7 +141,7 @@
     <!-- ══════════════════════════════════════
          TAB: GERAL
     ══════════════════════════════════════ -->
-    <section class="tab-content active" id="tab-geral">
+    <section class="tab-content active" id="tab-geral" data-tab-id="geral">
       <div class="geral-layout">
 
         <div class="panel geral-identity-panel">
@@ -124,8 +164,22 @@
             </div>
             <div class="field-group" style="flex:0 0 70px">
               <label>Nível</label>
-              <input type="number" data-field="nivel" class="sheet-input" min="1" max="30">
+              <input type="number" data-field="nivel" class="sheet-input" min="1" max="20">
             </div>
+          </div>
+
+          <!-- XP / Progressão -->
+          <div class="xp-section" id="xp-section">
+            <div class="xp-header">
+              <span>Experiência</span>
+              <span id="xp-label-val">—</span>
+            </div>
+            <div class="xp-bar-outer">
+              <div id="xp-bar-fill" class="xp-bar-fill" style="width:0%"></div>
+            </div>
+            <button id="btn-levelup" class="btn-levelup hidden" onclick="showLevelUpModal()">
+              ⬆ Subir de Nível!
+            </button>
           </div>
         </div>
 
@@ -146,8 +200,10 @@
               <div class="vital-block mana-block">
                 <div class="vital-block-title">✦ Mana</div>
                 <div class="vital-inputs">
+                  <div class="vital-field"><label>Dado (d12)</label>
+                    <input type="number" data-field="mana_dado" class="sheet-input vital-input" min="1" max="12"></div>
                   <div class="vital-field"><label>Máxima</label>
-                    <input type="number" data-field="mana_max"   class="sheet-input vital-input"></div>
+                    <div class="vital-calc" id="calc-mana-max">—</div></div>
                   <div class="vital-field"><label>Atual</label>
                     <input type="number" data-field="mana_atual" class="sheet-input vital-input"></div>
                   <div class="vital-field"><label>Temporária</label>
@@ -166,28 +222,45 @@
         <div class="panel geral-combat-panel">
           <div class="panel-title">Status de Combate</div>
           <div class="combat-quick-grid">
-            <div class="csb"><div class="csb-icon">🛡</div>
-              <input type="number" data-field="ca"           class="sheet-input csb-input">
-              <div class="csb-label">CA</div></div>
-            <div class="csb"><div class="csb-icon">⚡</div>
-              <input type="number" data-field="iniciativa"   class="sheet-input csb-input">
-              <div class="csb-label">Iniciativa</div></div>
-            <div class="csb"><div class="csb-icon">👣</div>
+            <div class="csb">
+              <div class="csb-icon">🛡</div>
+              <div class="csb-calc" id="calc-ca">—</div>
+              <div class="csb-label">CA</div>
+              <div class="ca-subs">
+                <input type="number" data-field="ca_base_raca" class="sheet-input ca-sub" placeholder="Base" title="Base da Raça">
+                <input type="number" data-field="ca_armadura"  class="sheet-input ca-sub" placeholder="Arm." title="Armadura">
+              </div>
+            </div>
+            <div class="csb">
+              <div class="csb-icon">⚡</div>
+              <div class="csb-calc" id="calc-iniciativa">—</div>
+              <div class="csb-label">Iniciativa</div>
+            </div>
+            <div class="csb">
+              <div class="csb-icon">👣</div>
               <input type="number" data-field="deslocamento" class="sheet-input csb-input">
-              <div class="csb-label">Deslocamento</div></div>
-            <div class="csb"><div class="csb-icon">◎</div>
-              <input type="number" data-field="precisao"     class="sheet-input csb-input">
-              <div class="csb-label">Precisão</div></div>
-            <div class="csb"><div class="csb-icon">💀</div>
-              <input type="number" data-field="letalidade"   class="sheet-input csb-input">
-              <div class="csb-label">Letalidade</div></div>
-            <div class="csb"><div class="csb-icon">◈</div>
-              <input type="number" data-field="proficiencia" class="sheet-input csb-input">
-              <div class="csb-label">Proficiência</div></div>
+              <div class="csb-label">Deslocamento</div>
+            </div>
+            <div class="csb">
+              <div class="csb-icon">◎</div>
+              <div class="csb-calc" id="calc-precisao">—</div>
+              <div class="csb-label">Precisão</div>
+            </div>
+            <div class="csb">
+              <div class="csb-icon">💀</div>
+              <div class="csb-calc" id="calc-letalidade">—</div>
+              <div class="csb-label">Letalidade</div>
+            </div>
+            <div class="csb">
+              <div class="csb-icon">◈</div>
+              <div class="csb-calc" id="calc-proficiencia">—</div>
+              <div class="csb-label">Proficiência</div>
+            </div>
             <div class="csb" style="grid-column:span 2">
               <div class="csb-icon">✨</div>
-              <input type="number" data-field="inspiracao"   class="sheet-input csb-input">
-              <div class="csb-label">Inspiração</div></div>
+              <input type="number" data-field="inspiracao" class="sheet-input csb-input mestre-only">
+              <div class="csb-label">Inspiração</div>
+            </div>
           </div>
         </div>
       </div>
@@ -196,7 +269,7 @@
     <!-- ══════════════════════════════════════
          TAB: ATRIBUTOS
     ══════════════════════════════════════ -->
-    <section class="tab-content" id="tab-atributos">
+    <section class="tab-content" id="tab-atributos" data-tab-id="atributos">
       <div class="stats-row">
         <div class="stat-hex" data-stat="forca">
           <div class="stat-label">Força</div>
@@ -246,34 +319,34 @@
           <div class="pericias-grid">
             <div class="pericias-col">
               <div class="pericias-col-header">Força</div>
-              <label class="pericia-row"><select data-field="p_atletismo"    class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Atletismo</span></label>
-              <label class="pericia-row"><select data-field="p_forca_bruta"  class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Força Bruta</span></label>
+              <label class="pericia-row"><select data-field="p_atletismo"    class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Atletismo</span><span class="pericia-bonus" data-pericia="p_atletismo">—</span></label>
+              <label class="pericia-row"><select data-field="p_forca_bruta"  class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Força Bruta</span><span class="pericia-bonus" data-pericia="p_forca_bruta">—</span></label>
               <div class="pericias-col-header" style="margin-top:.6rem">Destreza</div>
-              <label class="pericia-row"><select data-field="p_acrobacia"    class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Acrobacia</span></label>
-              <label class="pericia-row"><select data-field="p_furtividade"  class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Furtividade</span></label>
-              <label class="pericia-row"><select data-field="p_invadir"      class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Invadir</span></label>
+              <label class="pericia-row"><select data-field="p_acrobacia"    class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Acrobacia</span><span class="pericia-bonus" data-pericia="p_acrobacia">—</span></label>
+              <label class="pericia-row"><select data-field="p_furtividade"  class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Furtividade</span><span class="pericia-bonus" data-pericia="p_furtividade">—</span></label>
+              <label class="pericia-row"><select data-field="p_invadir"      class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Invadir</span><span class="pericia-bonus" data-pericia="p_invadir">—</span></label>
               <div class="pericias-col-header" style="margin-top:.6rem">Constituição</div>
-              <label class="pericia-row"><select data-field="p_fortitude"    class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Fortitude</span></label>
+              <label class="pericia-row"><select data-field="p_fortitude"    class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Fortitude</span><span class="pericia-bonus" data-pericia="p_fortitude">—</span></label>
             </div>
             <div class="pericias-col">
               <div class="pericias-col-header">Inteligência</div>
-              <label class="pericia-row"><select data-field="p_arcanismo"    class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Arcanismo</span></label>
-              <label class="pericia-row"><select data-field="p_historia"     class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>História</span></label>
-              <label class="pericia-row"><select data-field="p_investigacao"  class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Investigação</span></label>
+              <label class="pericia-row"><select data-field="p_arcanismo"    class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Arcanismo</span><span class="pericia-bonus" data-pericia="p_arcanismo">—</span></label>
+              <label class="pericia-row"><select data-field="p_historia"     class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>História</span><span class="pericia-bonus" data-pericia="p_historia">—</span></label>
+              <label class="pericia-row"><select data-field="p_investigacao"  class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Investigação</span><span class="pericia-bonus" data-pericia="p_investigacao">—</span></label>
               <div class="pericias-col-header" style="margin-top:.6rem">Sabedoria</div>
-              <label class="pericia-row"><select data-field="p_intuicao"     class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Intuição</span></label>
-              <label class="pericia-row"><select data-field="p_medicina"     class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Medicina</span></label>
-              <label class="pericia-row"><select data-field="p_natureza"     class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Natureza</span></label>
-              <label class="pericia-row"><select data-field="p_percepcao"    class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Percepção</span></label>
-              <label class="pericia-row"><select data-field="p_religiao"     class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Religião</span></label>
-              <label class="pericia-row"><select data-field="p_sobrevivencia" class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Sobrevivência</span></label>
+              <label class="pericia-row"><select data-field="p_intuicao"     class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Intuição</span><span class="pericia-bonus" data-pericia="p_intuicao">—</span></label>
+              <label class="pericia-row"><select data-field="p_medicina"     class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Medicina</span><span class="pericia-bonus" data-pericia="p_medicina">—</span></label>
+              <label class="pericia-row"><select data-field="p_natureza"     class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Natureza</span><span class="pericia-bonus" data-pericia="p_natureza">—</span></label>
+              <label class="pericia-row"><select data-field="p_percepcao"    class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Percepção</span><span class="pericia-bonus" data-pericia="p_percepcao">—</span></label>
+              <label class="pericia-row"><select data-field="p_religiao"     class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Religião</span><span class="pericia-bonus" data-pericia="p_religiao">—</span></label>
+              <label class="pericia-row"><select data-field="p_sobrevivencia" class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Sobrevivência</span><span class="pericia-bonus" data-pericia="p_sobrevivencia">—</span></label>
             </div>
             <div class="pericias-col">
               <div class="pericias-col-header">Carisma</div>
-              <label class="pericia-row"><select data-field="p_atuacao"      class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Atuação</span></label>
-              <label class="pericia-row"><select data-field="p_enganacao"    class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Enganação</span></label>
-              <label class="pericia-row"><select data-field="p_intimidacao"  class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Intimidação</span></label>
-              <label class="pericia-row"><select data-field="p_persuasao"    class="prof-select"><option value="0">○</option><option value="1">◉</option><option value="2">★</option></select><span>Persuasão</span></label>
+              <label class="pericia-row"><select data-field="p_atuacao"      class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Atuação</span><span class="pericia-bonus" data-pericia="p_atuacao">—</span></label>
+              <label class="pericia-row"><select data-field="p_enganacao"    class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Enganação</span><span class="pericia-bonus" data-pericia="p_enganacao">—</span></label>
+              <label class="pericia-row"><select data-field="p_intimidacao"  class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Intimidação</span><span class="pericia-bonus" data-pericia="p_intimidacao">—</span></label>
+              <label class="pericia-row"><select data-field="p_persuasao"    class="prof-select"><option value="0">○</option><option value="1">◉</option></select><span>Persuasão</span><span class="pericia-bonus" data-pericia="p_persuasao">—</span></label>
             </div>
           </div>
         </div>
@@ -283,7 +356,7 @@
     <!-- ══════════════════════════════════════
          TAB: COMBATE
     ══════════════════════════════════════ -->
-    <section class="tab-content" id="tab-combate">
+    <section class="tab-content" id="tab-combate" data-tab-id="combate">
       <div class="sheet-grid-2">
         <div class="panel">
           <div class="panel-title">Armas</div>
@@ -298,24 +371,51 @@
           </div>
         </div>
         <div class="panel">
-          <div class="panel-title">Resistências Elementais</div>
+          <div class="panel-title">Defesa & Resistências</div>
+
+          <!-- Defesa -->
+          <div class="defesa-block">
+            <div class="defesa-grid">
+              <div class="defesa-field">
+                <label>Base</label>
+                <input type="number" data-field="defesa_base" class="sheet-input defesa-input" min="0">
+              </div>
+              <div class="defesa-field">
+                <label>Bônus</label>
+                <input type="number" data-field="defesa_bonus" class="sheet-input defesa-input" min="0">
+              </div>
+              <div class="defesa-field">
+                <label>Total</label>
+                <div class="defesa-total" id="calc-defesa-total">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resist summary -->
+          <div class="resist-summary-bar">
+            <span>Comum: <strong id="calc-resist-comum">—</strong></span>
+            <span>Plena: <strong id="calc-resist-plena">—</strong></span>
+            <span style="margin-left:auto;font-size:.68rem">Plenas: <strong id="resist-plenas-usados">0</strong>/<strong id="resist-plenas-max">1</strong></span>
+          </div>
+          <p class="resist-hint" id="resist-hint-text">Jogador: clique para alternar Plena (máx. 1 + mod. Inteligência). Mestre: clique para marcar ⚔ Escola.</p>
+
           <div class="resistances-grid">
-            <div class="resist-item elem-fogo">      <span>🔥 Fogo</span>      <input type="number" data-field="r_fogo"       class="resist-val sheet-input"></div>
-            <div class="resist-item elem-gelo">      <span>❄ Gelo</span>       <input type="number" data-field="r_gelo"       class="resist-val sheet-input"></div>
-            <div class="resist-item elem-trovao">    <span>⚡ Trovão</span>    <input type="number" data-field="r_trovao"     class="resist-val sheet-input"></div>
-            <div class="resist-item elem-agua">      <span>💧 Água</span>      <input type="number" data-field="r_agua"       class="resist-val sheet-input"></div>
-            <div class="resist-item elem-natureza">  <span>🌿 Natureza</span>  <input type="number" data-field="r_natureza"   class="resist-val sheet-input"></div>
-            <div class="resist-item elem-terra">     <span>🪨 Terra</span>     <input type="number" data-field="r_terra"      class="resist-val sheet-input"></div>
-            <div class="resist-item elem-ar">        <span>💨 Ar</span>        <input type="number" data-field="r_ar"         class="resist-val sheet-input"></div>
-            <div class="resist-item elem-luz">       <span>☀ Luz</span>        <input type="number" data-field="r_luz"        class="resist-val sheet-input"></div>
-            <div class="resist-item elem-trevas">    <span>🌑 Trevas</span>    <input type="number" data-field="r_trevas"     class="resist-val sheet-input"></div>
-            <div class="resist-item elem-espectral"> <span>👻 Espectral</span> <input type="number" data-field="r_espectral"  class="resist-val sheet-input"></div>
-            <div class="resist-item elem-vazio">     <span>🕳 Vazio</span>     <input type="number" data-field="r_vazio"      class="resist-val sheet-input"></div>
-            <div class="resist-item elem-ethereal">  <span>✨ Ethereal</span>  <input type="number" data-field="r_ethereal"   class="resist-val sheet-input"></div>
-            <div class="resist-item elem-espiritual"><span>🔮 Espiritual</span><input type="number" data-field="r_espiritual"  class="resist-val sheet-input"></div>
-            <div class="resist-item elem-ilusao">    <span>🌀 Ilusão</span>    <input type="number" data-field="r_ilusao"     class="resist-val sheet-input"></div>
-            <div class="resist-item elem-imaterial"> <span>◌ Imaterial</span>  <input type="number" data-field="r_imaterial"  class="resist-val sheet-input"></div>
-            <div class="resist-item elem-cristal">   <span>💎 Cristal</span>   <input type="number" data-field="r_cristal"    class="resist-val sheet-input"></div>
+            <div class="resist-item elem-fogo"       id="ri-fogo"       onclick="handleResistTileClick('fogo')">      <span>🔥 Fogo</span>      <div class="resist-val-num" id="rv-fogo">—</div>      <div class="resist-badge" id="rb-fogo">Comum</div></div>
+            <div class="resist-item elem-gelo"       id="ri-gelo"       onclick="handleResistTileClick('gelo')">      <span>❄ Gelo</span>       <div class="resist-val-num" id="rv-gelo">—</div>      <div class="resist-badge" id="rb-gelo">Comum</div></div>
+            <div class="resist-item elem-trovao"     id="ri-trovao"     onclick="handleResistTileClick('trovao')">    <span>⚡ Trovão</span>    <div class="resist-val-num" id="rv-trovao">—</div>    <div class="resist-badge" id="rb-trovao">Comum</div></div>
+            <div class="resist-item elem-agua"       id="ri-agua"       onclick="handleResistTileClick('agua')">      <span>💧 Água</span>      <div class="resist-val-num" id="rv-agua">—</div>      <div class="resist-badge" id="rb-agua">Comum</div></div>
+            <div class="resist-item elem-natureza"   id="ri-natureza"   onclick="handleResistTileClick('natureza')">  <span>🌿 Natureza</span>  <div class="resist-val-num" id="rv-natureza">—</div>  <div class="resist-badge" id="rb-natureza">Comum</div></div>
+            <div class="resist-item elem-terra"      id="ri-terra"      onclick="handleResistTileClick('terra')">     <span>🪨 Terra</span>     <div class="resist-val-num" id="rv-terra">—</div>     <div class="resist-badge" id="rb-terra">Comum</div></div>
+            <div class="resist-item elem-ar"         id="ri-ar"         onclick="handleResistTileClick('ar')">        <span>💨 Ar</span>        <div class="resist-val-num" id="rv-ar">—</div>        <div class="resist-badge" id="rb-ar">Comum</div></div>
+            <div class="resist-item elem-luz"        id="ri-luz"        onclick="handleResistTileClick('luz')">       <span>☀ Luz</span>        <div class="resist-val-num" id="rv-luz">—</div>       <div class="resist-badge" id="rb-luz">Comum</div></div>
+            <div class="resist-item elem-trevas"     id="ri-trevas"     onclick="handleResistTileClick('trevas')">    <span>🌑 Trevas</span>    <div class="resist-val-num" id="rv-trevas">—</div>    <div class="resist-badge" id="rb-trevas">Comum</div></div>
+            <div class="resist-item elem-espectral"  id="ri-espectral"  onclick="handleResistTileClick('espectral')"> <span>👻 Espectral</span> <div class="resist-val-num" id="rv-espectral">—</div> <div class="resist-badge" id="rb-espectral">Comum</div></div>
+            <div class="resist-item elem-vazio"      id="ri-vazio"      onclick="handleResistTileClick('vazio')">     <span>🕳 Vazio</span>     <div class="resist-val-num" id="rv-vazio">—</div>     <div class="resist-badge" id="rb-vazio">Comum</div></div>
+            <div class="resist-item elem-ethereal"   id="ri-ethereal"   onclick="handleResistTileClick('ethereal')">  <span>✨ Ethereal</span>  <div class="resist-val-num" id="rv-ethereal">—</div>  <div class="resist-badge" id="rb-ethereal">Comum</div></div>
+            <div class="resist-item elem-espiritual" id="ri-espiritual" onclick="handleResistTileClick('espiritual')"><span>🔮 Espiritual</span><div class="resist-val-num" id="rv-espiritual">—</div><div class="resist-badge" id="rb-espiritual">Comum</div></div>
+            <div class="resist-item elem-ilusao"     id="ri-ilusao"     onclick="handleResistTileClick('ilusao')">    <span>🌀 Ilusão</span>    <div class="resist-val-num" id="rv-ilusao">—</div>    <div class="resist-badge" id="rb-ilusao">Comum</div></div>
+            <div class="resist-item elem-imaterial"  id="ri-imaterial"  onclick="handleResistTileClick('imaterial')"> <span>◌ Imaterial</span>  <div class="resist-val-num" id="rv-imaterial">—</div> <div class="resist-badge" id="rb-imaterial">Comum</div></div>
+            <div class="resist-item elem-cristal"    id="ri-cristal"    onclick="handleResistTileClick('cristal')">   <span>💎 Cristal</span>   <div class="resist-val-num" id="rv-cristal">—</div>   <div class="resist-badge" id="rb-cristal">Comum</div></div>
           </div>
         </div>
       </div>
@@ -324,7 +424,7 @@
     <!-- ══════════════════════════════════════
          TAB: MAGIAS
     ══════════════════════════════════════ -->
-    <section class="tab-content" id="tab-magias">
+    <section class="tab-content" id="tab-magias" data-tab-id="magias">
       <div id="magias-grid" class="magias-grid"></div>
       <div style="text-align:center;margin-top:1rem">
         <button class="btn-add" id="btn-add-magia">+ Adicionar Magia</button>
@@ -334,7 +434,7 @@
     <!-- ══════════════════════════════════════
          TAB: HABILIDADES
     ══════════════════════════════════════ -->
-    <section class="tab-content" id="tab-habilidades">
+    <section class="tab-content" id="tab-habilidades" data-tab-id="habilidades">
       <div class="sheet-grid-2">
         <div class="panel">
           <div class="panel-title">Descrição de Habilidades e Características Especiais</div>
@@ -358,7 +458,7 @@
     <!-- ══════════════════════════════════════
          TAB: INVENTÁRIO
     ══════════════════════════════════════ -->
-    <section class="tab-content" id="tab-inventario">
+    <section class="tab-content" id="tab-inventario" data-tab-id="inventario">
       <div class="panel coins-panel">
         <div class="panel-title">🎒 Bolsa Mágica Universal</div>
         <div class="coins-grid">
@@ -397,7 +497,7 @@
     <!-- ══════════════════════════════════════
          TAB: PERFIL
     ══════════════════════════════════════ -->
-    <section class="tab-content" id="tab-perfil">
+    <section class="tab-content" id="tab-perfil" data-tab-id="perfil">
       <div class="sheet-grid-3">
         <div class="panel">
           <div class="panel-title">Aparência & História</div>
@@ -462,7 +562,8 @@ const API_URL = 'https://ac53afc98d.execute-api.sa-east-1.amazonaws.com/prod';
 // ═══════════════════════════════════════════════════════════════════
 let currentChar  = null;
 let originalChar = null;
-let auxDatabase  = {};   // itens, habilidades, escolas, treinamentos
+let auxDatabase  = {};
+let slotData     = null;
 let isDirty      = false;
 
 // Contexto da ficha (vem da URL)
@@ -522,11 +623,31 @@ async function apiFetch(path, options = {}) {
 // ═══════════════════════════════════════════════════════════════════
 async function loadAuxDatabase() {
   try {
-    const res = await apiFetch('/');
-    if (res.ok) {
-      auxDatabase = await res.json();
+    const [auxRes, expRes] = await Promise.all([
+      apiFetch('/'),
+      fetch(`${API_URL}/exp_table`)
+    ]);
+    if (auxRes.ok) auxDatabase = await auxRes.json();
+    if (expRes.ok) {
+      const items = await expRes.json();
+      if (items.length) buildProgressionFromApi(items);
     }
   } catch(e) {}
+}
+
+function buildProgressionFromApi(items) {
+  const map = {};
+  items.forEach(item => { map[parseInt(item.nivel)] = item; });
+  for (let i = 1; i <= 20; i++) {
+    const it = map[i];
+    if (!it) continue;
+    PROGRESSION[i] = {
+      xp:     parseInt(it.xp) || 0,
+      tipo:   it.tipo   || null,
+      desc:   it.desc   || '',
+      opcoes: it.opcoes || []
+    };
+  }
 }
 
 function populateLinkedSelects() {
@@ -557,6 +678,7 @@ async function loadSlotChar() {
 
     if (res.ok) {
       fichaLiberada = data.ficha_liberada;
+      slotData      = data.slot || null;
       isReadOnly = (viewAs === 'mestre') || !fichaLiberada;
 
       // Atualiza info da mesa no HUD
@@ -569,19 +691,21 @@ async function loadSlotChar() {
       if (data.personagem) {
         currentChar  = JSON.parse(JSON.stringify(data.personagem));
         originalChar = JSON.parse(JSON.stringify(data.personagem));
+        applyMesaResistDados(data.mesa);
         renderSheet();
       } else {
-        // Ficha ainda não criada — mostra vazia para preencher
         currentChar  = {};
         originalChar = {};
+        applyMesaResistDados(data.mesa);
       }
 
       document.getElementById('sheet-main').classList.remove('hidden');
       document.getElementById('hud-center').classList.remove('hidden');
       updateHeaderIdentity();
       renderViewModeBadge();
+      renderXpSection();
 
-      if (isReadOnly) applyReadOnly();
+      applyTabLocking();
 
     } else if (res.status === 403) {
       showToast('Você não tem acesso a esta ficha.', 'error');
@@ -593,7 +717,7 @@ async function loadSlotChar() {
       isReadOnly    = viewAs === 'mestre';
       document.getElementById('sheet-main').classList.remove('hidden');
       renderViewModeBadge();
-      if (isReadOnly) applyReadOnly();
+      applyTabLocking();
     }
   } catch(e) {
     showToast('Erro ao carregar ficha.', 'error');
@@ -604,11 +728,68 @@ async function loadSlotChar() {
 // ═══════════════════════════════════════════════════════════════════
 //  READ-ONLY MODE
 // ═══════════════════════════════════════════════════════════════════
-function applyReadOnly() {
-  document.querySelectorAll('.sheet-input, .sheet-textarea, .resist-val, .stat-val, .csb-input, .vital-input, .prof-select')
-    .forEach(el => { el.disabled = true; el.style.opacity = '0.7'; });
-  document.querySelectorAll('.btn-add, #btn-save, #btn-discard')
-    .forEach(el => { el.style.display = 'none'; });
+const ALWAYS_EDITABLE = new Set(['hp_atual','mana_atual','hp_temp','mana_temp','buffs']);
+const ALL_TABS = ['geral','atributos','combate','magias','habilidades','inventario','perfil'];
+
+function applyTabLocking() {
+  if (!currentChar) return;
+
+  const tabsLiberadas = currentChar.tabs_liberadas;
+  const allOpen = fichaLiberada && (!tabsLiberadas || tabsLiberadas.length === 0);
+  const openTabs = new Set(allOpen ? ALL_TABS : (fichaLiberada ? (tabsLiberadas || []) : []));
+
+  document.querySelectorAll('.tab-content').forEach(section => {
+    const tabId   = section.dataset.tabId;
+    const tabOpen = openTabs.has(tabId);
+
+    section.querySelectorAll('[data-field]').forEach(el => {
+      const field        = el.dataset.field;
+      const alwaysOpen   = ALWAYS_EDITABLE.has(field);
+      const isMestreOnly = el.classList.contains('mestre-only');
+
+      if (viewAs === 'mestre') {
+        el.disabled     = false;
+        el.style.opacity = '';
+        return;
+      }
+      if (alwaysOpen) {
+        el.disabled     = false;
+        el.style.opacity = '';
+      } else if (isMestreOnly) {
+        el.disabled     = true;
+        el.style.opacity = '0.5';
+      } else if (tabOpen) {
+        el.disabled     = false;
+        el.style.opacity = '';
+      } else {
+        el.disabled     = true;
+        el.style.opacity = '0.7';
+      }
+    });
+
+    // Indicador visual de lock na aba
+    const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+    if (btn) btn.classList.toggle('tab-locked', !tabOpen && viewAs !== 'mestre');
+
+    // Botões de adicionar (btn-add) dentro de abas fechadas
+    section.querySelectorAll('.btn-add').forEach(el => {
+      el.style.display = (!tabOpen && viewAs !== 'mestre') ? 'none' : '';
+    });
+  });
+
+  // Aba combate: armas sempre abertas para jogador
+  if (viewAs !== 'mestre') {
+    document.querySelectorAll('#tab-combate .weapons-table input, #tab-combate .weapons-table select, #tab-combate .weapons-table textarea').forEach(el => {
+      el.disabled = false; el.style.opacity = '';
+    });
+    const btnWeapon = document.getElementById('btn-add-weapon');
+    if (btnWeapon) btnWeapon.style.display = '';
+  }
+
+  // Mestre não salva
+  if (viewAs === 'mestre') {
+    document.querySelectorAll('#btn-save, #btn-discard, .btn-add').forEach(el => el.style.display = 'none');
+  }
 }
 
 function renderViewModeBadge() {
@@ -639,6 +820,9 @@ function renderSheet() {
 
   updateAllMods();
   updateSaveVals();
+  updatePericiasBonuses();
+  updateCalcStats();
+  updateDefesaResist();
   renderWeapons();
   renderMagias();
   renderDescGrid('descricao-itens-grid',       currentChar.descricao_itens       || []);
@@ -662,10 +846,12 @@ function updateAllMods() {
       el.textContent = (mod >= 0 ? '+' : '') + mod;
     });
   });
+  updateCalcStats();
+  updateDefesaResist();
 }
 
 function updateSaveVals() {
-  const prof = parseInt(currentChar.proficiencia) || 0;
+  const prof = getProficiencia();
   ['forca','destreza','constituicao','inteligencia','sabedoria','carisma'].forEach(stat => {
     const base  = calcMod(currentChar[stat] || 10);
     const hasPr = !!currentChar['save_' + stat];
@@ -674,6 +860,165 @@ function updateSaveVals() {
       el.textContent = (total >= 0 ? '+' : '') + total;
     });
   });
+}
+
+const PERICIA_ATTR = {
+  p_atletismo:    'forca',        p_forca_bruta:  'forca',
+  p_acrobacia:    'destreza',     p_furtividade:  'destreza',   p_invadir:     'destreza',
+  p_fortitude:    'constituicao',
+  p_arcanismo:    'inteligencia', p_historia:     'inteligencia', p_investigacao: 'inteligencia',
+  p_intuicao:     'sabedoria',    p_medicina:     'sabedoria',  p_natureza:     'sabedoria',
+  p_percepcao:    'sabedoria',    p_religiao:     'sabedoria',  p_sobrevivencia:'sabedoria',
+  p_atuacao:      'carisma',      p_enganacao:    'carisma',    p_intimidacao:  'carisma',
+  p_persuasao:    'carisma'
+};
+
+function getProficiencia() {
+  return Math.ceil((parseInt(currentChar?.nivel) || 1) / 2);
+}
+
+function updatePericiasBonuses() {
+  const prof = getProficiencia();
+  Object.entries(PERICIA_ATTR).forEach(([pField, attr]) => {
+    const attrMod  = calcMod(currentChar?.[attr] || 10);
+    const treinado = parseInt(currentChar?.[pField]) || 0;
+    const bonus    = attrMod + treinado * prof;
+    document.querySelectorAll(`[data-pericia="${pField}"]`).forEach(el => {
+      el.textContent = (bonus >= 0 ? '+' : '') + bonus;
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MESA CONFIG — resist_dados padrão
+// ═══════════════════════════════════════════════════════════════════
+function applyMesaResistDados(mesa) {
+  if (!mesa?.resist_dados) return;
+  Object.entries(mesa.resist_dados).forEach(([elem, dado]) => {
+    if (!currentChar) return;
+    if (!currentChar['r_dado_' + elem]) {
+      currentChar['r_dado_' + elem] = dado;
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CALCULATED STATS
+// ═══════════════════════════════════════════════════════════════════
+const RESIST_ELEMS = ['fogo','gelo','trovao','agua','natureza','terra','ar','luz',
+                      'trevas','espectral','vazio','ethereal','espiritual','ilusao','imaterial','cristal'];
+
+function fmt(val) { return (val >= 0 ? '+' : '') + val; }
+
+function setCalc(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function updateCalcStats() {
+  if (!currentChar) return;
+  const dexMod = calcMod(currentChar.destreza    || 10);
+  const intMod = calcMod(currentChar.inteligencia || 10);
+
+  const ca = (parseInt(currentChar.ca_base_raca) || 0)
+           + dexMod
+           + (parseInt(currentChar.ca_armadura)  || 0)
+           + (parseInt(currentChar.ca_bonus)      || 0);
+
+  const precisao    = 6 + dexMod + (parseInt(currentChar.precisao_bonus) || 0);
+  const letalidade  = 5 + (parseInt(currentChar.letalidade_bonus) || 0);
+  const manaMax     = 5 + (parseInt(currentChar.mana_dado) || 0) + intMod
+                        + (parseInt(currentChar.mana_bonus) || 0);
+
+  setCalc('calc-ca',          ca);
+  setCalc('calc-iniciativa',  fmt(dexMod));
+  setCalc('calc-precisao',    precisao);
+  setCalc('calc-letalidade',  letalidade);
+  setCalc('calc-proficiencia', getProficiencia());
+  setCalc('calc-mana-max',    manaMax);
+
+  currentChar.mana_max = manaMax;
+}
+
+function updateDefesaResist() {
+  if (!currentChar) return;
+
+  const defBase  = parseInt(currentChar.defesa_base)  || 0;
+  const defBonus = parseInt(currentChar.defesa_bonus)  || 0;
+  const defTotal = defBase + defBonus;
+
+  const resistComum = Math.floor(defTotal / 2);
+  const resistPlena = Math.floor(defTotal * 1.5);
+
+  const intMod    = calcMod(currentChar.inteligencia || 10);
+  const maxPlenas = Math.max(0, 1 + intMod);
+
+  const plenas  = new Set(currentChar.resist_plenas  || []);
+  const escolas = new Set(currentChar.resist_escola   || []);
+
+  setCalc('calc-defesa-total',    defTotal);
+  setCalc('calc-resist-comum',    resistComum);
+  setCalc('calc-resist-plena',    resistPlena);
+  setCalc('resist-plenas-usados', plenas.size);
+  setCalc('resist-plenas-max',    maxPlenas);
+
+  const hint = document.getElementById('resist-hint-text');
+  if (hint) hint.textContent =
+    `Jogador: clique para alternar Plena (máx. 1 + mod. Inteligência = ${maxPlenas}). ` +
+    `Mestre: clique para marcar ⚔ Escola (plena automática, não usa slot).`;
+
+  RESIST_ELEMS.forEach(elem => {
+    const isEscola = escolas.has(elem);
+    const isPlena  = plenas.has(elem);
+    const val      = (isEscola || isPlena) ? resistPlena : resistComum;
+
+    const tile  = document.getElementById('ri-' + elem);
+    const valEl = document.getElementById('rv-' + elem);
+    const badge = document.getElementById('rb-' + elem);
+
+    if (valEl) valEl.textContent = val;
+    if (badge) badge.textContent = isEscola ? '⚔ Escola' : isPlena ? '✦ Plena' : 'Comum';
+    if (tile) {
+      tile.classList.toggle('resist-escola', isEscola);
+      tile.classList.toggle('resist-plena',  isPlena && !isEscola);
+    }
+  });
+}
+
+function handleResistTileClick(elem) {
+  if (!currentChar) return;
+
+  const escolas = [...(currentChar.resist_escola || [])];
+  const isEscola = escolas.includes(elem);
+
+  if (viewAs === 'mestre') {
+    currentChar.resist_escola = isEscola
+      ? escolas.filter(e => e !== elem)
+      : [...escolas, elem];
+    markDirty();
+    updateDefesaResist();
+    return;
+  }
+
+  // Jogador não pode alterar escola
+  if (isEscola) return;
+
+  const intMod    = calcMod(currentChar.inteligencia || 10);
+  const maxPlenas = Math.max(0, 1 + intMod);
+  const plenas    = [...(currentChar.resist_plenas || [])];
+  const isPlena   = plenas.includes(elem);
+
+  if (isPlena) {
+    currentChar.resist_plenas = plenas.filter(e => e !== elem);
+  } else {
+    if (plenas.length >= maxPlenas) {
+      showToast(`Máximo de ${maxPlenas} elemento(s) com resistência plena.`, 'error');
+      return;
+    }
+    currentChar.resist_plenas = [...plenas, elem];
+  }
+  markDirty();
+  updateDefesaResist();
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -875,7 +1220,7 @@ function setupTabs() {
 // ═══════════════════════════════════════════════════════════════════
 document.addEventListener('input', e => {
   const el = e.target;
-  if (!currentChar || isReadOnly) return;
+  if (!currentChar) return;
   const field = el.dataset.field;
   if (!field) return;
   const val = el.type === 'checkbox' ? el.checked
@@ -885,15 +1230,22 @@ document.addEventListener('input', e => {
   markDirty();
 
   if (['forca','destreza','constituicao','inteligencia','sabedoria','carisma'].includes(field)) {
-    updateAllMods(); updateSaveVals();
+    updateAllMods(); updateSaveVals(); updatePericiasBonuses();
   }
-  if (field.startsWith('save_') || field === 'proficiencia') updateSaveVals();
-  if (field.startsWith('hp_')   || field.startsWith('mana_')) updateVitalBars();
-  if (field === 'nome' || field === 'raca' || field === 'nivel') updateHeaderIdentity();
+  if (field.startsWith('save_')) updateSaveVals();
+  if (field.startsWith('p_')) updatePericiasBonuses();
+  if (field === 'ca_base_raca' || field === 'ca_armadura' || field === 'ca_bonus' ||
+      field === 'mana_dado'    || field === 'mana_bonus'  ||
+      field === 'precisao_bonus' || field === 'letalidade_bonus') updateCalcStats();
+  if (field === 'defesa_base' || field === 'defesa_bonus') updateDefesaResist();
+  if (field.startsWith('hp_') || field.startsWith('mana_')) updateVitalBars();
+  if (field === 'nome' || field === 'raca' || field === 'nivel') {
+    updateHeaderIdentity(); renderXpSection(); updatePericiasBonuses(); updateCalcStats(); updateDefesaResist();
+  }
 });
 
 function markDirty() {
-  if (isReadOnly) return;
+  if (viewAs === 'mestre') return;
   isDirty = true;
   document.getElementById('save-bar').classList.remove('hidden');
 }
@@ -914,7 +1266,7 @@ function setupSaveBar() {
 }
 
 async function saveChar() {
-  if (!currentChar || isReadOnly) return;
+  if (!currentChar || viewAs === 'mestre') return;
   const token = getToken();
   if (!token) { showToast('Sessão expirada. Faça login novamente.', 'error'); return; }
 
@@ -979,6 +1331,191 @@ function hideLoading() {
 // ═══════════════════════════════════════════════════════════════════
 function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  PROGRESSÃO DE NÍVEL
+// ═══════════════════════════════════════════════════════════════════
+let PROGRESSION = [
+  null,
+  { xp: 0,          tipo: 'fixo',    desc: '1 Ponto de Conhecimento. +2 Treinamentos.' },
+  { xp: 125 },
+  { xp: 300,        tipo: 'escolha', opcoes: ['+4 de Vida por Mod.CON.', '+3 de Poder', '+1 na rolagem de ataque'] },
+  { xp: 725 },
+  { xp: 1550,       tipo: 'fixo',    desc: '1 Ponto de Conhecimento. 1 dado de vida cheio.' },
+  { xp: 3200 },
+  { xp: 6700,       tipo: 'escolha', opcoes: ['+6 de Vida por Mod.CON.', '+4 de Poder', '+2 na rolagem de ataque'] },
+  { xp: 14000 },
+  { xp: 30000 },
+  { xp: 64000,      tipo: 'fixo',    desc: '1 Ponto de Conhecimento. 1 dado de vida cheio. +1 Treinamento.' },
+  { xp: 140000,     tipo: 'escolha', opcoes: ['+8 de Vida por Mod.CON.', '+8 de Poder', '+3 na rolagem de ataque'] },
+  { xp: 260000 },
+  { xp: 600000,     tipo: 'fixo',    desc: '+15 de Vida por Mod.CON. 1 Master Trait. +2 Pontos de Atributo.' },
+  { xp: 1300000 },
+  { xp: 2725000,    tipo: 'fixo',    desc: '1 Ponto de Conhecimento. 2 dados de vida cheios.' },
+  { xp: 6000000,    tipo: 'escolha', opcoes: ['+10 de Vida por Mod.CON.', '+16 de Poder', '+4 na rolagem de ataque'] },
+  { xp: 13000000,   tipo: 'escolha', opcoes: ['Magician Power (Passiva): +30 Mágico/Elemental', 'Warrior Power (Passiva): +15 Dano Físico', 'Tank Power (Passiva): +45 Vida Máxima'] },
+  { xp: 26000000,   tipo: 'escolha', opcoes: ['+50 Vida Máxima, +15 Letalidade, -1 Acerto Crítico.', '+100 Mana, +65 Vida, -1 Rodada Conjuração.', '+100 Vida, +3 CA, +30 de Defesa Base.'] },
+  { xp: 70000000,   tipo: 'fixo',    desc: '6 pontos de atributos para distribuir.' },
+  { xp: 200000000,  tipo: 'especial', desc: 'Acesso ao Heroic Tier (Nv.20)!' }
+];
+
+function fmtXp(xp) {
+  if (xp >= 1000000) return (xp/1000000).toFixed(1).replace(/\.0$/,'') + 'M';
+  if (xp >= 1000)    return Math.round(xp/1000) + 'K';
+  return String(xp);
+}
+
+function renderXpSection() {
+  const nivel  = parseInt(currentChar?.nivel) || 1;
+  const xpAtual = parseInt(slotData?.experiencia) || 0;
+  const capped  = nivel >= 20;
+  const proxXp  = capped ? null : PROGRESSION[nivel + 1]?.xp ?? null;
+  const prevXp  = PROGRESSION[Math.min(nivel, 20)]?.xp ?? 0;
+
+  const label = document.getElementById('xp-label-val');
+  const fill  = document.getElementById('xp-bar-fill');
+  const btn   = document.getElementById('btn-levelup');
+
+  if (label) label.textContent = capped
+    ? `${fmtXp(xpAtual)} XP — Nível Máximo`
+    : `${fmtXp(xpAtual)} / ${fmtXp(proxXp)} XP`;
+
+  if (fill) {
+    if (capped || !proxXp) { fill.style.width = '100%'; }
+    else {
+      const range = proxXp - prevXp || 1;
+      fill.style.width = Math.min(100, Math.max(0, ((xpAtual - prevXp) / range) * 100)) + '%';
+    }
+  }
+
+  if (btn) {
+    const jaUsado = currentChar?.nivel_recompensas?.[String(nivel + 1)] !== undefined;
+    const elegivel = !isReadOnly && !capped && proxXp !== null && xpAtual >= proxXp && !jaUsado;
+    btn.classList.toggle('hidden', !elegivel);
+  }
+}
+
+function showLevelUpModal() {
+  const nivel     = parseInt(currentChar?.nivel) || 1;
+  const novoNivel = nivel + 1;
+  if (novoNivel > 20) return;
+
+  const prog = PROGRESSION[novoNivel];
+  let corpo = '';
+
+  if (!prog?.tipo) {
+    corpo = `<p style="color:#9a9488;text-align:center;padding:.5rem 0">
+      Nenhuma recompensa especial neste nível.</p>
+      <button class="btn-confirm-lv" onclick="confirmarLevelUp(0)">Confirmar Nível ${novoNivel}</button>`;
+  } else if (prog.tipo === 'fixo' || prog.tipo === 'especial') {
+    const manual = prog.desc.includes('manualmente') || prog.desc.includes('dado') || prog.desc.includes('Treinamento') || prog.desc.includes('distribuir') || prog.desc.includes('Master Trait') || prog.desc.includes('Conhecimento');
+    corpo = `
+      <div class="reward-info">${prog.desc}</div>
+      ${manual ? '<p class="note-manual">⚠ Itens sem aplicação automática devem ser configurados manualmente na ficha.</p>' : ''}
+      <button class="btn-confirm-lv" onclick="confirmarLevelUp(0)">
+        ⬆ Confirmar Nível ${novoNivel}
+      </button>`;
+  } else if (prog.tipo === 'escolha') {
+    corpo = `<p style="color:#9a9488;font-size:.8rem;margin-bottom:.75rem">Escolha uma recompensa:</p>
+      ${prog.opcoes.map((op, i) => `
+        <button class="btn-opcao" onclick="confirmarLevelUp(${i})">
+          <span style="color:#cfaa56;margin-right:.5rem">◈</span>${op}
+        </button>`).join('')}`;
+  }
+
+  openCharModal(`
+    <div class="char-modal-header">
+      <h3 style="color:#cfaa56">⬆ Nível ${novoNivel}!</h3>
+      <button class="btn-close" onclick="closeCharModal()">✕</button>
+    </div>
+    <div class="char-modal-body">${corpo}</div>`);
+}
+
+async function confirmarLevelUp(opcaoIndex) {
+  const nivel     = parseInt(currentChar?.nivel) || 1;
+  const novoNivel = nivel + 1;
+  if (novoNivel > 20) return;
+
+  const c      = currentChar;
+  const conMod = calcMod(c.constituicao  || 10);
+  const intMod = calcMod(c.inteligencia  || 10);
+
+  if (!c.nivel_recompensas) c.nivel_recompensas = {};
+  c.nivel_recompensas[String(novoNivel)] = opcaoIndex;
+
+  // Bônus de escolha
+  const escolhas = {
+    3:  [() => { c.hp_max=(+c.hp_max||0)+4*conMod; },    () => { c.poder=((+c.poder||0)+3); },  () => { c.precisao_bonus=((+c.precisao_bonus||0)+1); }],
+    7:  [() => { c.hp_max=(+c.hp_max||0)+6*conMod; },    () => { c.poder=((+c.poder||0)+4); },  () => { c.precisao_bonus=((+c.precisao_bonus||0)+2); }],
+    11: [() => { c.hp_max=(+c.hp_max||0)+8*conMod; },    () => { c.poder=((+c.poder||0)+8); },  () => { c.precisao_bonus=((+c.precisao_bonus||0)+3); }],
+    16: [() => { c.hp_max=(+c.hp_max||0)+10*conMod; },   () => { c.poder=((+c.poder||0)+16); }, () => { c.precisao_bonus=((+c.precisao_bonus||0)+4); }],
+    17: [
+      () => { c.passiva_classe='magician_power'; c.poder_magico=(+c.poder_magico||0)+30; },
+      () => { c.passiva_classe='warrior_power';  c.dano_fisico =(+c.dano_fisico ||0)+15; },
+      () => { c.passiva_classe='tank_power';     c.hp_max      =(+c.hp_max      ||0)+45; }
+    ],
+    18: [
+      () => { c.hp_max=(+c.hp_max||0)+50; c.letalidade_bonus=(+c.letalidade_bonus||0)+15; c.reducao_critico=(c.reducao_critico||0)+1; },
+      () => { c.mana_bonus=(+c.mana_bonus||0)+100; c.hp_max=(+c.hp_max||0)+65; c.reducao_conjuracao=(c.reducao_conjuracao||0)+1; },
+      () => { c.hp_max=(+c.hp_max||0)+100; c.ca_bonus=(+c.ca_bonus||0)+3; c.defesa_base=(+c.defesa_base||0)+30; }
+    ]
+  };
+
+  // Bônus fixos
+  const fixos = {
+    1:  () => { c.pontos_conhecimento=(c.pontos_conhecimento||0)+1; },
+    5:  () => { c.pontos_conhecimento=(c.pontos_conhecimento||0)+1; },
+    10: () => { c.pontos_conhecimento=(c.pontos_conhecimento||0)+1; },
+    13: () => { c.hp_max=(+c.hp_max||0)+15*conMod; c.master_traits=(c.master_traits||0)+1; c.pontos_atributo_disponiveis=(c.pontos_atributo_disponiveis||0)+2; },
+    15: () => { c.pontos_conhecimento=(c.pontos_conhecimento||0)+1; },
+    19: () => { c.pontos_atributo_disponiveis=(c.pontos_atributo_disponiveis||0)+6; },
+    20: () => { c.heroic_tier=true; }
+  };
+
+  if (escolhas[novoNivel]) escolhas[novoNivel][opcaoIndex]?.();
+  if (fixos[novoNivel])    fixos[novoNivel]();
+
+  // Mana cresce por mod. de Inteligência a cada nível
+  c.mana_bonus = (+c.mana_bonus||0) + intMod;
+
+  // HP cresce por mod. de Constituição a cada nível
+  c.hp_max = (+c.hp_max||0) + conMod;
+
+  // Defesa cresce por 2 + mod. de Constituição a cada nível
+  c.defesa_base = (+c.defesa_base||0) + 2 + conMod;
+
+  c.nivel = novoNivel;
+
+  // Sincroniza nivel no slot
+  try {
+    await apiFetch(`/mesas/${mesaId}/slots/${slotId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ nivel: novoNivel })
+    });
+  } catch(e) {}
+
+  closeCharModal();
+  renderSheet();
+  renderXpSection();
+  markDirty();
+  showToast(`⬆ Nível ${novoNivel} alcançado!`);
+}
+
+function openCharModal(html) {
+  let root = document.getElementById('char-modal-root');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'char-modal-root';
+    document.body.appendChild(root);
+  }
+  root.innerHTML = `<div class="char-modal-overlay" id="char-modal-overlay" onclick="if(event.target.id==='char-modal-overlay')closeCharModal()">
+    <div class="char-modal-box">${html}</div></div>`;
+}
+
+function closeCharModal() {
+  const root = document.getElementById('char-modal-root');
+  if (root) root.innerHTML = '';
 }
 </script>
 </body>
