@@ -477,6 +477,7 @@
             <div id="tt-req" class="text-xs text-red-400 mb-2 hidden">Requisitos: <span id="tt-req-val"></span></div>
             <p id="tt-desc" class="text-sm text-slate-300 italic mb-2 hidden">Descrição...</p>
             <div id="tt-stats" class="text-sm text-blue-300 font-medium"></div>
+            <div id="tt-cost" class="text-xs mt-2 text-slate-400 hidden"></div>
             <div id="tt-status" class="text-xs mt-3 font-bold border-t border-slate-700 pt-2"></div>
             <div id="tt-id" class="text-[10px] text-slate-600 mt-1">ID: ...</div>
         </div>
@@ -808,8 +809,16 @@
             </div>
 
             <button onclick="syncAllTrees()"
-                class="w-full mb-4 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded transition-colors text-xs font-bold border border-slate-500">⬆️
+                class="w-full mb-2 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded transition-colors text-xs font-bold border border-slate-500">⬆️
                 Sincronizar Tudo com DB</button>
+
+            <button onclick="openTreeConfigModal()"
+                class="w-full mb-2 bg-violet-800 hover:bg-violet-700 text-white py-2 rounded transition-colors text-xs font-bold border border-violet-600">⚙️
+                Tree Configuration</button>
+
+            <button onclick="openImportJsonModal()"
+                class="w-full mb-4 bg-amber-800 hover:bg-amber-700 text-white py-2 rounded transition-colors text-xs font-bold border border-amber-600">📥
+                Importar / Restaurar JSON</button>
 
             <h3
                 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700 pb-2 mb-3 mt-4">
@@ -1061,6 +1070,7 @@
         <h3 id="mni-name" class="font-bold text-lg text-white leading-tight mb-1"></h3>
         <p id="mni-desc" class="text-sm text-slate-300 italic mb-2 hidden"></p>
         <div id="mni-stats" class="text-sm text-blue-300 font-medium mb-2"></div>
+        <div id="mni-cost" class="text-xs text-slate-400 mb-2 hidden"></div>
         <div id="mni-status" class="text-xs font-bold text-slate-400 border-t border-slate-700 pt-2 mb-3"></div>
         <div class="flex gap-2">
             <button id="mni-action-btn" onclick="mniAction()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-bold hidden"></button>
@@ -1214,6 +1224,154 @@
         </div>
     </div>
 
+    <!-- MODAL: IMPORTAR / RESTAURAR JSON -->
+    <div id="import-json-modal"
+        class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+        <div class="bg-slate-800 rounded-xl border border-amber-700 shadow-2xl w-[520px] max-h-[88vh] flex flex-col">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-700 shrink-0">
+                <h2 class="text-base font-black text-amber-300 tracking-wide">📥 Importar / Restaurar Árvore</h2>
+                <button onclick="closeImportJsonModal()" class="text-slate-400 hover:text-white text-lg font-bold leading-none">✕</button>
+            </div>
+            <div class="p-5 flex flex-col gap-3 flex-1 overflow-hidden">
+                <p class="text-xs text-slate-400">Cole o conteúdo do arquivo <span class="text-amber-300 font-mono">tree2.json</span> abaixo. O JSON deve ter os campos <span class="font-mono text-slate-300">nodes</span> e <span class="font-mono text-slate-300">edges</span>.</p>
+                <textarea id="import-json-input" rows="14"
+                    class="flex-1 w-full bg-slate-900 border border-slate-600 rounded px-3 py-2 text-xs font-mono text-green-300 focus:border-amber-500 outline-none resize-none"
+                    placeholder='{ "nodes": { ... }, "edges": [ ... ] }'></textarea>
+                <div id="import-json-error" class="text-xs text-red-400 hidden"></div>
+            </div>
+            <div class="flex gap-3 px-5 py-4 border-t border-slate-700 shrink-0">
+                <button onclick="closeImportJsonModal()"
+                    class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 rounded font-bold text-sm transition-colors">Cancelar</button>
+                <button onclick="executeImportJson()"
+                    class="flex-1 bg-amber-600 hover:bg-amber-500 text-white py-2 rounded font-bold text-sm transition-colors">Restaurar e Salvar no Banco</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: TREE CONFIGURATION -->
+    <div id="tree-config-modal"
+        class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+        <div class="bg-slate-800 rounded-xl border border-violet-700 shadow-2xl w-[500px] max-h-[88vh] flex flex-col">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-700 shrink-0">
+                <h2 class="text-base font-black text-violet-300 tracking-wide">⚙️ Tree Configuration</h2>
+                <button onclick="closeTreeConfigModal()" class="text-slate-400 hover:text-white text-lg font-bold leading-none">✕</button>
+            </div>
+
+            <div class="overflow-y-auto flex-1 p-5 space-y-4">
+                <!-- Toggle custom config -->
+                <div class="bg-slate-900/60 rounded-lg p-3 border border-violet-800/60 flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-sm font-bold text-white">Usar Configuração Customizada</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Quando desativado, os valores padrão do sistema são aplicados.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="checkbox" id="cfg-use-custom" class="sr-only peer" onchange="onTreeConfigToggle()">
+                        <div class="w-11 h-6 bg-slate-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+                    </label>
+                </div>
+
+                <div id="cfg-fields" class="space-y-4 transition-opacity duration-200">
+
+                    <!-- Limite de alocação -->
+                    <div class="bg-slate-900/40 rounded-lg p-4 border border-slate-700">
+                        <h3 class="text-[11px] font-bold text-violet-300 uppercase tracking-widest mb-3">Limite de Alocação</h3>
+                        <div class="flex items-center gap-3">
+                            <label class="flex items-center gap-2 text-sm text-slate-300 cursor-pointer select-none shrink-0">
+                                <input type="checkbox" id="cfg-no-cap" class="accent-violet-500" onchange="onCapToggle()">
+                                Sem limite
+                            </label>
+                            <input type="number" id="cfg-allocation-cap" min="1" max="9999" placeholder="ex: 50"
+                                class="flex-1 bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white focus:border-violet-500 outline-none">
+                            <span class="text-xs text-slate-400 shrink-0">pontos máx.</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-2">Padrão: sem limite — usa totalPoints do jogador.</p>
+                    </div>
+
+                    <!-- Custo por tipo de nodo -->
+                    <div class="bg-slate-900/40 rounded-lg p-4 border border-slate-700">
+                        <h3 class="text-[11px] font-bold text-violet-300 uppercase tracking-widest mb-3">Custo por Tipo de Nodo</h3>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-300">Nodo Pequeno <span class="text-slate-500">(basic)</span></span>
+                                <input type="number" id="cfg-cost-basic" min="0" max="99" value="1"
+                                    class="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-sm text-white text-center focus:border-violet-500 outline-none">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-300">Passiva Notável <span class="text-slate-500">(notable)</span></span>
+                                <input type="number" id="cfg-cost-notable" min="0" max="99" value="1"
+                                    class="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-sm text-white text-center focus:border-violet-500 outline-none">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-300">Habilidade Ativa <span class="text-slate-500">(large)</span></span>
+                                <input type="number" id="cfg-cost-large" min="0" max="99" value="1"
+                                    class="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-sm text-white text-center focus:border-violet-500 outline-none">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-300">Classe Base <span class="text-slate-500">(root)</span></span>
+                                <input type="number" id="cfg-cost-root" min="0" max="99" value="1"
+                                    class="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-sm text-white text-center focus:border-violet-500 outline-none">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-300">Especialização <span class="text-slate-500">(especializacao)</span></span>
+                                <input type="number" id="cfg-cost-especializacao" min="0" max="99" value="1"
+                                    class="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-sm text-white text-center focus:border-violet-500 outline-none">
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-2">Padrão: 1 ponto cada. Omini Portal e Fonte nunca consomem pontos.</p>
+                    </div>
+
+                    <!-- Omini Portal -->
+                    <div class="bg-slate-900/40 rounded-lg p-4 border border-slate-700">
+                        <h3 class="text-[11px] font-bold text-violet-300 uppercase tracking-widest mb-3">Nodos Omini Portal</h3>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm text-slate-300 flex-1">Pontos necessários para desbloquear</span>
+                            <input type="number" id="cfg-omega-required" min="0" max="9999" value="7"
+                                class="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-sm text-white text-center focus:border-violet-500 outline-none">
+                            <span class="text-xs text-slate-400 shrink-0">pts gastos</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-2">Padrão: 7. O jogador precisa ter esse total alocado para usar um portal.</p>
+                    </div>
+
+                    <!-- Fórmula de Proficiência -->
+                    <div class="bg-slate-900/40 rounded-lg p-4 border border-slate-700">
+                        <h3 class="text-[11px] font-bold text-violet-300 uppercase tracking-widest mb-3">Fórmula de Proficiência</h3>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <input type="number" id="cfg-prof-base" min="0" max="999" value="1"
+                                class="w-14 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-sm text-white text-center focus:border-violet-500 outline-none" oninput="updateCfgPreviews()">
+                            <span class="text-sm text-slate-400">+  floor( pontos /</span>
+                            <input type="number" id="cfg-prof-divisor" min="1" max="9999" value="10"
+                                class="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-sm text-white text-center focus:border-violet-500 outline-none" oninput="updateCfgPreviews()">
+                            <span class="text-sm text-slate-400">)</span>
+                        </div>
+                        <p id="cfg-prof-preview" class="text-[11px] text-violet-400 font-mono mt-2">proficiência = 1 + floor(pontos / 10)</p>
+                        <p class="text-[11px] text-slate-500 mt-1">Padrão: base=1, divisor=10.</p>
+                    </div>
+
+                    <!-- Fórmula do Slider -->
+                    <div class="bg-slate-900/40 rounded-lg p-4 border border-slate-700">
+                        <h3 class="text-[11px] font-bold text-violet-300 uppercase tracking-widest mb-3">Fórmula do Slider (Vida / Mana)</h3>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-sm text-slate-400">floor( nível /</span>
+                            <input type="number" id="cfg-slider-divisor" min="1" max="9999" value="2"
+                                class="w-16 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-sm text-white text-center focus:border-violet-500 outline-none" oninput="updateCfgPreviews()">
+                            <span class="text-sm text-slate-400">)</span>
+                        </div>
+                        <p id="cfg-slider-preview" class="text-[11px] text-violet-400 font-mono mt-2">pontos distribuíveis = floor(nível / 2)</p>
+                        <p class="text-[11px] text-slate-500 mt-1">Padrão: divisor=2. Resultado = pontos distribuíveis entre Vida e Mana.</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="flex gap-3 px-5 py-4 border-t border-slate-700 shrink-0">
+                <button onclick="closeTreeConfigModal()"
+                    class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 rounded font-bold text-sm transition-colors">Cancelar</button>
+                <button onclick="saveTreeConfig()"
+                    class="flex-1 bg-violet-600 hover:bg-violet-500 text-white py-2 rounded font-bold text-sm transition-colors">Salvar Configuração</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE LOGIN ADMIN -->
     <div id="admin-modal"
         class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden backdrop-blur-sm">
@@ -1241,10 +1399,14 @@
         let selectedUsers = new Set();
 
         function countPointsUsed(allocatedNodes) {
-            return allocatedNodes.filter(id => {
+            let cfg = getTreeConfig();
+            let total = 0;
+            for (let id of allocatedNodes) {
                 let n = treeData.nodes[id];
-                return n && n.type !== 'omega' && n.type !== 'omegaFonte' && !n.isMythic;
-            }).length;
+                if (!n || n.type === 'omega' || n.type === 'omegaFonte' || n.isMythic) continue;
+                total += (cfg.nodeCosts[n.type] ?? 1);
+            }
+            return total;
         }
 
         function getEffectiveAllocSet() {
@@ -1316,6 +1478,38 @@
         // --- DADOS DA ÁRVORE (ESTRUTURA) ---
         let treeData = { nodes: {}, edges: [] };
         let currentTreeId = "default";
+
+        const DEFAULT_TREE_CONFIG = {
+            useCustomConfig: false,
+            nodeCosts: { basic: 1, notable: 1, large: 1, root: 1, especializacao: 1 },
+            omegaRequiredPoints: 7,
+            proficiencyBase: 1,
+            proficiencyDivisor: 10,
+            sliderDivisor: 2,
+            allocationCap: null
+        };
+
+        function getTreeConfig() {
+            let cfg = treeData.config;
+            if (!cfg || !cfg.useCustomConfig) return DEFAULT_TREE_CONFIG;
+            return {
+                ...DEFAULT_TREE_CONFIG,
+                ...cfg,
+                nodeCosts: { ...DEFAULT_TREE_CONFIG.nodeCosts, ...(cfg.nodeCosts || {}) }
+            };
+        }
+
+        function getNodeCostLabel(node) {
+            if (!node || node.isMythic) return null;
+            let cfg = getTreeConfig();
+            if (node.type === 'omegaFonte') return { text: 'Alocado automaticamente com o Portal', color: 'text-cyan-600' };
+            if (node.type === 'omega') {
+                let req = cfg.omegaRequiredPoints;
+                return { text: `Requisito: ${req} ponto${req !== 1 ? 's' : ''} gastos na árvore`, color: 'text-cyan-400' };
+            }
+            let cost = cfg.nodeCosts[node.type] ?? 1;
+            return { text: `Custo: ${cost} ponto${cost !== 1 ? 's' : ''}`, color: 'text-slate-400' };
+        }
 
         function getLocalTrees() {
             let t = localStorage.getItem("poe2_trees_db");
@@ -1520,25 +1714,32 @@
             }
         }
 
-        async function saveTreeToDynamo() {
-            let askCloud = confirm("Sincronizar a estrutura da Árvore Atual com o banco de dados?");
-
+        async function persistTreeData({ toCloud = false, silent = false } = {}) {
             let trees = getLocalTrees();
             if (!trees[currentTreeId]) {
                 trees[currentTreeId] = { tree_id: currentTreeId, name: "Árvore Atual", data: treeData };
             } else {
                 trees[currentTreeId].data = treeData;
-                trees[currentTreeId].tree_id = currentTreeId; // Garantir a chave certa
+                trees[currentTreeId].tree_id = currentTreeId;
             }
             saveLocalTrees(trees);
-
             localStorage.setItem("poe2_global_tree", JSON.stringify(treeData)); // Retro-compatibilidade
 
-            if (askCloud) {
-                let apiResponse = await apiFetch('/tree', 'POST', trees[currentTreeId]);
-                if (apiResponse) alert("Árvore atual salva na nuvem!");
-                else alert("API indisponível ou Falha. Árvore salva localmente para testes.");
+            if (toCloud) {
+                let payload = trees[currentTreeId];
+                let apiResponse = await apiFetch('/tree', 'POST', payload);
+                if (!silent) {
+                    if (apiResponse) alert("Árvore atual salva na nuvem!");
+                    else alert("API indisponível ou Falha. Árvore salva localmente para testes.");
+                }
+                return !!apiResponse;
             }
+            return true;
+        }
+
+        async function saveTreeToDynamo() {
+            let askCloud = confirm("Sincronizar a estrutura da Árvore Atual com o banco de dados?");
+            await persistTreeData({ toCloud: askCloud, silent: false });
         }
 
         // ================= ENGINE DO CANVAS =================
@@ -1960,10 +2161,16 @@
             }
 
             // Para os outros nodos, precisa estar conectado a algo já alocado.
-            // Nodos omega (portais) são gratuitos — não consomem pontos, apenas precisam de conectividade.
+            // Nodos omega (portais) requerem N pontos gastos (config) e conectividade; não consomem pontos adicionais.
+            let cfg = getTreeConfig();
+            let effectiveMax = cfg.allocationCap != null ? Math.min(currentUser.totalPoints, cfg.allocationCap) : currentUser.totalPoints;
             let ns = getNeighbors(nodeId);
             for (let n of ns) {
-                if (allocSet.has(n)) return isOmega ? true : currentUser.totalPoints > usedPoints;
+                if (allocSet.has(n)) {
+                    if (isOmega) return usedPoints >= cfg.omegaRequiredPoints;
+                    let cost = cfg.nodeCosts[node.type] ?? 1;
+                    return (effectiveMax - usedPoints) >= cost;
+                }
             }
             return false;
         }
@@ -2304,7 +2511,8 @@
             currentUser.level = used;
 
             let avail = currentUser.totalPoints - used;
-            let proficiency = 1 + Math.floor(used / 10);
+            let pcfg = getTreeConfig();
+            let proficiency = pcfg.proficiencyBase + Math.floor(used / pcfg.proficiencyDivisor);
             document.getElementById('lbl-pts-used').textContent = used;
             document.getElementById('lbl-pts-avail').textContent = avail;
             document.getElementById('lbl-proficiency').textContent = proficiency;
@@ -2318,7 +2526,8 @@
 
         function updateVitaManaSlider() {
             if (!currentUser) return;
-            let total = Math.floor(currentUser.level / 2);
+            let scfg = getTreeConfig();
+            let total = Math.floor(currentUser.level / scfg.sliderDivisor);
             let slider = document.getElementById('vm-slider');
             if (!slider) return;
 
@@ -2781,6 +2990,17 @@
                 let fonteName = fonteNode ? fonteNode.name : n.fonteId;
                 document.getElementById("tt-stats").innerHTML += `<div class="text-cyan-400 text-xs mt-1">Fonte: ${fonteName} → clique para ir</div>`;
             }
+
+            let ttCost = document.getElementById("tt-cost");
+            let costLabel = getNodeCostLabel(n);
+            if (costLabel) {
+                ttCost.textContent = costLabel.text;
+                ttCost.className = `text-xs mt-2 ${costLabel.color}`;
+                ttCost.classList.remove("hidden");
+            } else {
+                ttCost.classList.add("hidden");
+            }
+
             document.getElementById("tt-id").textContent = "ID: " + n.id;
 
             let st = document.getElementById("tt-status");
@@ -3083,6 +3303,225 @@
 
         function closeAdminModal() {
             document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        // ================= IMPORTAR / RESTAURAR JSON =================
+
+        function openImportJsonModal() {
+            document.getElementById('import-json-input').value = '';
+            document.getElementById('import-json-error').classList.add('hidden');
+            document.getElementById('import-json-modal').classList.remove('hidden');
+        }
+
+        function closeImportJsonModal() {
+            document.getElementById('import-json-modal').classList.add('hidden');
+        }
+
+        async function executeImportJson() {
+            let errEl = document.getElementById('import-json-error');
+            errEl.classList.add('hidden');
+
+            let raw = document.getElementById('import-json-input').value.trim();
+            if (!raw) { errEl.textContent = 'Cole o JSON antes de continuar.'; errEl.classList.remove('hidden'); return; }
+
+            let parsed;
+            try { parsed = JSON.parse(raw); } catch(e) {
+                errEl.textContent = 'JSON inválido: ' + e.message;
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            // Detecta e normaliza os formatos possíveis de backup:
+            // Formato A: { nodes: {}, edges: [] }  — dados diretos da árvore
+            // Formato B: { id, name, data: { nodes, edges } }  — objeto de árvore único
+            // Formato C: { tree_id: { id, name, data: { nodes, edges } }, ... }  — dump do banco com uma ou mais árvores
+            let treeNodes, treeEdges, treeRaces;
+
+            if (parsed.nodes && typeof parsed.nodes === 'object' && Array.isArray(parsed.edges)) {
+                // Formato A
+                treeNodes = parsed.nodes;
+                treeEdges = parsed.edges;
+                treeRaces = parsed.races || null;
+            } else if (parsed.data && parsed.data.nodes && typeof parsed.data.nodes === 'object') {
+                // Formato B — objeto único com .data
+                treeNodes = parsed.data.nodes;
+                treeEdges = parsed.data.edges || [];
+                treeRaces = parsed.data.races || null;
+            } else {
+                // Formato C — dump multi-árvore: pega a que tem mais nodos
+                let bestKey = null, bestCount = 0;
+                for (let k in parsed) {
+                    let entry = parsed[k];
+                    if (entry && entry.data && entry.data.nodes && typeof entry.data.nodes === 'object') {
+                        let count = Object.keys(entry.data.nodes).length;
+                        if (count > bestCount) { bestCount = count; bestKey = k; }
+                    }
+                }
+                if (!bestKey) {
+                    errEl.textContent = 'Formato não reconhecido. O JSON deve conter "nodes" e "edges".';
+                    errEl.classList.remove('hidden');
+                    return;
+                }
+                treeNodes = parsed[bestKey].data.nodes;
+                treeEdges = parsed[bestKey].data.edges || [];
+                treeRaces = parsed[bestKey].data.races || null;
+            }
+
+            if (Object.keys(treeNodes).length === 0) {
+                errEl.textContent = 'A árvore no JSON não contém nodos.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            let nodeCount = Object.keys(treeNodes).length;
+            if (!confirm(`Importar árvore com ${nodeCount} nodos e ${treeEdges.length} arestas?\n\nIsso VAI sobrescrever a árvore atual no banco (tree_id: "${currentTreeId}").`)) return;
+
+            // Preserva a config atual; inclui races se existir no backup
+            let newData = { nodes: treeNodes, edges: treeEdges, config: treeData.config || undefined };
+            if (treeRaces) newData.races = treeRaces;
+            treeData = newData;
+
+            let btn = document.querySelector('#import-json-modal button[onclick="executeImportJson()"]');
+            if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+
+            let ok = await persistTreeData({ toCloud: true, silent: true });
+
+            if (btn) { btn.disabled = false; btn.textContent = 'Restaurar e Salvar no Banco'; }
+
+            if (ok) {
+                drawTree();
+                updatePointsUI();
+                closeImportJsonModal();
+                alert(`Árvore restaurada com sucesso! ${nodeCount} nodos carregados.`);
+            } else {
+                alert('API indisponível. Árvore restaurada localmente, mas não salva no banco. Tente sincronizar manualmente depois.');
+                drawTree();
+                updatePointsUI();
+                closeImportJsonModal();
+            }
+        }
+
+        // ================= TREE CONFIGURATION MODAL =================
+
+        function openTreeConfigModal() {
+            let cfg = treeData.config || {};
+            let useCustom = !!cfg.useCustomConfig;
+            let costs = { ...DEFAULT_TREE_CONFIG.nodeCosts, ...(cfg.nodeCosts || {}) };
+
+            document.getElementById('cfg-use-custom').checked = useCustom;
+            document.getElementById('cfg-no-cap').checked = (cfg.allocationCap == null && useCustom) || (!useCustom);
+            document.getElementById('cfg-allocation-cap').value = cfg.allocationCap ?? '';
+            document.getElementById('cfg-cost-basic').value = costs.basic;
+            document.getElementById('cfg-cost-notable').value = costs.notable;
+            document.getElementById('cfg-cost-large').value = costs.large;
+            document.getElementById('cfg-cost-root').value = costs.root;
+            document.getElementById('cfg-cost-especializacao').value = costs.especializacao;
+            document.getElementById('cfg-omega-required').value = cfg.omegaRequiredPoints ?? DEFAULT_TREE_CONFIG.omegaRequiredPoints;
+            document.getElementById('cfg-prof-base').value = cfg.proficiencyBase ?? DEFAULT_TREE_CONFIG.proficiencyBase;
+            document.getElementById('cfg-prof-divisor').value = cfg.proficiencyDivisor ?? DEFAULT_TREE_CONFIG.proficiencyDivisor;
+            document.getElementById('cfg-slider-divisor').value = cfg.sliderDivisor ?? DEFAULT_TREE_CONFIG.sliderDivisor;
+
+            onCapToggle();
+            updateCfgPreviews();
+            _setCfgFieldsEnabled(useCustom);
+            document.getElementById('tree-config-modal').classList.remove('hidden');
+        }
+
+        function closeTreeConfigModal() {
+            document.getElementById('tree-config-modal').classList.add('hidden');
+        }
+
+        function onTreeConfigToggle() {
+            let useCustom = document.getElementById('cfg-use-custom').checked;
+            _setCfgFieldsEnabled(useCustom);
+            if (!useCustom) {
+                // Preenche campos com os defaults para visualização
+                document.getElementById('cfg-no-cap').checked = true;
+                document.getElementById('cfg-allocation-cap').value = '';
+                document.getElementById('cfg-cost-basic').value = DEFAULT_TREE_CONFIG.nodeCosts.basic;
+                document.getElementById('cfg-cost-notable').value = DEFAULT_TREE_CONFIG.nodeCosts.notable;
+                document.getElementById('cfg-cost-large').value = DEFAULT_TREE_CONFIG.nodeCosts.large;
+                document.getElementById('cfg-cost-root').value = DEFAULT_TREE_CONFIG.nodeCosts.root;
+                document.getElementById('cfg-cost-especializacao').value = DEFAULT_TREE_CONFIG.nodeCosts.especializacao;
+                document.getElementById('cfg-omega-required').value = DEFAULT_TREE_CONFIG.omegaRequiredPoints;
+                document.getElementById('cfg-prof-base').value = DEFAULT_TREE_CONFIG.proficiencyBase;
+                document.getElementById('cfg-prof-divisor').value = DEFAULT_TREE_CONFIG.proficiencyDivisor;
+                document.getElementById('cfg-slider-divisor').value = DEFAULT_TREE_CONFIG.sliderDivisor;
+                updateCfgPreviews();
+            }
+        }
+
+        function _setCfgFieldsEnabled(enabled) {
+            let fields = document.getElementById('cfg-fields');
+            if (enabled) {
+                fields.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                fields.classList.add('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        function onCapToggle() {
+            let noCap = document.getElementById('cfg-no-cap').checked;
+            document.getElementById('cfg-allocation-cap').disabled = noCap;
+            if (noCap) document.getElementById('cfg-allocation-cap').value = '';
+        }
+
+        function updateCfgPreviews() {
+            let base = parseInt(document.getElementById('cfg-prof-base').value) || 0;
+            let profDiv = parseInt(document.getElementById('cfg-prof-divisor').value) || 10;
+            let sliderDiv = parseInt(document.getElementById('cfg-slider-divisor').value) || 2;
+            document.getElementById('cfg-prof-preview').textContent = `proficiência = ${base} + floor(pontos / ${profDiv})`;
+            document.getElementById('cfg-slider-preview').textContent = `pontos distribuíveis = floor(nível / ${sliderDiv})`;
+        }
+
+        async function saveTreeConfig() {
+            let useCustom = document.getElementById('cfg-use-custom').checked;
+            let noCap = document.getElementById('cfg-no-cap').checked;
+            let capVal = parseInt(document.getElementById('cfg-allocation-cap').value);
+
+            let newConfig = {
+                useCustomConfig: useCustom,
+                nodeCosts: {
+                    basic:          parseInt(document.getElementById('cfg-cost-basic').value) || 1,
+                    notable:        parseInt(document.getElementById('cfg-cost-notable').value) || 1,
+                    large:          parseInt(document.getElementById('cfg-cost-large').value) || 1,
+                    root:           parseInt(document.getElementById('cfg-cost-root').value) || 1,
+                    especializacao: parseInt(document.getElementById('cfg-cost-especializacao').value) || 1
+                },
+                omegaRequiredPoints: parseInt(document.getElementById('cfg-omega-required').value) ?? 7,
+                proficiencyBase:    parseInt(document.getElementById('cfg-prof-base').value) ?? 1,
+                proficiencyDivisor: Math.max(1, parseInt(document.getElementById('cfg-prof-divisor').value) || 10),
+                sliderDivisor:      Math.max(1, parseInt(document.getElementById('cfg-slider-divisor').value) || 2),
+                allocationCap:      (!useCustom || noCap || isNaN(capVal)) ? null : capVal
+            };
+
+            if (Object.keys(treeData.nodes || {}).length === 0) {
+                alert("Erro: a árvore parece estar vazia. A configuração não foi salva para evitar sobrescrever o banco com dados inválidos. Recarregue a página e tente novamente.");
+                return;
+            }
+
+            if (!confirm("Salvar a configuração desta árvore no banco de dados?")) return;
+
+            treeData.config = newConfig;
+
+            let btn = document.querySelector('#tree-config-modal button[onclick="saveTreeConfig()"]');
+            if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+
+            let ok = await persistTreeData({ toCloud: true, silent: true });
+
+            if (btn) { btn.disabled = false; btn.textContent = 'Salvar Configuração'; }
+
+            if (ok) {
+                updatePointsUI();
+                drawTree();
+                closeTreeConfigModal();
+            } else {
+                treeData.config = newConfig;
+                alert("API indisponível. Configuração salva localmente como fallback.");
+                updatePointsUI();
+                drawTree();
+                closeTreeConfigModal();
+            }
         }
 
         function loginAdmin() {
@@ -3448,9 +3887,13 @@
 
             if (apiManage && apiManage.trees) {
                 for (let t of apiManage.trees) {
-                    if (!trees[t.id]) trees[t.id] = { id: t.id, name: t.name, data: { nodes: {}, edges: [] } };
+                    // Only register trees that aren't already stored locally — never overwrite local data with empty shells
+                    if (!trees[t.id] && !trees[t.tree_id]) {
+                        // Don't persist empty shells to localStorage; only track the metadata for display
+                        trees[t.id || t.tree_id] = { id: t.id || t.tree_id, tree_id: t.id || t.tree_id, name: t.name, data: null };
+                    }
                 }
-                saveLocalTrees(trees);
+                // Do NOT call saveLocalTrees here — we don't want to persist empty shells that could be synced to the cloud
                 if (apiManage.active) saveActiveTreeId(apiManage.active);
             }
 
@@ -3478,11 +3921,36 @@
         }
 
         async function syncAllTrees() {
+            if (!confirm("Sincronizar todas as árvores locais com o banco de dados? Isso vai sobrescrever os dados na nuvem com os dados locais.")) return;
+
+            // Flush current in-memory tree to localStorage before syncing
+            await persistTreeData({ toCloud: false });
+
             let trees = getLocalTrees();
+            let synced = 0;
+            let skipped = 0;
+
             for (let key in trees) {
-                await apiFetch(`/tree`, 'POST', trees[key]);
+                let tree = trees[key];
+                let nodeCount = Object.keys(tree.data?.nodes || {}).length;
+
+                if (nodeCount === 0) {
+                    console.warn(`[syncAllTrees] Pulando árvore "${key}" — sem nodos`);
+                    skipped++;
+                    continue;
+                }
+
+                // Normalize: ensure tree_id is always present in the payload
+                let payload = { ...tree, tree_id: tree.tree_id || tree.id || key };
+                await apiFetch(`/tree`, 'POST', payload);
+                synced++;
             }
-            alert("Todas as árvores sincronizadas com o banco de dados (Nuvem)!");
+
+            if (skipped > 0) {
+                alert(`${synced} árvore(s) sincronizada(s). ${skipped} pulada(s) por não terem nodos.`);
+            } else {
+                alert(`${synced} árvore(s) sincronizada(s) com sucesso!`);
+            }
         }
 
         async function adminCreateTree(clone) {
@@ -5045,6 +5513,17 @@
             if (node.desc) { descEl.innerHTML = parseDescWithKeywords(node.desc); descEl.classList.remove('hidden'); }
             else { descEl.classList.add('hidden'); }
             document.getElementById('mni-stats').innerHTML = node.stats.map(s => `<div class="flex items-center gap-1.5">${_diamond()} ${renderStatHtml(s)}</div>`).join('');
+
+            let mniCost = document.getElementById('mni-cost');
+            let mniCostLabel = getNodeCostLabel(node);
+            if (mniCostLabel) {
+                mniCost.textContent = mniCostLabel.text;
+                mniCost.className = `text-xs mb-2 ${mniCostLabel.color}`;
+                mniCost.classList.remove('hidden');
+            } else {
+                mniCost.classList.add('hidden');
+            }
+
             let st = document.getElementById('mni-status');
             let actionBtn = document.getElementById('mni-action-btn');
             let mythicBtn = document.getElementById('mni-mythic-btn');
