@@ -1248,6 +1248,44 @@
         </div>
     </div>
 
+    <!-- MODAL: ALERT (substitui alert() nativo) -->
+    <div id="woe-alert-modal"
+        class="fixed inset-0 bg-black/80 flex items-center justify-center z-[200] hidden backdrop-blur-sm">
+        <div id="woe-alert-inner" class="bg-slate-800 rounded-xl shadow-2xl w-[420px] max-w-[90vw] flex flex-col border border-slate-600">
+            <div class="flex items-center gap-3 px-5 py-4 border-b border-slate-700">
+                <span id="woe-alert-icon" class="text-xl leading-none">ℹ️</span>
+                <h2 id="woe-alert-title" class="text-base font-black tracking-wide text-slate-300">Aviso</h2>
+            </div>
+            <div class="px-5 py-4">
+                <p id="woe-alert-message" class="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap"></p>
+            </div>
+            <div class="flex px-5 py-4 border-t border-slate-700">
+                <button id="woe-alert-ok"
+                    class="flex-1 bg-slate-600 hover:bg-slate-500 text-white py-2 rounded font-bold text-sm transition-colors">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRM (substitui confirm() nativo) -->
+    <div id="woe-confirm-modal"
+        class="fixed inset-0 bg-black/80 flex items-center justify-center z-[200] hidden backdrop-blur-sm">
+        <div id="woe-confirm-inner" class="bg-slate-800 rounded-xl shadow-2xl w-[460px] max-w-[90vw] flex flex-col border border-amber-700">
+            <div class="flex items-center gap-3 px-5 py-4 border-b border-slate-700">
+                <span id="woe-confirm-icon" class="text-xl leading-none">⚠️</span>
+                <h2 id="woe-confirm-title" class="text-base font-black tracking-wide text-amber-300">Confirmar</h2>
+            </div>
+            <div class="px-5 py-4">
+                <p id="woe-confirm-message" class="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap"></p>
+            </div>
+            <div class="flex gap-3 px-5 py-4 border-t border-slate-700">
+                <button id="woe-confirm-cancel"
+                    class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded font-bold text-sm transition-colors">Cancelar</button>
+                <button id="woe-confirm-ok"
+                    class="flex-1 bg-amber-600 hover:bg-amber-500 text-white py-2 rounded font-bold text-sm transition-colors">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: TREE CONFIGURATION -->
     <div id="tree-config-modal"
         class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden backdrop-blur-sm">
@@ -1438,7 +1476,7 @@
             return Array.from(visited).filter(id => id !== mythicRootId && currentUser.allocatedNodes.includes(id));
         }
 
-        function playerActivateMythicClass(nodeId) {
+        async function playerActivateMythicClass(nodeId) {
             if (!currentUser) return;
             let unlocked = currentUser.unlockedMythicClasses || [];
             if (!unlocked.includes(nodeId)) return;
@@ -1450,7 +1488,7 @@
                 if (pts > 0) {
                     let oldName = treeData.nodes[currentUser.mythicClassId]?.name || 'classe anterior';
                     let newName = treeData.nodes[nodeId]?.name || 'nova classe';
-                    if (!confirm(`Trocar para "${newName}" devolverá ${pts} ponto(s) investido(s) em "${oldName}". Deseja continuar?`)) return;
+                    if (!await showConfirm(`Trocar para "${newName}" devolverá ${pts} ponto(s) investido(s) em "${oldName}". Deseja continuar?`, { title: 'Trocar Classe', type: 'warning' })) return;
                     currentUser.allocatedNodes = currentUser.allocatedNodes.filter(id => !oldAllocated.includes(id));
                 }
             }
@@ -1497,6 +1535,49 @@
                 ...cfg,
                 nodeCosts: { ...DEFAULT_TREE_CONFIG.nodeCosts, ...(cfg.nodeCosts || {}) }
             };
+        }
+
+        function showAlert(message, { title = 'Aviso', type = 'info' } = {}) {
+            return new Promise(resolve => {
+                const icons = { info: 'ℹ️', success: '✅', error: '⚠️', warning: '⚠️' };
+                const borders = { info: 'border-slate-600', success: 'border-emerald-700', error: 'border-red-700', warning: 'border-amber-700' };
+                const titleColors = { info: 'text-slate-300', success: 'text-emerald-300', error: 'text-red-300', warning: 'text-amber-300' };
+                document.getElementById('woe-alert-icon').textContent = icons[type] || 'ℹ️';
+                document.getElementById('woe-alert-title').textContent = title;
+                document.getElementById('woe-alert-title').className = `text-base font-black tracking-wide ${titleColors[type] || titleColors.info}`;
+                document.getElementById('woe-alert-message').textContent = message;
+                document.getElementById('woe-alert-inner').className = `bg-slate-800 rounded-xl shadow-2xl w-[420px] max-w-[90vw] flex flex-col border ${borders[type] || borders.info}`;
+                const modal = document.getElementById('woe-alert-modal');
+                modal.classList.remove('hidden');
+                const btn = document.getElementById('woe-alert-ok');
+                const handler = () => { modal.classList.add('hidden'); btn.removeEventListener('click', handler); resolve(); };
+                btn.addEventListener('click', handler);
+            });
+        }
+
+        function showConfirm(message, { title = 'Confirmar', confirmLabel = 'Confirmar', cancelLabel = 'Cancelar', type = 'warning' } = {}) {
+            return new Promise(resolve => {
+                const icons = { warning: '⚠️', danger: '🗑️', info: '❓', success: '✅' };
+                const borders = { warning: 'border-amber-700', danger: 'border-red-700', info: 'border-slate-600', success: 'border-emerald-700' };
+                const titleColors = { warning: 'text-amber-300', danger: 'text-red-300', info: 'text-slate-300', success: 'text-emerald-300' };
+                const confirmBgs = { warning: 'bg-amber-600 hover:bg-amber-500', danger: 'bg-red-700 hover:bg-red-600', info: 'bg-slate-600 hover:bg-slate-500', success: 'bg-emerald-600 hover:bg-emerald-500' };
+                document.getElementById('woe-confirm-icon').textContent = icons[type] || '⚠️';
+                document.getElementById('woe-confirm-title').textContent = title;
+                document.getElementById('woe-confirm-title').className = `text-base font-black tracking-wide ${titleColors[type] || titleColors.warning}`;
+                document.getElementById('woe-confirm-message').innerHTML = message.replace(/\n/g, '<br>');
+                document.getElementById('woe-confirm-inner').className = `bg-slate-800 rounded-xl shadow-2xl w-[460px] max-w-[90vw] flex flex-col border ${borders[type] || borders.warning}`;
+                const okBtn = document.getElementById('woe-confirm-ok');
+                okBtn.className = `flex-1 ${confirmBgs[type] || confirmBgs.warning} text-white py-2 rounded font-bold text-sm transition-colors`;
+                okBtn.textContent = confirmLabel;
+                document.getElementById('woe-confirm-cancel').textContent = cancelLabel;
+                const modal = document.getElementById('woe-confirm-modal');
+                modal.classList.remove('hidden');
+                const okHandler = () => { modal.classList.add('hidden'); okBtn.removeEventListener('click', okHandler); cancelBtn.removeEventListener('click', cancelHandler); resolve(true); };
+                const cancelBtn = document.getElementById('woe-confirm-cancel');
+                const cancelHandler = () => { modal.classList.add('hidden'); okBtn.removeEventListener('click', okHandler); cancelBtn.removeEventListener('click', cancelHandler); resolve(false); };
+                okBtn.addEventListener('click', okHandler);
+                cancelBtn.addEventListener('click', cancelHandler);
+            });
         }
 
         function getNodeCostLabel(node) {
@@ -1645,7 +1726,7 @@
 
         async function loadUserFlow() {
             let code = document.getElementById("char-code").value.trim();
-            if (!code) return alert("Digite um código de jogador.");
+            if (!code) { await showAlert("Digite um código de jogador.", { title: 'Atenção', type: 'warning' }); return; }
 
             // Tenta API Gateway
             let apiData = await apiFetch(`/user/${code}`, 'GET');
@@ -1658,7 +1739,7 @@
             } else if (db[code]) {
                 currentUser = db[code];
             } else {
-                return alert("Usuário não encontrado no DB.");
+                await showAlert("Usuário não encontrado no DB.", { title: 'Não encontrado', type: 'error' }); return;
             }
 
             // Atualiza UI
@@ -1668,7 +1749,7 @@
             updatePointsUI();
             updateSummaryUI();
             updateRaceUI();
-            alert(`Personagem ${currentUser.name} carregado!`);
+            await showAlert(`Personagem ${currentUser.name} carregado!`, { title: 'Carregado!', type: 'success' });
         }
 
         async function saveUserFlow() {
@@ -1676,7 +1757,7 @@
 
             currentUser.level = countPointsUsed(currentUser.allocatedNodes); // Nível = pontos gastos (omega/omegaFonte não contam)
 
-            let askCloud = confirm("Deseja sincronizar este save com o DynamoDB (Nuvem)?");
+            let askCloud = await showConfirm("Deseja sincronizar este save com o DynamoDB (Nuvem)?", { title: 'Sincronizar', type: 'info', confirmLabel: 'Sincronizar' });
 
             // Salva Local
             let db = getLocalUsers();
@@ -1685,21 +1766,21 @@
 
             if (askCloud) {
                 let apiResponse = await apiFetch('/user', 'POST', currentUser);
-                if (apiResponse) alert("Salvo no DynamoDB com sucesso!");
-                else alert("Falha ao contatar DynamoDB. Salvo apenas localmente.");
+                if (apiResponse) await showAlert("Salvo no DynamoDB com sucesso!", { title: 'Salvo!', type: 'success' });
+                else await showAlert("Falha ao contatar DynamoDB. Salvo apenas localmente.", { title: 'Atenção', type: 'warning' });
             } else {
-                alert("Salvo localmente.");
+                await showAlert("Salvo localmente.", { title: 'Salvo', type: 'success' });
             }
             updatePointsUI();
         }
 
-        function resetUserPoints() {
+        async function resetUserPoints() {
             if (!currentUser) return;
             if (currentUser.allocatedNodes.length === 0) {
-                alert("Você não tem pontos alocados para resetar.");
+                await showAlert("Você não tem pontos alocados para resetar.", { title: 'Atenção', type: 'warning' });
                 return;
             }
-            if (confirm("Tem certeza que deseja resetar TODOS os seus pontos? Isso removerá sua classe atual e todas as habilidades adquiridas.\n\nVocê poderá gastar todos os seus pontos novamente.")) {
+            if (await showConfirm("Tem certeza que deseja resetar TODOS os seus pontos? Isso removerá sua classe atual e todas as habilidades adquiridas.\n\nVocê poderá gastar todos os seus pontos novamente.", { title: 'Resetar Pontos', type: 'danger', confirmLabel: 'Resetar' })) {
                 currentUser.allocatedNodes = [];
                 currentUser.level = 0;
 
@@ -1710,7 +1791,7 @@
 
                 updatePointsUI();
                 updateSummaryUI();
-                alert("Árvore resetada com sucesso! Você pode escolher uma nova classe agora.");
+                await showAlert("Árvore resetada com sucesso! Você pode escolher uma nova classe agora.", { title: 'Resetado!', type: 'success' });
             }
         }
 
@@ -1729,8 +1810,8 @@
                 let payload = trees[currentTreeId];
                 let apiResponse = await apiFetch('/tree', 'POST', payload);
                 if (!silent) {
-                    if (apiResponse) alert("Árvore atual salva na nuvem!");
-                    else alert("API indisponível ou Falha. Árvore salva localmente para testes.");
+                    if (apiResponse) await showAlert("Árvore atual salva na nuvem!", { title: 'Salvo!', type: 'success' });
+                    else await showAlert("API indisponível ou Falha. Árvore salva localmente para testes.", { title: 'Atenção', type: 'warning' });
                 }
                 return !!apiResponse;
             }
@@ -1738,7 +1819,7 @@
         }
 
         async function saveTreeToDynamo() {
-            let askCloud = confirm("Sincronizar a estrutura da Árvore Atual com o banco de dados?");
+            let askCloud = await showConfirm("Sincronizar a estrutura da Árvore Atual com o banco de dados?", { title: 'Sincronizar', type: 'info', confirmLabel: 'Sincronizar' });
             await persistTreeData({ toCloud: askCloud, silent: false });
         }
 
@@ -2105,7 +2186,7 @@
             return blocked;
         }
 
-        function computeBlockedRefund(newNodeIds, prevAllocSet) {
+        async function computeBlockedRefund(newNodeIds, prevAllocSet) {
             let testSet = new Set([...prevAllocSet, ...newNodeIds]);
             let newBlockedSet = getBlockedNodes(testSet);
             let blockedAlloc = Array.from(prevAllocSet).filter(id => newBlockedSet.has(id));
@@ -2129,7 +2210,7 @@
             let toRemove = new Set([...blockedAlloc, ...orphans]);
 
             let names = Array.from(toRemove).map(id => treeData.nodes[id]?.name).filter(Boolean);
-            if (!confirm(`Ativar este nodo bloqueará ${toRemove.size} nodo(s) já alocado(s):\n${names.join(', ')}\n\nOs pontos serão devolvidos. Deseja continuar?`)) {
+            if (!await showConfirm(`Ativar este nodo bloqueará ${toRemove.size} nodo(s) já alocado(s):\n${names.join(', ')}\n\nOs pontos serão devolvidos. Deseja continuar?`, { title: 'Atenção', type: 'warning', confirmLabel: 'Continuar' })) {
                 return null;
             }
             return toRemove;
@@ -2400,11 +2481,11 @@
             } catch (e) {}
         }
 
-        function toggleAllocation(nodeId) {
-            if (!currentUser) return alert("Carregue um personagem primeiro.");
+        async function toggleAllocation(nodeId) {
+            if (!currentUser) { await showAlert("Carregue um personagem primeiro.", { title: 'Atenção', type: 'warning' }); return; }
             let node = treeData.nodes[nodeId];
             if (node.isMythic) {
-                alert("Esta é uma Classe Mítica. Somente o administrador pode ativá-la para o seu personagem.");
+                await showAlert("Esta é uma Classe Mítica. Somente o administrador pode ativá-la para o seu personagem.", { title: 'Classe Mítica', type: 'info' });
                 return;
             }
             let allocSet = getEffectiveAllocSet();
@@ -2438,7 +2519,7 @@
                 if (omegaNames.length) msg += ` e ${omegaNames.length} Omini associado(s)`;
                 if (orphans.length) msg += ` + ${orphans.length} nodo(s) que ficam desconectados (pontos devolvidos)`;
                 msg += '?';
-                if (!confirm(msg)) return;
+                if (!await showConfirm(msg, { title: 'Desalocar Omini', type: 'warning', confirmLabel: 'Desalocar' })) return;
 
                 currentUser.allocatedNodes = currentUser.allocatedNodes.filter(id => !totalRemove.has(id));
                 playDeallocateSound();
@@ -2456,7 +2537,7 @@
                     }
                     let willAdd = [nodeId];
                     if (fonteId && !allocSet.has(fonteId) && treeData.nodes[fonteId]) willAdd.push(fonteId);
-                    let refund = computeBlockedRefund(willAdd, allocSet);
+                    let refund = await computeBlockedRefund(willAdd, allocSet);
                     if (refund === null) return;
                     for (let id of willAdd) currentUser.allocatedNodes.push(id);
                     if (refund.size > 0) currentUser.allocatedNodes = currentUser.allocatedNodes.filter(id => !refund.has(id));
@@ -2474,11 +2555,11 @@
                     return an && an.type === 'root' && !an.isMythic;
                 });
                 if (nodeType === 'root' && !node.isMythic && hasRoot) {
-                    alert("Você já escolheu uma classe! Para mudar de classe, é necessário resetar todos os seus pontos no painel ao lado.");
+                    await showAlert("Você já escolheu uma classe! Para mudar de classe, é necessário resetar todos os seus pontos no painel ao lado.", { title: 'Atenção', type: 'warning' });
                     return;
                 }
                 if (canAllocate(nodeId, allocSet)) {
-                    let refund = computeBlockedRefund([nodeId], allocSet);
+                    let refund = await computeBlockedRefund([nodeId], allocSet);
                     if (refund === null) return;
                     currentUser.allocatedNodes.push(nodeId);
                     if (refund.size > 0) currentUser.allocatedNodes = currentUser.allocatedNodes.filter(id => !refund.has(id));
@@ -2489,7 +2570,7 @@
                     updatePointsUI();
                     updateSummaryUI();
                 } else if (currentUser.totalPoints <= countPointsUsed(Array.from(allocSet))) {
-                    alert("Sem pontos de atributo disponíveis.");
+                    await showAlert("Sem pontos de atributo disponíveis.", { title: 'Sem Pontos', type: 'warning' });
                 }
             } else {
                 // Desalocação normal para outros tipos
@@ -2499,7 +2580,7 @@
                     updatePointsUI();
                     updateSummaryUI();
                 } else {
-                    alert("Remover este nodo quebraria o caminho de outros até a classe raiz.");
+                    await showAlert("Remover este nodo quebraria o caminho de outros até a classe raiz.", { title: 'Ação Bloqueada', type: 'error' });
                 }
             }
         }
@@ -2847,9 +2928,9 @@
             document.getElementById('summary-container').innerHTML = html;
         }
 
-        function exportToPDF() {
+        async function exportToPDF() {
             if (!currentUser || currentUser.allocatedNodes.length === 0) {
-                return alert("Você precisa alocar pelo menos um ponto ou escolher uma classe antes de exportar a ficha.");
+                await showAlert("Você precisa alocar pelo menos um ponto ou escolher uma classe antes de exportar a ficha.", { title: 'Atenção', type: 'warning' }); return;
             }
 
             // Identificar a raiz/classe atual
@@ -3374,7 +3455,7 @@
             }
 
             let nodeCount = Object.keys(treeNodes).length;
-            if (!confirm(`Importar árvore com ${nodeCount} nodos e ${treeEdges.length} arestas?\n\nIsso VAI sobrescrever a árvore atual no banco (tree_id: "${currentTreeId}").`)) return;
+            if (!await showConfirm(`Importar árvore com ${nodeCount} nodos e ${treeEdges.length} arestas?\n\nIsso VAI sobrescrever a árvore atual no banco (tree_id: "${currentTreeId}").`, { title: 'Importar Árvore', type: 'warning', confirmLabel: 'Importar' })) return;
 
             // Preserva a config atual; inclui races se existir no backup
             let newData = { nodes: treeNodes, edges: treeEdges, config: treeData.config || undefined };
@@ -3392,9 +3473,9 @@
                 drawTree();
                 updatePointsUI();
                 closeImportJsonModal();
-                alert(`Árvore restaurada com sucesso! ${nodeCount} nodos carregados.`);
+                await showAlert(`Árvore restaurada com sucesso! ${nodeCount} nodos carregados.`, { title: 'Restaurado!', type: 'success' });
             } else {
-                alert('API indisponível. Árvore restaurada localmente, mas não salva no banco. Tente sincronizar manualmente depois.');
+                await showAlert('API indisponível. Árvore restaurada localmente, mas não salva no banco. Tente sincronizar manualmente depois.', { title: 'Atenção', type: 'warning' });
                 drawTree();
                 updatePointsUI();
                 closeImportJsonModal();
@@ -3496,11 +3577,11 @@
             };
 
             if (Object.keys(treeData.nodes || {}).length === 0) {
-                alert("Erro: a árvore parece estar vazia. A configuração não foi salva para evitar sobrescrever o banco com dados inválidos. Recarregue a página e tente novamente.");
+                await showAlert("Erro: a árvore parece estar vazia. A configuração não foi salva para evitar sobrescrever o banco com dados inválidos. Recarregue a página e tente novamente.", { title: 'Erro', type: 'error' });
                 return;
             }
 
-            if (!confirm("Salvar a configuração desta árvore no banco de dados?")) return;
+            if (!await showConfirm("Salvar a configuração desta árvore no banco de dados?", { title: 'Salvar Configuração', type: 'info', confirmLabel: 'Salvar' })) return;
 
             treeData.config = newConfig;
 
@@ -3517,14 +3598,14 @@
                 closeTreeConfigModal();
             } else {
                 treeData.config = newConfig;
-                alert("API indisponível. Configuração salva localmente como fallback.");
+                await showAlert("API indisponível. Configuração salva localmente como fallback.", { title: 'Atenção', type: 'warning' });
                 updatePointsUI();
                 drawTree();
                 closeTreeConfigModal();
             }
         }
 
-        function loginAdmin() {
+        async function loginAdmin() {
             if (document.getElementById('admin-pwd').value === 'skillarte') {
                 isAdmin = true;
                 closeAdminModal();
@@ -3542,7 +3623,7 @@
                 renderAdminTreeList();
                 renderAdminRaceList();
             } else {
-                alert("Senha incorreta.");
+                await showAlert("Senha incorreta.", { title: 'Acesso Negado', type: 'error' });
             }
         }
 
@@ -3596,20 +3677,20 @@
             document.getElementById('submit-node-btn').textContent = "Inserir Nodo";
         }
 
-        function saveNode(e) {
+        async function saveNode(e) {
             e.preventDefault();
             let id = document.getElementById('new-id').value.trim();
             let isEdit = document.getElementById('new-id').readOnly;
 
-            if (!isEdit && treeData.nodes[id]) return alert("ID já existe! Para editar, clique no nodo desejado na árvore.");
+            if (!isEdit && treeData.nodes[id]) { await showAlert("ID já existe! Para editar, clique no nodo desejado na árvore.", { title: 'ID Duplicado', type: 'error' }); return; }
 
             let nodeType = document.getElementById('new-type').value;
             let fonteId = document.getElementById('new-fonte').value.trim();
 
             if (nodeType === 'omega') {
-                if (!fonteId) return alert("Nodos Omini comuns precisam de um Omini Fonte associado. Preencha o campo 'ID do Omini Fonte'.");
-                if (!treeData.nodes[fonteId]) return alert(`O Omini Fonte com ID '${fonteId}' não foi encontrado na árvore!`);
-                if (treeData.nodes[fonteId].type !== 'omegaFonte') return alert(`O nodo '${fonteId}' não é do tipo Omini Fonte!`);
+                if (!fonteId) { await showAlert("Nodos Omini comuns precisam de um Omini Fonte associado. Preencha o campo 'ID do Omini Fonte'.", { title: 'Erro', type: 'error' }); return; }
+                if (!treeData.nodes[fonteId]) { await showAlert(`O Omini Fonte com ID '${fonteId}' não foi encontrado na árvore!`, { title: 'Erro', type: 'error' }); return; }
+                if (treeData.nodes[fonteId].type !== 'omegaFonte') { await showAlert(`O nodo '${fonteId}' não é do tipo Omini Fonte!`, { title: 'Erro', type: 'error' }); return; }
             }
 
             let isMythic = nodeType === 'root' ? document.getElementById('new-mythic').checked : false;
@@ -3633,9 +3714,9 @@
             let parents = parentStr.split(',').map(s => s.trim()).filter(s => s);
 
             if (n.type !== 'root' && n.type !== 'omegaFonte') {
-                if (parents.length === 0) return alert("Especifique pelo menos um pai para nodos não-raiz!");
+                if (parents.length === 0) { await showAlert("Especifique pelo menos um pai para nodos não-raiz!", { title: 'Erro', type: 'error' }); return; }
                 for (let p of parents) {
-                    if (!treeData.nodes[p] && p !== id) return alert(`ID do pai '${p}' não encontrado!`);
+                    if (!treeData.nodes[p] && p !== id) { await showAlert(`ID do pai '${p}' não encontrado!`, { title: 'Erro', type: 'error' }); return; }
                 }
 
                 // Se for edição, removemos as arestas antigas onde este nodo era o alvo
@@ -3656,19 +3737,19 @@
             if (!isEdit) {
                 document.getElementById('new-id').value = '';
                 document.getElementById('new-parent').value = id;
-                alert("Nodo criado com sucesso!");
+                await showAlert("Nodo criado com sucesso!", { title: 'Criado!', type: 'success' });
             } else {
-                alert("Alterações guardadas com sucesso!");
+                await showAlert("Alterações guardadas com sucesso!", { title: 'Salvo!', type: 'success' });
                 updateSummaryUI(); // Reflete em tempo real caso o jogador já tenha o nodo alocado
             }
         }
 
-        function deleteNode() {
+        async function deleteNode() {
             let id = document.getElementById('del-node-id').value.trim();
-            if (!id) return alert("Por favor, introduza o ID do nodo.");
-            if (!treeData.nodes[id]) return alert("Nodo não encontrado na árvore.");
+            if (!id) { await showAlert("Por favor, introduza o ID do nodo.", { title: 'Atenção', type: 'warning' }); return; }
+            if (!treeData.nodes[id]) { await showAlert("Nodo não encontrado na árvore.", { title: 'Não encontrado', type: 'error' }); return; }
 
-            if (!confirm(`Tem a certeza que deseja ELIMINAR o nodo '${treeData.nodes[id].name}' (${id})? Todas as ligações associadas também serão apagadas.`)) return;
+            if (!await showConfirm(`Tem a certeza que deseja ELIMINAR o nodo '${treeData.nodes[id].name}' (${id})? Todas as ligações associadas também serão apagadas.`, { title: 'Eliminar Nodo', type: 'danger', confirmLabel: 'Eliminar' })) return;
 
             // 1. Remover arestas (conexões) ligadas a este nodo
             treeData.edges = treeData.edges.filter(e => e.source !== id && e.target !== id);
@@ -3695,7 +3776,7 @@
             }
 
             document.getElementById('del-node-id').value = '';
-            alert("Nodo eliminado com sucesso!");
+            await showAlert("Nodo eliminado com sucesso!", { title: 'Eliminado!', type: 'success' });
         }
 
         // --- Admin de Usuários ---
@@ -3703,7 +3784,7 @@
             let code = document.getElementById('new-user-code').value.trim();
             let name = document.getElementById('new-user-name').value.trim();
             let pts = parseInt(document.getElementById('new-user-pts').value);
-            if (!code || !name || isNaN(pts)) return alert("Preencha todos os campos corretamente.");
+            if (!code || !name || isNaN(pts)) { await showAlert("Preencha todos os campos corretamente.", { title: 'Atenção', type: 'warning' }); return; }
 
             let u = { code: code, name: name, totalPoints: pts, allocatedNodes: [], level: 0, mythicClassId: null, unlockedMythicClasses: [] };
             let db = getLocalUsers();
@@ -3711,14 +3792,14 @@
             saveLocalUsers(db);
 
             let apiRes = await apiFetch('/user', 'POST', u);
-            alert(apiRes ? "Usuário criado na Nuvem e Local!" : "Usuário criado Localmente (API Indisponível)");
+            await showAlert(apiRes ? "Usuário criado na Nuvem e Local!" : "Usuário criado Localmente (API Indisponível)", { title: apiRes ? 'Criado!' : 'Criado Localmente', type: apiRes ? 'success' : 'warning' });
             renderAdminUserList();
         }
 
         async function adminModifyPoints() {
             let code = document.getElementById('edit-user-code').value.trim();
             let pts = parseInt(document.getElementById('edit-user-pts').value);
-            if (!code || isNaN(pts)) return alert("Dados inválidos.");
+            if (!code || isNaN(pts)) { await showAlert("Dados inválidos.", { title: 'Erro', type: 'error' }); return; }
 
             let userToEdit = null;
             let apiUser = await apiFetch(`/user/${code}`, 'GET');
@@ -3729,7 +3810,7 @@
             } else if (db[code]) {
                 userToEdit = db[code];
             } else {
-                return alert("Usuário não encontrado.");
+                await showAlert("Usuário não encontrado.", { title: 'Não encontrado', type: 'error' }); return;
             }
 
             userToEdit.totalPoints += pts;
@@ -3747,8 +3828,8 @@
                 updatePointsUI();
             }
 
-            if (apiUpdate) alert(`Pontos atualizados na Nuvem! (Novo: ${userToEdit.totalPoints})`);
-            else alert(`Pontos atualizados Localmente. (Novo: ${userToEdit.totalPoints})`);
+            if (apiUpdate) await showAlert(`Pontos atualizados na Nuvem! (Novo: ${userToEdit.totalPoints})`, { title: 'Atualizado!', type: 'success' });
+            else await showAlert(`Pontos atualizados Localmente. (Novo: ${userToEdit.totalPoints})`, { title: 'Atualizado', type: 'info' });
 
             renderAdminUserList();
         }
@@ -3836,7 +3917,7 @@
 
         async function applyBatchPoints() {
             let pts = parseInt(document.getElementById('batch-pts-input').value);
-            if (isNaN(pts) || pts === 0) return alert("Digite uma quantidade válida (diferente de zero).");
+            if (isNaN(pts) || pts === 0) { await showAlert("Digite uma quantidade válida (diferente de zero).", { title: 'Atenção', type: 'warning' }); return; }
 
             let status = document.getElementById('batch-pts-status');
             status.textContent = `Aplicando para ${selectedUsers.size} jogador${selectedUsers.size > 1 ? 'es' : ''}...`;
@@ -3921,7 +4002,7 @@
         }
 
         async function syncAllTrees() {
-            if (!confirm("Sincronizar todas as árvores locais com o banco de dados? Isso vai sobrescrever os dados na nuvem com os dados locais.")) return;
+            if (!await showConfirm("Sincronizar todas as árvores locais com o banco de dados? Isso vai sobrescrever os dados na nuvem com os dados locais.", { title: 'Sincronizar Tudo', type: 'warning', confirmLabel: 'Sincronizar' })) return;
 
             // Flush current in-memory tree to localStorage before syncing
             await persistTreeData({ toCloud: false });
@@ -3947,19 +4028,19 @@
             }
 
             if (skipped > 0) {
-                alert(`${synced} árvore(s) sincronizada(s). ${skipped} pulada(s) por não terem nodos.`);
+                await showAlert(`${synced} árvore(s) sincronizada(s). ${skipped} pulada(s) por não terem nodos.`, { title: 'Sincronizado', type: 'warning' });
             } else {
-                alert(`${synced} árvore(s) sincronizada(s) com sucesso!`);
+                await showAlert(`${synced} árvore(s) sincronizada(s) com sucesso!`, { title: 'Sincronizado!', type: 'success' });
             }
         }
 
         async function adminCreateTree(clone) {
             let id = document.getElementById('new-tree-id').value.trim();
             let name = document.getElementById('new-tree-name').value.trim();
-            if (!id || !name) return alert("Preencha o ID e o Nome da nova árvore.");
+            if (!id || !name) { await showAlert("Preencha o ID e o Nome da nova árvore.", { title: 'Atenção', type: 'warning' }); return; }
 
             let trees = getLocalTrees();
-            if (trees[id]) return alert("Já existe uma árvore com este ID.");
+            if (trees[id]) { await showAlert("Já existe uma árvore com este ID.", { title: 'ID Duplicado', type: 'error' }); return; }
 
             let newData = clone ? JSON.parse(JSON.stringify(treeData)) : { nodes: {}, edges: [] };
 
@@ -3967,7 +4048,7 @@
             saveLocalTrees(trees);
 
             await apiFetch(`/tree`, 'POST', trees[id]);
-            alert("Árvore " + name + " criada com sucesso!");
+            await showAlert("Árvore " + name + " criada com sucesso!", { title: 'Criada!', type: 'success' });
 
             document.getElementById('new-tree-id').value = '';
             document.getElementById('new-tree-name').value = '';
@@ -3976,8 +4057,8 @@
 
         async function adminSetActiveTree(id) {
             let trees = getLocalTrees();
-            if (!trees[id]) return alert("Árvore não encontrada.");
-            if (!confirm(`Deseja ativar a árvore ${trees[id].name || id}? O canvas será atualizado.`)) return;
+            if (!trees[id]) { await showAlert("Árvore não encontrada.", { title: 'Não encontrado', type: 'error' }); return; }
+            if (!await showConfirm(`Deseja ativar a árvore ${trees[id].name || id}? O canvas será atualizado.`, { title: 'Ativar Árvore', type: 'info', confirmLabel: 'Ativar' })) return;
 
             // Faz o request pra garantir as configs da árvore completa se n tiver
             let tData = await apiFetch(`/tree/${id}`, 'GET');
@@ -3999,7 +4080,7 @@
                 if (validNodes.length !== currentUser.allocatedNodes.length) {
                     currentUser.allocatedNodes = validNodes;
                     currentUser.level = countPointsUsed(validNodes);
-                    alert("Atenção: Alguns pontos alocados não existem nesta árvore e foram removidos temporariamente. Salve para confirmar.");
+                    await showAlert("Atenção: Alguns pontos alocados não existem nesta árvore e foram removidos temporariamente. Salve para confirmar.", { title: 'Atenção', type: 'warning' });
                 }
                 updatePointsUI();
                 updateSummaryUI();
@@ -4007,8 +4088,8 @@
         }
 
         async function adminDeleteTree(id) {
-            if (id === getActiveTreeId()) return alert("Você não pode excluir a árvore ativa. Ative outra primeiro.");
-            if (!confirm(`CUIDADO! Tem certeza que deseja apagar DEFINITIVAMENTE a árvore "${id}"?`)) return;
+            if (id === getActiveTreeId()) { await showAlert("Você não pode excluir a árvore ativa. Ative outra primeiro.", { title: 'Ação Bloqueada', type: 'error' }); return; }
+            if (!await showConfirm(`CUIDADO! Tem certeza que deseja apagar DEFINITIVAMENTE a árvore "${id}"?`, { title: 'Excluir Árvore', type: 'danger', confirmLabel: 'Excluir' })) return;
 
             let trees = getLocalTrees();
             delete trees[id];
@@ -4020,7 +4101,7 @@
 
         // ================= SINCRONIZAÇÃO E NOVAS FUNCIONALIDADES =================
         async function syncCurrentUser() {
-            if (!currentUser) return alert("Nenhum jogador carregado.");
+            if (!currentUser) { await showAlert("Nenhum jogador carregado.", { title: 'Atenção', type: 'warning' }); return; }
 
             let btn = document.getElementById('btn-sync');
             if (btn) btn.textContent = "Syncing...";
@@ -4046,21 +4127,21 @@
                     saveLocalUsers(db);
                     updatePointsUI();
                     updateSummaryUI();
-                    alert("Dados do personagem atualizados com sucesso!");
+                    await showAlert("Dados do personagem atualizados com sucesso!", { title: 'Atualizado!', type: 'success' });
                 } else {
-                    alert("Seus dados já estão atualizados.");
+                    await showAlert("Seus dados já estão atualizados.", { title: 'Atualizado', type: 'info' });
                 }
             } else {
-                alert("Falha ao buscar dados do usuário.");
+                await showAlert("Falha ao buscar dados do usuário.", { title: 'Erro', type: 'error' });
             }
 
             if (btn) btn.innerHTML = "🔄 Sync";
         }
 
-        function focusMyClass() {
-            if (!currentUser || currentUser.allocatedNodes.length === 0) return alert("Você ainda não escolheu uma classe. Aloque ou selecione um jogador primeiro.");
+        async function focusMyClass() {
+            if (!currentUser || currentUser.allocatedNodes.length === 0) { await showAlert("Você ainda não escolheu uma classe. Aloque ou selecione um jogador primeiro.", { title: 'Atenção', type: 'warning' }); return; }
             let rootNodeId = currentUser.allocatedNodes.find(id => treeData.nodes[id] && treeData.nodes[id].type === 'root');
-            if (!rootNodeId) return alert("Nenhuma classe raiz encontrada na sua árvore.");
+            if (!rootNodeId) { await showAlert("Nenhuma classe raiz encontrada na sua árvore.", { title: 'Erro', type: 'error' }); return; }
 
             let n = treeData.nodes[rootNodeId];
             camera.x = -n.x;
@@ -4070,8 +4151,8 @@
 
         async function adminDeleteUser() {
             let code = document.getElementById('del-user-code').value.trim();
-            if (!code) return alert("Introduza um código do utilizador...");
-            if (!confirm(`Tem a certeza que deseja EXCLUIR DEFINITIVAMENTE o utilizador '${code}'?`)) return;
+            if (!code) { await showAlert("Introduza um código do utilizador...", { title: 'Atenção', type: 'warning' }); return; }
+            if (!await showConfirm(`Tem a certeza que deseja EXCLUIR DEFINITIVAMENTE o utilizador '${code}'?`, { title: 'Excluir Usuário', type: 'danger', confirmLabel: 'Excluir' })) return;
 
             let db = getLocalUsers();
             if (db[code]) {
@@ -4092,9 +4173,9 @@
         }
 
         // ================= MODAL DE PONTOS (ADMIN) =================
-        function openPointsModal(code) {
+        async function openPointsModal(code) {
             let u = adminUserCache[code] || getLocalUsers()[code];
-            if (!u) return alert("Jogador não encontrado. Tente recarregar a lista.");
+            if (!u) { await showAlert("Jogador não encontrado. Tente recarregar a lista.", { title: 'Não encontrado', type: 'error' }); return; }
 
             document.getElementById('pm-name').value = u.name;
             document.getElementById('pm-code').textContent = code;
@@ -4263,12 +4344,12 @@
             let input = document.getElementById('pm-pts-input');
             let code = input.dataset.code;
             let pts = parseInt(input.value);
-            if (!code || isNaN(pts) || pts === 0) return alert("Digite uma quantidade válida (diferente de zero).");
+            if (!code || isNaN(pts) || pts === 0) { await showAlert("Digite uma quantidade válida (diferente de zero).", { title: 'Atenção', type: 'warning' }); return; }
 
             let apiUser = await apiFetch(`/user/${code}`, 'GET');
             let db = getLocalUsers();
             let userToEdit = apiUser || db[code];
-            if (!userToEdit) return alert("Usuário não encontrado.");
+            if (!userToEdit) { await showAlert("Usuário não encontrado.", { title: 'Não encontrado', type: 'error' }); return; }
 
             let minimum = countPointsUsed(userToEdit.allocatedNodes);
             userToEdit.totalPoints = Math.max(userToEdit.totalPoints + pts, minimum);
@@ -4397,12 +4478,12 @@
         }
 
         // ---- Admin ----
-        function addPassiveField(title = '', desc = '') {
+        async function addPassiveField(title = '', desc = '') {
             let list = document.getElementById('race-passives-list');
             let empty = document.getElementById('race-passives-empty');
             let btn = document.getElementById('race-add-passive-btn');
             if (!list) return;
-            if (list.children.length >= 5) { alert('Máximo de 5 passivas.'); return; }
+            if (list.children.length >= 5) { await showAlert('Máximo de 5 passivas.', { title: 'Limite atingido', type: 'warning' }); return; }
             empty.classList.add('hidden');
             let idx = Date.now();
             let row = document.createElement('div');
@@ -4446,13 +4527,13 @@
             let id = document.getElementById('race-form-id').value.trim();
             let name = document.getElementById('race-form-name').value.trim();
             let desc = document.getElementById('race-form-desc').value.trim();
-            if (!id || !name) { alert("Preencha ID e Nome da Raça."); return; }
+            if (!id || !name) { await showAlert("Preencha ID e Nome da Raça.", { title: 'Atenção', type: 'warning' }); return; }
             let passives = getPassivesFromForm();
             racesData[id] = { id, name, desc, passives };
             persistRaces();
             renderAdminRaceList();
             adminClearRaceForm();
-            alert(`Raça "${name}" salva!`);
+            await showAlert(`Raça "${name}" salva!`, { title: 'Salva!', type: 'success' });
         }
 
         function adminClearRaceForm() {
@@ -4491,7 +4572,7 @@
         async function adminDeleteRace(id) {
             let r = racesData[id];
             if (!r) return;
-            if (!confirm(`Excluir a raça "${r.name}"?`)) return;
+            if (!await showConfirm(`Excluir a raça "${r.name}"?`, { title: 'Excluir Raça', type: 'danger', confirmLabel: 'Excluir' })) return;
             delete racesData[id];
             persistRaces();
             renderAdminRaceList();
@@ -4598,11 +4679,11 @@
             document.getElementById('race-confirm-btn').disabled = false;
         }
 
-        function playerConfirmRace() {
+        async function playerConfirmRace() {
             if (!_pendingRaceId || !currentUser) return;
             let r = racesData[_pendingRaceId];
             if (!r) return;
-            if (!confirm(`Você está escolhendo "${r.name}" como sua raça.\n\nAtenção: esta escolha é permanente e não poderá ser alterada sem a intervenção do administrador.\n\nDeseja confirmar?`)) return;
+            if (!await showConfirm(`Você está escolhendo "${r.name}" como sua raça.\n\nAtenção: esta escolha é permanente e não poderá ser alterada sem a intervenção do administrador.\n\nDeseja confirmar?`, { title: 'Escolher Raça', type: 'warning', confirmLabel: 'Confirmar' })) return;
             currentUser.raceId = _pendingRaceId;
             updateRaceUI();
             saveUserFlow();
@@ -4650,7 +4731,7 @@
         async function adminResetPlayerRace() {
             let code = document.getElementById('pm-code').textContent;
             if (!code) return;
-            if (!confirm(`Resetar a raça do jogador "${code}"? Ele poderá escolher uma nova raça.`)) return;
+            if (!await showConfirm(`Resetar a raça do jogador "${code}"? Ele poderá escolher uma nova raça.`, { title: 'Resetar Raça', type: 'danger', confirmLabel: 'Resetar' })) return;
             let db = getLocalUsers();
             let u = db[code];
             if (!u) return;
@@ -4662,7 +4743,7 @@
             }
             await apiFetch('/user', 'POST', { ...u, raceId: null });
             document.getElementById('pm-race-name').textContent = '—';
-            alert('Raça resetada com sucesso.');
+            await showAlert('Raça resetada com sucesso.', { title: 'Resetada!', type: 'success' });
         }
 
         // ================= SISTEMA DE KEYWORDS =================
@@ -4953,11 +5034,11 @@
             }
         }
 
-        function adminSaveKeyword() {
+        async function adminSaveKeyword() {
             let idRaw = document.getElementById('kw-form-id').value.trim();
             let id = idRaw.replace(/\s+/g, '_').toLowerCase();
             let name = document.getElementById('kw-form-name').value.trim();
-            if (!id || !name) { alert('Preencha ID e Nome da Keyword.'); return; }
+            if (!id || !name) { await showAlert('Preencha ID e Nome da Keyword.', { title: 'Atenção', type: 'warning' }); return; }
 
             let typeEl = document.querySelector('input[name="kw-color-type"]:checked');
             let type = typeEl ? typeEl.value : 'solid';
@@ -5043,10 +5124,10 @@
             openKeywordsModal();
         }
 
-        function adminDeleteKeyword(id) {
+        async function adminDeleteKeyword(id) {
             let kw = keywordsData[id];
             if (!kw) return;
-            if (!confirm(`Excluir a keyword "${kw.name}"?`)) return;
+            if (!await showConfirm(`Excluir a keyword "${kw.name}"?`, { title: 'Excluir Keyword', type: 'danger', confirmLabel: 'Excluir' })) return;
             delete keywordsData[id];
             persistKeywords();
             renderAdminKeywordList();
