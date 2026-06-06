@@ -479,7 +479,7 @@
             <div id="tt-stats" class="text-sm text-blue-300 font-medium"></div>
             <div id="tt-cost" class="text-xs mt-2 text-slate-400 hidden"></div>
             <div id="tt-status" class="text-xs mt-3 font-bold border-t border-slate-700 pt-2"></div>
-            <div id="tt-id" class="text-[10px] text-slate-600 mt-1">ID: ...</div>
+            <div id="tt-id" class="text-[10px] text-slate-600 mt-1 hidden">ID: ...</div>
         </div>
 
         <!-- Coordenadas HUD -->
@@ -3082,7 +3082,9 @@
                 ttCost.classList.add("hidden");
             }
 
-            document.getElementById("tt-id").textContent = "ID: " + n.id;
+            let ttId = document.getElementById("tt-id");
+            if (isAdmin) { ttId.textContent = "ID: " + n.id; ttId.classList.remove("hidden"); }
+            else { ttId.classList.add("hidden"); }
 
             let st = document.getElementById("tt-status");
             let allocSet = getEffectiveAllocSet();
