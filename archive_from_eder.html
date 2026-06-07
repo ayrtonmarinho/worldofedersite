@@ -2729,9 +2729,9 @@
                 document.getElementById('vilasLugarList').innerHTML = '';
                 document.getElementById('cidadesLugarList').innerHTML = '';
                 document.getElementById('lugaresInternList').innerHTML = '';
-                (itemToEdit.vilas || []).forEach(v => addLugarSubItem('vilas', v.nome, v.descricao));
-                (itemToEdit.cidades || []).forEach(v => addLugarSubItem('cidades', v.nome, v.descricao));
-                (itemToEdit.lugaresInternos || []).forEach(v => addLugarSubItem('lugaresInternos', v.nome, v.descricao));
+                (itemToEdit.vilas || []).forEach(v => addLugarSubItem('vilas', v.nome, v.descricao, v.imagem || ''));
+                (itemToEdit.cidades || []).forEach(v => addLugarSubItem('cidades', v.nome, v.descricao, v.imagem || ''));
+                (itemToEdit.lugaresInternos || []).forEach(v => addLugarSubItem('lugaresInternos', v.nome, v.descricao, v.imagem || ''));
             } else if (type === 'treinamentos') {
                 if (itemToEdit.cor) document.getElementById('inpCorTreinamento').value = itemToEdit.cor;
                 else document.getElementById('inpCorTreinamento').value = "#8b0000";
@@ -2855,7 +2855,7 @@
         // ================= CONTINENTES E NAÇÕES — SUB-SEÇÕES =================
         const _lugarListIds = { vilas: 'vilasLugarList', cidades: 'cidadesLugarList', lugaresInternos: 'lugaresInternList' };
 
-        function addLugarSubItem(section, nome = '', descricao = '') {
+        function addLugarSubItem(section, nome = '', descricao = '', imagem = '') {
             let listId = _lugarListIds[section];
             if (!listId) return;
             let list = document.getElementById(listId);
@@ -2867,7 +2867,9 @@
                 <input type="text" placeholder="Nome" value="${nome.replace(/"/g, '&quot;')}"
                     class="lugar-sub-nome w-full bg-slate-900 border border-white/10 rounded px-2 py-1 text-xs text-slate-200 mb-1 focus:border-[#cfaa56]/60 outline-none">
                 <textarea placeholder="Descrição (opcional)" rows="2"
-                    class="lugar-sub-desc w-full bg-slate-900 border border-white/10 rounded px-2 py-1 text-xs text-slate-400 resize-none focus:border-[#cfaa56]/60 outline-none">${descricao}</textarea>
+                    class="lugar-sub-desc w-full bg-slate-900 border border-white/10 rounded px-2 py-1 text-xs text-slate-400 resize-none focus:border-[#cfaa56]/60 outline-none mb-1">${descricao}</textarea>
+                <input type="text" placeholder="URL da imagem (opcional)" value="${imagem.replace(/"/g, '&quot;')}"
+                    class="lugar-sub-img w-full bg-slate-900 border border-white/10 rounded px-2 py-1 text-xs text-slate-500 focus:border-[#cfaa56]/60 outline-none">
             `;
             list.appendChild(div);
         }
@@ -2879,7 +2881,8 @@
             document.querySelectorAll(`#${listId} .lugar-sub-item`).forEach(div => {
                 let nome = div.querySelector('.lugar-sub-nome').value.trim();
                 let desc = div.querySelector('.lugar-sub-desc').value.trim();
-                if (nome) items.push({ nome, descricao: desc });
+                let img  = div.querySelector('.lugar-sub-img').value.trim();
+                if (nome) items.push({ nome, descricao: desc, imagem: img || undefined });
             });
             return items;
         }
@@ -2903,29 +2906,43 @@
                 container.innerHTML = '<p class="text-slate-600 text-sm text-center py-8">Nenhum continente ou nação cadastrado ainda.</p>';
                 return;
             }
+
+            function subItemCard(it, borderColor) {
+                let uid = 'sub_' + Math.random().toString(36).slice(2);
+                let imgHtml = it.imagem
+                    ? `<img src="${it.imagem}" alt="${it.nome}" class="w-full h-28 object-cover rounded-t-lg">`
+                    : '';
+                let hasDetail = it.descricao || it.imagem;
+                return `<div class="rounded-lg border border-white/8 overflow-hidden bg-black/25 cursor-pointer select-none"
+                            onclick="(function(el){let b=el.querySelector('.sub-body');if(b)b.classList.toggle('hidden');})(this)">
+                    <div class="flex items-center justify-between px-3 py-2 gap-2">
+                        <span class="text-xs text-slate-300 font-semibold leading-tight">${it.nome}</span>
+                        ${hasDetail ? `<span class="text-slate-600 text-[10px] shrink-0">▾</span>` : ''}
+                    </div>
+                    ${hasDetail ? `<div class="sub-body hidden border-t border-white/5">
+                        ${imgHtml}
+                        ${it.descricao ? `<p class="text-[11px] text-slate-500 px-3 py-2 leading-relaxed">${it.descricao}</p>` : ''}
+                    </div>` : ''}
+                </div>`;
+            }
+
+            function subSection(icon, label, items, borderColor) {
+                if (!items.length) return '';
+                let cards = items.map(it => subItemCard(it, borderColor)).join('');
+                return `<div class="mt-3">
+                    <p class="text-[10px] uppercase tracking-widest font-bold mb-2" style="color:${borderColor}">${icon} ${label} <span class="text-slate-600 font-normal">(${items.length})</span></p>
+                    <div class="space-y-1">${cards}</div>
+                </div>`;
+            }
+
             container.innerHTML = lugares.map(lugar => {
-                let vilas = (lugar.vilas || []);
-                let cidades = (lugar.cidades || []);
-                let lugaresInt = (lugar.lugaresInternos || []);
+                let vilas = lugar.vilas || [];
+                let cidades = lugar.cidades || [];
+                let lugaresInt = lugar.lugaresInternos || [];
                 let borderColor = lugar.cor || '#cfaa56';
                 let imgHtml = lugar.imagem
-                    ? `<img src="${lugar.imagem}" alt="${lugar.nome}" class="w-full h-32 object-cover rounded-t-xl mb-0">`
+                    ? `<img src="${lugar.imagem}" alt="${lugar.nome}" class="w-full h-36 object-cover">`
                     : '';
-
-                function subSection(icon, label, items) {
-                    if (!items.length) return '';
-                    let rows = items.map(it =>
-                        `<div class="py-1 border-b border-white/5 last:border-0">
-                            <p class="text-xs text-slate-300 font-semibold">${it.nome}</p>
-                            ${it.descricao ? `<p class="text-[11px] text-slate-500 mt-0.5">${it.descricao}</p>` : ''}
-                        </div>`
-                    ).join('');
-                    return `<div class="mt-3">
-                        <p class="text-[10px] uppercase tracking-widest font-bold mb-1" style="color:${borderColor}">${icon} ${label} <span class="text-slate-600 font-normal">(${items.length})</span></p>
-                        <div class="bg-black/30 rounded px-3 py-1">${rows}</div>
-                    </div>`;
-                }
-
                 let hasSubSections = vilas.length || cidades.length || lugaresInt.length;
 
                 return `<div class="rounded-xl border overflow-hidden" style="border-color:${borderColor}40">
@@ -2937,7 +2954,9 @@
                         </div>
                         ${lugar.descricao ? `<p class="text-xs text-slate-500 leading-relaxed mb-2">${lugar.descricao}</p>` : ''}
                         ${hasSubSections
-                            ? subSection('🏘️', 'Vilas', vilas) + subSection('🏙️', 'Cidades', cidades) + subSection('📍', 'Lugares', lugaresInt)
+                            ? subSection('🏘️', 'Vilas', vilas, borderColor)
+                              + subSection('🏙️', 'Cidades', cidades, borderColor)
+                              + subSection('📍', 'Lugares', lugaresInt, borderColor)
                             : '<p class="text-[11px] text-slate-700 italic mt-2">Sem sub-locais cadastrados.</p>'
                         }
                     </div>
