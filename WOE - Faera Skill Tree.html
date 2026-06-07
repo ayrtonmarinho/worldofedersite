@@ -478,6 +478,14 @@
             <p id="tt-desc" class="text-sm text-slate-300 italic mb-2 hidden">Descrição...</p>
             <div id="tt-stats" class="text-sm text-blue-300 font-medium"></div>
             <div id="tt-cost" class="text-xs mt-2 text-slate-400 hidden"></div>
+            <div id="tt-global" class="hidden mt-2 flex items-start gap-1.5">
+                <span class="text-emerald-400 text-xs shrink-0">🌐</span>
+                <div>
+                    <span class="text-xs font-bold text-emerald-400">Global</span>
+                    <p class="text-[10px] text-emerald-600 leading-tight">Nodos Globais são aplicados em todos os casos.</p>
+                </div>
+            </div>
+            <div id="tt-linked-skill" class="hidden mt-1.5 text-[11px] text-violet-400">🔗 <span id="tt-linked-skill-val"></span></div>
             <div id="tt-status" class="text-xs mt-3 font-bold border-t border-slate-700 pt-2"></div>
             <div id="tt-id" class="text-[10px] text-slate-600 mt-1 hidden">ID: ...</div>
         </div>
@@ -719,8 +727,13 @@
 
                 <div id="ext-fonte" class="hidden">
                     <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">ID do Omini Fonte associado</label>
-                    <input type="text" id="new-fonte" placeholder="ID do nodo omegaFonte"
-                        class="w-full bg-slate-900 border border-cyan-700 rounded px-2 py-1.5 text-sm text-cyan-300 focus:border-cyan-400 outline-none">
+                    <div class="relative">
+                        <input type="text" id="new-fonte" placeholder="Buscar Omini Fonte..." autocomplete="off"
+                            oninput="handleFonteAutocomplete()"
+                            onblur="setTimeout(()=>{let d=document.getElementById('fonte-autocomplete');if(d)d.classList.add('hidden');},150)"
+                            class="w-full bg-slate-900 border border-cyan-700 rounded px-2 py-1.5 text-sm text-cyan-300 focus:border-cyan-400 outline-none">
+                        <div id="fonte-autocomplete" class="absolute w-full mt-1 bg-slate-800 border border-cyan-800/60 rounded shadow-2xl max-h-44 overflow-y-auto hidden z-50"></div>
+                    </div>
                     <p class="text-[10px] text-slate-500 mt-1">Obrigatório para Omini comum. O Fonte deve existir na árvore.</p>
                 </div>
 
@@ -753,6 +766,28 @@
                         class="w-full bg-slate-900 border border-amber-800 rounded px-2 py-1.5 text-sm text-amber-300 focus:border-amber-500 outline-none">
                     <div id="chain-autocomplete" class="absolute w-full mt-1 bg-slate-800 border border-amber-800/60 rounded shadow-2xl max-h-40 overflow-y-auto hidden z-50"></div>
                     <p class="text-[10px] text-slate-500 mt-1">Este nodo herda os bloqueios da especialização indicada.</p>
+                </div>
+
+                <!-- Nodo Global (só basic e notable) -->
+                <div id="ext-global" class="hidden">
+                    <label class="flex items-start gap-2.5 cursor-pointer bg-emerald-950/40 border border-emerald-800/40 rounded px-3 py-2">
+                        <input type="checkbox" id="new-global" class="w-4 h-4 rounded accent-emerald-500 shrink-0 mt-0.5">
+                        <div>
+                            <span class="text-xs font-bold text-emerald-300">Nodo Global</span>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Nodos Globais são aplicados em todos os casos. Altera a borda visual do nodo (ondulada para atributo, triangular para passiva).</p>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Vinculado a Habilidade (todos os tipos) -->
+                <div class="relative">
+                    <label class="block text-[10px] text-violet-400 uppercase font-bold mb-1">Vinculado a Habilidade <span class="text-slate-600 normal-case font-normal">(opcional — informativo)</span></label>
+                    <input type="text" id="new-linked-skill" placeholder="Buscar nodo pelo nome ou ID..." autocomplete="off"
+                        oninput="handleLinkedSkillAutocomplete()"
+                        onblur="setTimeout(()=>{let d=document.getElementById('linked-skill-autocomplete');if(d)d.classList.add('hidden');},150)"
+                        class="w-full bg-slate-900 border border-violet-900 rounded px-2 py-1.5 text-sm text-violet-300 focus:border-violet-500 outline-none">
+                    <div id="linked-skill-autocomplete" class="absolute w-full mt-1 bg-slate-800 border border-violet-800/60 rounded shadow-2xl max-h-44 overflow-y-auto hidden z-50"></div>
+                    <p class="text-[10px] text-slate-600 mt-1">Exibido como vínculo informativo no tooltip do nodo.</p>
                 </div>
 
                 <div class="flex gap-2">
@@ -1071,6 +1106,14 @@
         <p id="mni-desc" class="text-sm text-slate-300 italic mb-2 hidden"></p>
         <div id="mni-stats" class="text-sm text-blue-300 font-medium mb-2"></div>
         <div id="mni-cost" class="text-xs text-slate-400 mb-2 hidden"></div>
+        <div id="mni-global" class="hidden mb-1.5 flex items-start gap-1.5">
+            <span class="text-emerald-400 text-xs shrink-0">🌐</span>
+            <div>
+                <span class="text-xs font-bold text-emerald-400">Global</span>
+                <p class="text-[10px] text-emerald-600 leading-tight">Nodos Globais são aplicados em todos os casos.</p>
+            </div>
+        </div>
+        <div id="mni-linked-skill" class="hidden mb-1.5 text-[11px] text-violet-400">🔗 <span id="mni-linked-skill-val"></span></div>
         <div id="mni-status" class="text-xs font-bold text-slate-400 border-t border-slate-700 pt-2 mb-3"></div>
         <div class="flex gap-2">
             <button id="mni-action-btn" onclick="mniAction()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-bold hidden"></button>
@@ -1933,6 +1976,44 @@
             ctx.closePath();
         }
 
+        // Borda ondulada para nodo basic Global
+        function drawWavyCirclePath(ctx, x, y, r) {
+            ctx.beginPath();
+            const steps = 72;
+            const waves = 7;
+            const amp = r * 0.13;
+            for (let i = 0; i <= steps; i++) {
+                let angle = (i / steps) * Math.PI * 2;
+                let wave = amp * Math.sin(waves * angle);
+                let rx = x + (r + wave) * Math.cos(angle);
+                let ry = y + (r + wave) * Math.sin(angle);
+                if (i === 0) ctx.moveTo(rx, ry);
+                else ctx.lineTo(rx, ry);
+            }
+            ctx.closePath();
+        }
+
+        // Triângulo suavizado para nodo notable Global
+        function drawSoftTrianglePath(ctx, x, y, r) {
+            ctx.beginPath();
+            const pts = [];
+            for (let i = 0; i < 3; i++) {
+                let a = (i * 2 * Math.PI) / 3 - Math.PI / 2;
+                pts.push({ x: x + r * Math.cos(a), y: y + r * Math.sin(a) });
+            }
+            for (let i = 0; i < 3; i++) {
+                let prev = pts[(i + 2) % 3];
+                let curr = pts[i];
+                let next = pts[(i + 1) % 3];
+                let mx1 = (prev.x + curr.x) / 2, my1 = (prev.y + curr.y) / 2;
+                let mx2 = (curr.x + next.x) / 2, my2 = (curr.y + next.y) / 2;
+                if (i === 0) ctx.moveTo(mx1, my1);
+                else ctx.lineTo(mx1, my1);
+                ctx.quadraticCurveTo(curr.x, curr.y, mx2, my2);
+            }
+            ctx.closePath();
+        }
+
         function drawLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1989,7 +2070,8 @@
                 let colors = ATTR_COLORS[node.attribute] || ATTR_COLORS["none"];
 
                 let pathFn = drawCirclePath;
-                if (node.type === "notable") pathFn = drawDiamondPath;
+                if (node.type === "notable") pathFn = node.isGlobal ? drawSoftTrianglePath : drawDiamondPath;
+                if (node.type === "basic" && node.isGlobal) pathFn = drawWavyCirclePath;
                 if (node.type === "large") pathFn = drawPentagonPath;
                 if (node.type === "root") pathFn = drawHexagonPath;
                 if (node.type === "omega") pathFn = drawStarPath;
@@ -2090,6 +2172,8 @@
                         document.getElementById('new-blocks').value = (hoveredNode.blocks || []).join(', ');
                         document.getElementById('new-chain').value = hoveredNode.chainId || '';
                         document.getElementById('new-mythic').checked = hoveredNode.isMythic || false;
+                        document.getElementById('new-global').checked = hoveredNode.isGlobal || false;
+                        document.getElementById('new-linked-skill').value = hoveredNode.linkedSkill || '';
 
                         let parents = treeData.edges.filter(edge => edge.target === hoveredNode.id).map(edge => edge.source);
                         document.getElementById('new-parent').value = parents.join(', ');
@@ -3086,6 +3170,16 @@
             if (isAdmin) { ttId.textContent = "ID: " + n.id; ttId.classList.remove("hidden"); }
             else { ttId.classList.add("hidden"); }
 
+            let ttGlobal = document.getElementById("tt-global");
+            if (n.isGlobal) ttGlobal.classList.remove("hidden");
+            else ttGlobal.classList.add("hidden");
+
+            let ttLinked = document.getElementById("tt-linked-skill");
+            if (n.linkedSkill) {
+                document.getElementById("tt-linked-skill-val").textContent = "Vinculado a: " + n.linkedSkill;
+                ttLinked.classList.remove("hidden");
+            } else { ttLinked.classList.add("hidden"); }
+
             let st = document.getElementById("tt-status");
             let allocSet = getEffectiveAllocSet();
             let hasRoot = Array.from(allocSet).some(id => {
@@ -3318,6 +3412,68 @@
             document.getElementById('new-chain').value = id;
             document.getElementById('chain-autocomplete').classList.add('hidden');
             document.getElementById('new-chain').focus();
+        }
+
+        function handleFonteAutocomplete() {
+            let input = document.getElementById('new-fonte');
+            let dropdown = document.getElementById('fonte-autocomplete');
+            if (!input || !dropdown) return;
+
+            let val = input.value.trim().toLowerCase();
+            let fontes = Object.values(treeData.nodes).filter(n =>
+                n.type === 'omegaFonte' &&
+                (!val || n.id.toLowerCase().includes(val) || n.name.toLowerCase().includes(val))
+            );
+
+            if (fontes.length === 0) { dropdown.classList.add('hidden'); return; }
+
+            dropdown.innerHTML = fontes.slice(0, 10).map(n =>
+                `<div onmousedown="selectFonteAutocomplete('${escHtml(n.id)}')"
+                    class="px-2 py-1.5 hover:bg-cyan-900/40 cursor-pointer text-xs border-b border-slate-700/50 last:border-0 transition-colors flex items-center justify-between gap-2">
+                    <span class="text-cyan-300 font-mono">${escHtml(n.id)}</span>
+                    <span class="text-slate-400 truncate ml-2 max-w-[140px]">${escHtml(n.name)}</span>
+                </div>`
+            ).join('');
+            dropdown.classList.remove('hidden');
+        }
+
+        function selectFonteAutocomplete(id) {
+            document.getElementById('new-fonte').value = id;
+            document.getElementById('fonte-autocomplete').classList.add('hidden');
+            document.getElementById('new-fonte').focus();
+        }
+
+        function handleLinkedSkillAutocomplete() {
+            let input = document.getElementById('new-linked-skill');
+            let dropdown = document.getElementById('linked-skill-autocomplete');
+            if (!input || !dropdown) return;
+
+            let val = input.value.trim().toLowerCase();
+            if (!val) { dropdown.classList.add('hidden'); return; }
+
+            let typeLabels = { basic: 'Atributo', notable: 'Passiva', large: 'Ativa', root: 'Classe', omega: 'Omini', omegaFonte: 'Omini Fonte', especializacao: 'Espec.' };
+            let typeColors = { basic: 'text-slate-400', notable: 'text-fuchsia-400', large: 'text-amber-400', root: 'text-rose-400', omega: 'text-cyan-400', omegaFonte: 'text-yellow-300', especializacao: 'text-orange-300' };
+
+            let matches = Object.values(treeData.nodes).filter(n =>
+                n.name.toLowerCase().includes(val) || n.id.toLowerCase().includes(val)
+            );
+
+            if (matches.length === 0) { dropdown.classList.add('hidden'); return; }
+
+            dropdown.innerHTML = matches.slice(0, 12).map(n =>
+                `<div onmousedown="selectLinkedSkillAutocomplete('${escHtml(n.name)}')"
+                    class="px-2 py-1.5 hover:bg-violet-900/40 cursor-pointer text-xs border-b border-slate-700/50 last:border-0 transition-colors flex items-center justify-between gap-2">
+                    <span class="text-violet-300 font-medium truncate">${escHtml(n.name)}</span>
+                    <span class="${typeColors[n.type] || 'text-slate-500'} shrink-0 text-[10px]">${typeLabels[n.type] || n.type}</span>
+                </div>`
+            ).join('');
+            dropdown.classList.remove('hidden');
+        }
+
+        function selectLinkedSkillAutocomplete(name) {
+            document.getElementById('new-linked-skill').value = name;
+            document.getElementById('linked-skill-autocomplete').classList.add('hidden');
+            document.getElementById('new-linked-skill').focus();
         }
 
         function handleIdAutocomplete() {
@@ -3649,16 +3805,18 @@
             let f = document.getElementById('ext-fonte');
             let ch = document.getElementById('ext-chain');
             let myt = document.getElementById('ext-mythic');
+            let glob = document.getElementById('ext-global');
             if (t === 'basic') { d.classList.add('hidden'); i.classList.add('hidden'); }
             else { d.classList.remove('hidden'); i.classList.remove('hidden'); }
             if (t === 'omega') f.classList.remove('hidden');
             else f.classList.add('hidden');
-            // chain só faz sentido em nodos que NÃO são a própria especialização nem raiz
             if (t === 'especializacao' || t === 'root' || t === 'omegaFonte') ch.classList.add('hidden');
             else ch.classList.remove('hidden');
-            // checkbox de Classe Mítica só para root
             if (t === 'root') myt.classList.remove('hidden');
             else { myt.classList.add('hidden'); document.getElementById('new-mythic').checked = false; }
+            // Global só faz sentido para basic e notable
+            if (t === 'basic' || t === 'notable') glob.classList.remove('hidden');
+            else { glob.classList.add('hidden'); document.getElementById('new-global').checked = false; }
         }
 
         function resetNodeForm() {
@@ -3676,6 +3834,8 @@
             document.getElementById('new-blocks').value = '';
             document.getElementById('new-chain').value = '';
             document.getElementById('new-mythic').checked = false;
+            document.getElementById('new-global').checked = false;
+            document.getElementById('new-linked-skill').value = '';
             document.getElementById('submit-node-btn').textContent = "Inserir Nodo";
         }
 
@@ -3709,7 +3869,9 @@
                 fonteId: nodeType === 'omega' ? fonteId : undefined,
                 blocks: document.getElementById('new-blocks').value.split(',').map(s => s.trim()).filter(s => s),
                 chainId: document.getElementById('new-chain').value.trim() || undefined,
-                isMythic: isMythic || undefined
+                isMythic: isMythic || undefined,
+                isGlobal: (nodeType === 'basic' || nodeType === 'notable') ? (document.getElementById('new-global').checked || undefined) : undefined,
+                linkedSkill: document.getElementById('new-linked-skill').value.trim() || undefined
             };
 
             let parentStr = document.getElementById('new-parent').value;
@@ -5606,6 +5768,16 @@
             } else {
                 mniCost.classList.add('hidden');
             }
+
+            let mniGlobal = document.getElementById('mni-global');
+            if (node.isGlobal) mniGlobal.classList.remove('hidden');
+            else mniGlobal.classList.add('hidden');
+
+            let mniLinked = document.getElementById('mni-linked-skill');
+            if (node.linkedSkill) {
+                document.getElementById('mni-linked-skill-val').textContent = 'Vinculado a: ' + node.linkedSkill;
+                mniLinked.classList.remove('hidden');
+            } else { mniLinked.classList.add('hidden'); }
 
             let st = document.getElementById('mni-status');
             let actionBtn = document.getElementById('mni-action-btn');
