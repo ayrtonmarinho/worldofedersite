@@ -1994,25 +1994,14 @@
             ctx.closePath();
         }
 
-        // Losango com cantos arredondados para nodo notable Global
+        // Estrela de 4 pontas (lados côncavos) para nodo notable Global
         function drawRoundedDiamondPath(ctx, x, y, r) {
             ctx.beginPath();
-            const pts = [
-                { x: x,     y: y - r },
-                { x: x + r, y: y     },
-                { x: x,     y: y + r },
-                { x: x - r, y: y     },
-            ];
-            for (let i = 0; i < 4; i++) {
-                let prev = pts[(i + 3) % 4];
-                let curr = pts[i];
-                let next = pts[(i + 1) % 4];
-                let mx1 = (prev.x + curr.x) / 2, my1 = (prev.y + curr.y) / 2;
-                let mx2 = (curr.x + next.x) / 2, my2 = (curr.y + next.y) / 2;
-                if (i === 0) ctx.moveTo(mx1, my1);
-                else ctx.lineTo(mx1, my1);
-                ctx.quadraticCurveTo(curr.x, curr.y, mx2, my2);
-            }
+            ctx.moveTo(x, y - r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.quadraticCurveTo(x, y, x, y + r);
+            ctx.quadraticCurveTo(x, y, x - r, y);
+            ctx.quadraticCurveTo(x, y, x, y - r);
             ctx.closePath();
         }
 
