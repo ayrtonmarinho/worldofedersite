@@ -1068,6 +1068,14 @@
         </div>
     </div>
 
+    <!-- LIGHTBOX DE IMAGEM -->
+    <div id="woe-lightbox" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[300] hidden backdrop-blur-sm cursor-zoom-out"
+        onclick="document.getElementById('woe-lightbox').classList.add('hidden'); document.body.style.overflow='';">
+        <img id="woe-lightbox-img" src="" alt="" class="max-w-[92vw] max-h-[92vh] object-contain rounded-lg shadow-2xl pointer-events-none select-none">
+        <button class="absolute top-4 right-5 text-white/60 hover:text-white text-3xl leading-none font-light"
+            onclick="document.getElementById('woe-lightbox').classList.add('hidden'); document.body.style.overflow='';">✕</button>
+    </div>
+
     <!-- MODAL DE LOGIN ADMIN -->
     <div id="adminLoginModal"
         class="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] hidden backdrop-blur-sm">
@@ -2888,6 +2896,15 @@
         }
 
         // ================= MODAL: CONTINENTES E NAÇÕES =================
+        function openWoeLightbox(src, alt) {
+            let lb = document.getElementById('woe-lightbox');
+            let img = document.getElementById('woe-lightbox-img');
+            img.src = src;
+            img.alt = alt || '';
+            lb.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
         function openContinentesModal() {
             renderContinentesModal();
             document.getElementById('continentesModal').classList.remove('hidden');
@@ -2908,13 +2925,14 @@
             }
 
             function subItemCard(it, borderColor) {
-                let uid = 'sub_' + Math.random().toString(36).slice(2);
                 let imgHtml = it.imagem
-                    ? `<img src="${it.imagem}" alt="${it.nome}" class="w-full h-28 object-cover rounded-t-lg">`
+                    ? `<img src="${it.imagem}" alt="${it.nome}"
+                            class="w-full h-28 object-cover cursor-zoom-in hover:brightness-110 transition-[filter]"
+                            onclick="event.stopPropagation(); openWoeLightbox('${it.imagem.replace(/'/g, "\\'")}', '${it.nome.replace(/'/g, "\\'")}');">`
                     : '';
                 let hasDetail = it.descricao || it.imagem;
-                return `<div class="rounded-lg border border-white/8 overflow-hidden bg-black/25 cursor-pointer select-none"
-                            onclick="(function(el){let b=el.querySelector('.sub-body');if(b)b.classList.toggle('hidden');})(this)">
+                return `<div class="rounded-lg border border-white/8 overflow-hidden bg-black/25 ${hasDetail ? 'cursor-pointer' : ''} select-none"
+                            ${hasDetail ? `onclick="(function(el){let b=el.querySelector('.sub-body');if(b)b.classList.toggle('hidden');})(this)"` : ''}>
                     <div class="flex items-center justify-between px-3 py-2 gap-2">
                         <span class="text-xs text-slate-300 font-semibold leading-tight">${it.nome}</span>
                         ${hasDetail ? `<span class="text-slate-600 text-[10px] shrink-0">▾</span>` : ''}
