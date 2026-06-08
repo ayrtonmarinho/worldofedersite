@@ -878,6 +878,65 @@
         </div>
     </div>
 
+    <!-- MODAL DE RECAPITULAÇÕES -->
+    <div id="recapsModal" class="fixed inset-0 bg-black/85 flex items-start justify-center z-[116] hidden backdrop-blur-md overflow-y-auto py-10 px-4">
+        <div class="bg-[#1a1a22] rounded-2xl border border-sky-800/30 shadow-[0_0_60px_rgba(56,189,248,0.08)] w-full max-w-2xl relative">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-5 border-b border-white/8 sticky top-0 bg-[#1a1a22] z-10 rounded-t-2xl">
+                <div>
+                    <h2 class="text-lg font-bold text-sky-400" style="font-family:var(--font-heading)">📋 Recapitulações</h2>
+                    <p id="recaps-mesa-name" class="text-xs text-slate-500 mt-0.5"></p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="recaps-add-btn" onclick="openRecapForm()" class="hidden text-xs font-bold bg-sky-900/40 hover:bg-sky-800/60 border border-sky-700/50 text-sky-300 px-3 py-1.5 rounded-lg transition-colors">+ Nova Recapitulação</button>
+                    <button onclick="closeRecapsModal()" class="text-slate-500 hover:text-white text-2xl leading-none transition-colors ml-2">✕</button>
+                </div>
+            </div>
+
+            <!-- Formulário (oculto por padrão) -->
+            <div id="recap-form-panel" class="hidden border-b border-sky-800/30 bg-sky-950/20 px-6 py-5 space-y-3">
+                <h3 id="recap-form-title" class="text-sm font-bold text-sky-300 mb-1">Nova Recapitulação</h3>
+                <input type="hidden" id="recap-edit-id" value="">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Título</label>
+                        <input type="text" id="recap-inp-titulo" placeholder="Ex: Sessão 1 — A Chegada"
+                            class="w-full bg-slate-900 border border-sky-900/50 rounded px-2 py-1.5 text-sm text-slate-200 focus:border-sky-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Data</label>
+                        <input type="date" id="recap-inp-data"
+                            class="w-full bg-slate-900 border border-sky-900/50 rounded px-2 py-1.5 text-sm text-slate-200 focus:border-sky-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Recapitulação</label>
+                    <textarea id="recap-inp-texto" rows="5" placeholder="Descreva o que aconteceu nesta sessão..."
+                        class="w-full bg-slate-900 border border-sky-900/50 rounded px-2 py-1.5 text-sm text-slate-300 focus:border-sky-500 outline-none resize-y"></textarea>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">URL de Vídeo <span class="text-slate-600 font-normal normal-case">(YouTube — opcional)</span></label>
+                    <input type="text" id="recap-inp-video" placeholder="https://youtube.com/watch?v=..."
+                        class="w-full bg-slate-900 border border-sky-900/50 rounded px-2 py-1.5 text-sm text-slate-400 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">URL de Imagem <span class="text-slate-600 font-normal normal-case">(opcional)</span></label>
+                    <input type="text" id="recap-inp-imagem" placeholder="https://..."
+                        class="w-full bg-slate-900 border border-sky-900/50 rounded px-2 py-1.5 text-sm text-slate-400 focus:border-sky-500 outline-none">
+                </div>
+                <div class="flex gap-2 pt-1">
+                    <button onclick="cancelRecapForm()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded text-sm font-bold transition-colors">Cancelar</button>
+                    <button onclick="saveRecap()" class="flex-1 bg-sky-700 hover:bg-sky-600 text-white py-2 rounded text-sm font-bold transition-colors shadow-lg shadow-sky-900/40">Salvar</button>
+                </div>
+            </div>
+
+            <!-- Lista de recapitulações -->
+            <div id="recaps-list" class="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
+                <p class="text-slate-600 text-sm text-center py-8">Nenhuma recapitulação registrada ainda.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE EDIÇÃO DE JOGADOR -->
     <div id="playerEditModal"
         class="fixed inset-0 bg-black/80 flex items-center justify-center z-[116] hidden backdrop-blur-sm">
@@ -1074,6 +1133,18 @@
         <img id="woe-lightbox-img" src="" alt="" class="max-w-[92vw] max-h-[92vh] object-contain rounded-lg shadow-2xl pointer-events-none select-none">
         <button class="absolute top-4 right-5 text-white/60 hover:text-white text-3xl leading-none font-light"
             onclick="document.getElementById('woe-lightbox').classList.add('hidden'); document.body.style.overflow='';">✕</button>
+    </div>
+
+    <!-- LIGHTBOX DE VÍDEO -->
+    <div id="woe-video-lightbox" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[301] hidden backdrop-blur-sm"
+        onclick="closeWoeVideoLightbox()">
+        <div class="w-[92vw] max-w-4xl" onclick="event.stopPropagation()">
+            <div class="aspect-video w-full rounded-xl overflow-hidden shadow-2xl">
+                <iframe id="woe-video-iframe" src="" class="w-full h-full" frameborder="0" allowfullscreen allow="autoplay"></iframe>
+            </div>
+        </div>
+        <button class="absolute top-4 right-5 text-white/60 hover:text-white text-3xl leading-none font-light"
+            onclick="closeWoeVideoLightbox()">✕</button>
     </div>
 
     <!-- MODAL DE LOGIN ADMIN -->
@@ -2043,6 +2114,12 @@
                     ${isAdmin ? `<span class="text-[10px] text-slate-500 font-mono -mt-1 mb-2 select-all" title="ID da mesa">ID: ${sanitize(mesa.id)}</span>` : ''}
                     <div class="text-xs text-slate-400 italic mb-3 border-l-2 border-sky-800 pl-2">"${sanitize(mesa.background) || 'Sem descrição.'}"</div>
                     ${playersList}
+                    <div class="mt-auto pt-3">
+                        <button onclick="event.stopPropagation(); openRecapsModal('${mesa.id}')"
+                            class="w-full text-xs font-bold py-2 px-3 rounded border border-sky-800/50 bg-sky-900/20 hover:bg-sky-800/40 text-sky-400 transition-colors flex items-center justify-center gap-2">
+                            📋 Recapitulações <span class="text-sky-600 font-normal">(${(mesa.recaps || []).length})</span>
+                        </button>
+                    </div>
                 </div>
             `;
             return div;
@@ -2858,6 +2935,169 @@
 
         function toggleMasterTrait() {
             // Removido o hidden dinâmico para que TODAS as habilidades possam ter tópicos.
+        }
+
+        // ================= RECAPITULAÇÕES DE MESA =================
+        let _recapsMesaId = null;
+
+        function openRecapsModal(mesaId) {
+            _recapsMesaId = mesaId;
+            let mesa = (database.mesas || []).find(m => m.id === mesaId);
+            if (!mesa) return;
+            document.getElementById('recaps-mesa-name').textContent = mesa.titulo || mesa.nome || mesaId;
+            let addBtn = document.getElementById('recaps-add-btn');
+            let canManage = isAdmin && loggedAdmin && (loggedAdmin.access_level === 1 || !loggedAdmin.access_level || mesa.mestre === loggedAdmin.nome);
+            if (canManage) addBtn.classList.remove('hidden'); else addBtn.classList.add('hidden');
+            cancelRecapForm();
+            renderRecapsList();
+            document.getElementById('recapsModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeRecapsModal() {
+            document.getElementById('recapsModal').classList.add('hidden');
+            document.body.style.overflow = '';
+            _recapsMesaId = null;
+        }
+
+        function openRecapForm(recapId) {
+            let form = document.getElementById('recap-form-panel');
+            form.classList.remove('hidden');
+            document.getElementById('recap-form-title').textContent = recapId ? 'Editar Recapitulação' : 'Nova Recapitulação';
+            document.getElementById('recap-edit-id').value = recapId || '';
+            if (recapId) {
+                let mesa = (database.mesas || []).find(m => m.id === _recapsMesaId);
+                let recap = (mesa?.recaps || []).find(r => r.id === recapId);
+                if (recap) {
+                    document.getElementById('recap-inp-titulo').value = recap.titulo || '';
+                    document.getElementById('recap-inp-data').value = recap.data || '';
+                    document.getElementById('recap-inp-texto').value = recap.texto || '';
+                    document.getElementById('recap-inp-video').value = recap.videoUrl || '';
+                    document.getElementById('recap-inp-imagem').value = recap.imagemUrl || '';
+                }
+            } else {
+                document.getElementById('recap-inp-titulo').value = '';
+                document.getElementById('recap-inp-data').value = '';
+                document.getElementById('recap-inp-texto').value = '';
+                document.getElementById('recap-inp-video').value = '';
+                document.getElementById('recap-inp-imagem').value = '';
+            }
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function cancelRecapForm() {
+            document.getElementById('recap-form-panel').classList.add('hidden');
+            document.getElementById('recap-edit-id').value = '';
+        }
+
+        function saveRecap() {
+            let titulo = document.getElementById('recap-inp-titulo').value.trim();
+            if (!titulo) { alert('Preencha o título da recapitulação.'); return; }
+            let editId = document.getElementById('recap-edit-id').value;
+            let mesa = (database.mesas || []).find(m => m.id === _recapsMesaId);
+            if (!mesa) return;
+            if (!mesa.recaps) mesa.recaps = [];
+            let recap = {
+                id: editId || 'rc_' + Date.now(),
+                titulo,
+                data: document.getElementById('recap-inp-data').value || '',
+                texto: document.getElementById('recap-inp-texto').value.trim(),
+                videoUrl: document.getElementById('recap-inp-video').value.trim() || undefined,
+                imagemUrl: document.getElementById('recap-inp-imagem').value.trim() || undefined,
+            };
+            if (editId) {
+                let idx = mesa.recaps.findIndex(r => r.id === editId);
+                if (idx !== -1) mesa.recaps[idx] = recap; else mesa.recaps.push(recap);
+            } else {
+                mesa.recaps.push(recap);
+            }
+            saveMesaRecaps(mesa);
+            cancelRecapForm();
+            renderRecapsList();
+        }
+
+        function deleteRecap(recapId) {
+            if (!confirm('Deletar esta recapitulação?')) return;
+            let mesa = (database.mesas || []).find(m => m.id === _recapsMesaId);
+            if (!mesa) return;
+            mesa.recaps = (mesa.recaps || []).filter(r => r.id !== recapId);
+            saveMesaRecaps(mesa);
+            renderRecapsList();
+        }
+
+        function saveMesaRecaps(mesa) {
+            localStorage.setItem('woe_archive_db', JSON.stringify(database));
+            let payload = { ...mesa, type: 'mesas' };
+            if (loggedAdmin) { payload.admin_nome = loggedAdmin.nome; payload.admin_senha = loggedAdmin.senha; }
+            apiFetch('/save', 'POST', payload).catch(e => console.warn('Recap save error:', e));
+        }
+
+        function _youtubeEmbedUrl(url, autoplay) {
+            if (!url) return null;
+            let m = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+            return m ? `https://www.youtube.com/embed/${m[1]}${autoplay ? '?autoplay=1' : ''}` : null;
+        }
+
+        function openWoeVideoLightbox(embedUrl) {
+            document.getElementById('woe-video-iframe').src = embedUrl;
+            document.getElementById('woe-video-lightbox').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeWoeVideoLightbox() {
+            document.getElementById('woe-video-iframe').src = '';
+            document.getElementById('woe-video-lightbox').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function renderRecapsList() {
+            let container = document.getElementById('recaps-list');
+            let mesa = (database.mesas || []).find(m => m.id === _recapsMesaId);
+            let recaps = (mesa?.recaps || []).slice().sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+            let canManage = isAdmin && loggedAdmin && (loggedAdmin.access_level === 1 || !loggedAdmin.access_level || mesa?.mestre === loggedAdmin.nome);
+            if (!recaps.length) {
+                container.innerHTML = '<p class="text-slate-600 text-sm text-center py-8">Nenhuma recapitulação registrada ainda.</p>';
+                return;
+            }
+            container.innerHTML = recaps.map(recap => {
+                let embedUrl = _youtubeEmbedUrl(recap.videoUrl);
+                let embedUrlAutoplay = _youtubeEmbedUrl(recap.videoUrl, true);
+                let mediaHtml = '';
+                if (embedUrl) {
+                    mediaHtml = `<div class="mt-3 rounded-lg overflow-hidden aspect-video relative group cursor-pointer"
+                            onclick="openWoeVideoLightbox('${embedUrlAutoplay}')">
+                        <iframe src="${embedUrl}" class="w-full h-full pointer-events-none" frameborder="0" loading="lazy"></iframe>
+                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="bg-black/70 text-white text-3xl w-14 h-14 flex items-center justify-center rounded-full shadow-xl">▶</span>
+                        </div>
+                    </div>`;
+                } else if (recap.videoUrl) {
+                    mediaHtml = `<a href="${recap.videoUrl}" target="_blank" rel="noopener"
+                        class="mt-3 flex items-center gap-2 text-xs text-sky-400 hover:text-sky-300 underline underline-offset-2">▶ Ver vídeo</a>`;
+                }
+                if (recap.imagemUrl) {
+                    mediaHtml += `<img src="${recap.imagemUrl}" alt="${recap.titulo}"
+                        class="mt-3 w-full rounded-lg object-contain cursor-zoom-in hover:brightness-110 transition-[filter]"
+                        onclick="openWoeLightbox('${recap.imagemUrl.replace(/'/g,"\\'")}','${recap.titulo.replace(/'/g,"\\'")}')">`;
+                }
+                let adminBtns = canManage ? `
+                    <div class="flex gap-1.5 shrink-0 ml-auto">
+                        <button onclick="openRecapForm('${recap.id}')" class="text-[10px] bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded font-bold transition-colors">✏️</button>
+                        <button onclick="deleteRecap('${recap.id}')" class="text-[10px] bg-red-900/40 hover:bg-red-700/60 text-red-400 px-2 py-1 rounded font-bold transition-colors">✕</button>
+                    </div>` : '';
+                let dataFmt = recap.data ? new Date(recap.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+                return `<div class="bg-black/30 border border-sky-900/30 rounded-xl p-4">
+                    <div class="flex items-start gap-2 mb-2">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-sm text-sky-300 leading-snug" style="font-family:var(--font-heading)">${sanitize(recap.titulo)}</h4>
+                            ${dataFmt ? `<p class="text-[10px] text-slate-500 mt-0.5">📅 ${dataFmt}</p>` : ''}
+                        </div>
+                        ${adminBtns}
+                    </div>
+                    ${recap.texto ? `<p class="text-xs text-slate-400 leading-relaxed whitespace-pre-wrap">${sanitize(recap.texto)}</p>` : ''}
+                    ${mediaHtml}
+                </div>`;
+            }).join('');
         }
 
         // ================= CONTINENTES E NAÇÕES — SUB-SEÇÕES =================

@@ -704,6 +704,14 @@
                     </label>
                 </div>
 
+                <div id="ext-mythic-assoc" class="hidden">
+                    <label class="block text-[10px] text-purple-400 uppercase font-bold mb-1">Associar à Classe Mítica <span class="text-slate-600 font-normal normal-case">(aparece na aba mítica quando esta classe estiver ativa)</span></label>
+                    <select id="new-mythic-assoc"
+                        class="w-full bg-slate-900 border border-purple-900 rounded px-2 py-1.5 text-sm text-purple-300 focus:border-purple-500 outline-none">
+                        <option value="">— Nenhuma —</option>
+                    </select>
+                </div>
+
                 <div id="ext-desc" class="hidden">
                     <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">
                         Descrição —
@@ -1526,15 +1534,19 @@
             if (!unlocked.includes(nodeId)) return;
             if (currentUser.mythicClassId === nodeId) { focusClassNode(nodeId); return; }
 
+            if (!currentUser.mythicClassAllocations) currentUser.mythicClassAllocations = {};
+
+            // Salvar e remover alocação da classe atual antes de trocar
             if (currentUser.mythicClassId) {
                 let oldAllocated = getMythicSubtreeAllocated(currentUser.mythicClassId);
-                let pts = countPointsUsed(oldAllocated);
-                if (pts > 0) {
-                    let oldName = treeData.nodes[currentUser.mythicClassId]?.name || 'classe anterior';
-                    let newName = treeData.nodes[nodeId]?.name || 'nova classe';
-                    if (!await showConfirm(`Trocar para "${newName}" devolverá ${pts} ponto(s) investido(s) em "${oldName}". Deseja continuar?`, { title: 'Trocar Classe', type: 'warning' })) return;
-                    currentUser.allocatedNodes = currentUser.allocatedNodes.filter(id => !oldAllocated.includes(id));
-                }
+                currentUser.mythicClassAllocations[currentUser.mythicClassId] = oldAllocated;
+                currentUser.allocatedNodes = currentUser.allocatedNodes.filter(id => !oldAllocated.includes(id));
+            }
+
+            // Restaurar alocação salva da nova classe (se houver)
+            let savedAlloc = (currentUser.mythicClassAllocations[nodeId] || []).filter(id => treeData.nodes[id]);
+            if (savedAlloc.length > 0) {
+                currentUser.allocatedNodes = [...new Set([...currentUser.allocatedNodes, ...savedAlloc])];
             }
 
             currentUser.mythicClassId = nodeId;
@@ -1732,7 +1744,8 @@
                     allocatedNodes: ["root_warrior", "w_str1"],
                     level: 2,
                     mythicClassId: null,
-                    unlockedMythicClasses: []
+                    unlockedMythicClasses: [],
+                    mythicClassAllocations: {}
                 };
                 saveLocalUsers(db);
             }
@@ -2171,6 +2184,7 @@
 
                         document.getElementById('submit-node-btn').textContent = "Guardar Alterações";
                         toggleFormFields();
+                        document.getElementById('new-mythic-assoc').value = hoveredNode.mythicAssociation || '';
 
                         document.getElementById('del-node-id').value = hoveredNode.id;
                     }
@@ -2787,13 +2801,28 @@
                     .map(n => n.id)
             );
 
+            let mythicBasics = {}, mythicPassives = [], mythicActives = [];
+
             for (let id of currentUser.allocatedNodes) {
                 let n = treeData.nodes[id];
                 if (!n) continue;
                 if (n.type === 'root' && !n.isMythic) rootNode = n;
                 if (n.type === 'especializacao') { specNodes.push(n); continue; }
-                if (chainNodeIds.has(id)) continue; // chain nodes ficam só no dropdown
-                if (n.type === 'root') continue; // stats da classe já aparecem no card
+                if (chainNodeIds.has(id)) continue;
+                if (n.type === 'root') continue;
+                // Nodo associado a uma classe mítica — vai para o painel mítico (só se a classe ativa bater)
+                if (n.mythicAssociation) {
+                    if (n.mythicAssociation === currentUser.mythicClassId) {
+                        if (n.type === 'basic' || n.type === 'omega' || n.type === 'omegaFonte') {
+                            if (n.stats) n.stats.forEach(s => { mythicBasics[s] = (mythicBasics[s] || 0) + 1; });
+                        } else if (n.type === 'notable') {
+                            mythicPassives.push(n);
+                        } else if (n.type === 'large') {
+                            mythicActives.push(n);
+                        }
+                    }
+                    continue; // nunca cai no painel base
+                }
                 if (n.type === 'basic' || n.type === 'omega' || n.type === 'omegaFonte') {
                     if(n.stats) n.stats.forEach(s => { basics[s] = (basics[s] || 0) + 1; });
                 } else if (n.type === 'notable') {
@@ -2956,6 +2985,30 @@
                             </div>`;
                         }
                         html += `</div></div>`;
+                    }
+
+                    // Habilidades e passivas associadas à classe mítica ativa
+                    if (mythicNode && (Object.keys(mythicBasics).length || mythicPassives.length || mythicActives.length)) {
+                        html += `<div class="border-t border-purple-900/40 px-3 py-3 space-y-2.5">`;
+                        if (Object.keys(mythicBasics).length > 0) {
+                            html += `<div><p class="text-[10px] uppercase tracking-widest font-bold text-purple-700 mb-1.5">Atributos Míticos</p>`;
+                            for (let k in mythicBasics) { html += `<div class="text-sm text-purple-300 flex items-center gap-1.5 flex-wrap mb-0.5">${_diamond()} ${renderStatHtml(k)}${mythicBasics[k] > 1 ? '<span class="text-slate-500 text-xs">(x'+mythicBasics[k]+')</span>' : ''}</div>`; }
+                            html += `</div>`;
+                        }
+                        if (mythicPassives.length > 0) {
+                            html += `<div><p class="text-[10px] uppercase tracking-widest font-bold text-purple-700 mb-1.5">Passivas Míticas</p>`;
+                            mythicPassives.forEach(p => {
+                                let statsText = p.stats && p.stats.length > 0 ? `<div class="text-[10px] text-purple-400/70 ml-3 flex items-center gap-1 flex-wrap mt-0.5">↳ ${p.stats.map(s => renderStatHtml(s)).join(' ')}</div>` : '';
+                                html += `<div class="text-sm text-purple-200 cursor-default mb-1.5" data-node-id="${p.id}">✦ ${escHtml(p.name)}${statsText}</div>`;
+                            });
+                            html += `</div>`;
+                        }
+                        if (mythicActives.length > 0) {
+                            html += `<div><p class="text-[10px] uppercase tracking-widest font-bold text-purple-700 mb-1.5">Habilidades Míticas</p>`;
+                            mythicActives.forEach(a => html += `<div class="text-sm text-purple-100 font-bold cursor-default mb-1" data-node-id="${a.id}">✦ ${escHtml(a.name)}</div>`);
+                            html += `</div>`;
+                        }
+                        html += `</div>`;
                     }
 
                     html += `</div>`;
@@ -3808,6 +3861,20 @@
             // Global só faz sentido para basic e notable
             if (t === 'basic' || t === 'notable') glob.classList.remove('hidden');
             else { glob.classList.add('hidden'); document.getElementById('new-global').checked = false; }
+            // Associação mítica disponível para basic, notable e large
+            let mythicAssocEl = document.getElementById('ext-mythic-assoc');
+            let mythicAssocSel = document.getElementById('new-mythic-assoc');
+            if (t === 'basic' || t === 'notable' || t === 'large') {
+                mythicAssocEl.classList.remove('hidden');
+                let mythicRoots = Object.values(treeData.nodes).filter(n => n.type === 'root' && n.isMythic);
+                let currentVal = mythicAssocSel.value;
+                mythicAssocSel.innerHTML = '<option value="">— Nenhuma —</option>'
+                    + mythicRoots.map(n => `<option value="${n.id}">${n.name}</option>`).join('');
+                mythicAssocSel.value = currentVal;
+            } else {
+                mythicAssocEl.classList.add('hidden');
+                mythicAssocSel.value = '';
+            }
         }
 
         function resetNodeForm() {
@@ -3827,6 +3894,7 @@
             document.getElementById('new-mythic').checked = false;
             document.getElementById('new-global').checked = false;
             document.getElementById('new-linked-skill').value = '';
+            document.getElementById('new-mythic-assoc').value = '';
             document.getElementById('submit-node-btn').textContent = "Inserir Nodo";
         }
 
@@ -3862,7 +3930,8 @@
                 chainId: document.getElementById('new-chain').value.trim() || undefined,
                 isMythic: isMythic || undefined,
                 isGlobal: (nodeType === 'basic' || nodeType === 'notable') ? (document.getElementById('new-global').checked || undefined) : undefined,
-                linkedSkill: document.getElementById('new-linked-skill').value.trim() || undefined
+                linkedSkill: document.getElementById('new-linked-skill').value.trim() || undefined,
+                mythicAssociation: (['basic','notable','large'].includes(nodeType)) ? (document.getElementById('new-mythic-assoc').value || undefined) : undefined
             };
 
             let parentStr = document.getElementById('new-parent').value;
@@ -3941,7 +4010,7 @@
             let pts = parseInt(document.getElementById('new-user-pts').value);
             if (!code || !name || isNaN(pts)) { await showAlert("Preencha todos os campos corretamente.", { title: 'Atenção', type: 'warning' }); return; }
 
-            let u = { code: code, name: name, totalPoints: pts, allocatedNodes: [], level: 0, mythicClassId: null, unlockedMythicClasses: [] };
+            let u = { code: code, name: name, totalPoints: pts, allocatedNodes: [], level: 0, mythicClassId: null, unlockedMythicClasses: [], mythicClassAllocations: {} };
             let db = getLocalUsers();
             db[code] = u;
             saveLocalUsers(db);
@@ -4398,6 +4467,8 @@
             } else {
                 unlocked = unlocked.filter(id => id !== nodeId);
                 if (u.mythicClassId === nodeId) u.mythicClassId = null;
+                // Limpar alocação salva da classe revogada
+                if (u.mythicClassAllocations) delete u.mythicClassAllocations[nodeId];
             }
             u.unlockedMythicClasses = unlocked;
 
